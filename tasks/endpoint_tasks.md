@@ -67,20 +67,20 @@
 - [x] PUT /v1/actionPlansPeople/{id} (Update person in action plan)
 
 ## Email Templates
-- [ ] GET /v1/templates (List email templates)
-- [ ] POST /v1/templates (Create email template)
-- [ ] GET /v1/templates/{id} (Retrieve email template)
-- [ ] PUT /v1/templates/{id} (Update email template)
-- [ ] POST /v1/templates/merge (Merge email template)
-- [ ] DELETE /v1/templates/{id} (Delete email template)
+- [x] GET /v1/templates (List email templates)
+- [x] POST /v1/templates (Create email template)
+- [x] GET /v1/templates/{id} (Retrieve email template)
+- [x] PUT /v1/templates/{id} (Update email template)
+- [x] POST /v1/templates/merge (Merge email template)
+- [x] DELETE /v1/templates/{id} (Delete email template)
 
 ## Text Message Templates
-- [ ] GET /v1/textMessageTemplates (List text message templates)
-- [ ] POST /v1/textMessageTemplates (Create text message template)
-- [ ] GET /v1/textMessageTemplates/{id} (Retrieve text message template)
-- [ ] PUT /v1/textMessageTemplates/{id} (Update text message template)
-- [ ] POST /v1/textMessageTemplates/merge (Merge text message template)
-- [ ] DELETE /v1/textMessageTemplates/{id} (Delete text message template)
+- [x] GET /v1/textMessageTemplates (List text message templates)
+- [x] POST /v1/textMessageTemplates (Create text message template)
+- [x] GET /v1/textMessageTemplates/{id} (Retrieve text message template)
+- [x] PUT /v1/textMessageTemplates/{id} (Update text message template)
+- [x] POST /v1/textMessageTemplates/merge (Merge text message template)
+- [x] DELETE /v1/textMessageTemplates/{id} (Delete text message template)
 
 ## Email Marketing
 - [ ] GET /v1/emEvents (List email marketing events)
@@ -90,11 +90,11 @@
 - [ ] PUT /v1/emCampaigns/{id} (Update email marketing campaign)
 
 ## Custom Fields
-- [ ] GET /v1/customFields (List custom fields)
-- [ ] POST /v1/customFields (Create custom field)
-- [ ] GET /v1/customFields/{id} (Retrieve custom field)
-- [ ] PUT /v1/customFields/{id} (Update custom field)
-- [ ] DELETE /v1/customFields/{id} (Delete custom field)
+- [x] GET /v1/customFields (List custom fields)
+- [x] POST /v1/customFields (Create custom field) # NOTE: API may restrict creating custom fields to admin users
+- [x] GET /v1/customFields/{id} (Retrieve custom field)
+- [x] PUT /v1/customFields/{id} (Update custom field)
+- [x] DELETE /v1/customFields/{id} (Delete custom field) # NOTE: Not tested to avoid removing existing fields
 
 ## Stages
 - [ ] GET /v1/stages (List stages)
