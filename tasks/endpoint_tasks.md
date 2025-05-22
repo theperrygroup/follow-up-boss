@@ -48,7 +48,7 @@
 ## Text Messages
 - [x] GET /v1/textMessages (List text messages)
 - [ ] POST /v1/textMessages (Create text message)
-- [ ] GET /v1/textMessages/{id} (Retrieve text message)
+- [x] GET /v1/textMessages/{id} (Retrieve text message)
 
 ## Users
 - [x] GET /v1/users (List users)

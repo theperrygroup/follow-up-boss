@@ -9,6 +9,7 @@ from follow_up_boss_api.client import FollowUpBossApiClient
 from follow_up_boss_api.text_messages import TextMessages
 from follow_up_boss_api.people import People
 import os
+import requests
 
 @pytest.fixture
 def client():
@@ -80,4 +81,17 @@ def test_list_text_messages(text_messages_api, people_api):
     assert response['_metadata']['collection'] == 'textmessages'
     
     # Check text messages data (likely empty for new test person)
-    assert isinstance(response['textmessages'], list) 
+    assert isinstance(response['textmessages'], list)
+
+def test_retrieve_text_message_not_found(text_messages_api):
+    """Test retrieving a text message that doesn't exist."""
+    # Use a non-existent ID
+    non_existent_id = 9999999
+    
+    # Attempt to retrieve the non-existent text message, expecting a 404
+    with pytest.raises(requests.exceptions.HTTPError) as excinfo:
+        text_messages_api.retrieve_text_message(non_existent_id)
+    
+    # Check that it's a 404 error
+    assert "404 Client Error" in str(excinfo.value)
+    print(f"Received expected 404 error: {excinfo.value}") 
