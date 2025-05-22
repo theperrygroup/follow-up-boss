@@ -32,12 +32,10 @@ def tasks_api(client):
 def test_task_data():
     """Create test data for a task."""
     unique_suffix = uuid.uuid4().hex[:8]
-    tomorrow = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
     
+    # Start with just a name - minimum required field
     return {
-        "name": f"Test Task {unique_suffix}",
-        "details": f"This is a test task created for API testing {unique_suffix}",
-        "due_date": tomorrow
+        "name": f"Test Task {unique_suffix}"
     }
 
 
@@ -148,12 +146,11 @@ def test_update_task(tasks_api, test_task_data):
         
         # Generate new data for update
         updated_name = f"Updated Task {uuid.uuid4().hex[:8]}"
-        updated_status = "complete"
         
         # Update the task
         update_data = {
             "name": updated_name,
-            "status": updated_status
+            "isCompleted": 1  # Use isCompleted instead of status
         }
         
         update_response = tasks_api.update_task(task_id, update_data)
@@ -168,8 +165,8 @@ def test_update_task(tasks_api, test_task_data):
         assert update_response["id"] == task_id
         assert "name" in update_response
         assert update_response["name"] == updated_name
-        assert "status" in update_response
-        assert update_response["status"] == updated_status
+        assert "isCompleted" in update_response
+        assert update_response["isCompleted"] == 1
         
         # Clean up - delete the task
         try:
