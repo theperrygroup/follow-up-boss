@@ -2,9 +2,9 @@
 API bindings for Follow Up Boss Calls endpoints.
 """
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union
 
-from .api_client import ApiClient
+from .client import FollowUpBossApiClient
 import logging
 
 logger = logging.getLogger(__name__)
@@ -14,14 +14,14 @@ class Calls:
     Provides access to the Calls endpoints of the Follow Up Boss API.
     """
 
-    def __init__(self, client: ApiClient):
+    def __init__(self, client: FollowUpBossApiClient):
         """
         Initializes the Calls resource.
 
         Args:
-            client: An instance of the ApiClient.
+            client: An instance of the FollowUpBossApiClient.
         """
-        self._client = client
+        self.client = client
 
     def list_calls(
         self,
@@ -56,7 +56,7 @@ class Calls:
             params["sort"] = sort
         params.update(kwargs)
         
-        return self._client.get("/calls", params=params)
+        return self.client._get("calls", params=params)
 
     def create_call(
         self, 
@@ -68,9 +68,8 @@ class Calls:
         note: Optional[str] = None,
         recording_url: Optional[str] = None,
         called_at: Optional[str] = None, # ISO 8601 format e.g. "2023-01-15T14:30:00Z"
-        subject: Optional[str] = None, # Often FUB items have a subject
         **kwargs: Any
-    ) -> Dict[str, Any]:
+    ) -> Union[Dict[str, Any], str]:
         """
         Creates a new call log entry for a specific person.
 
@@ -84,11 +83,10 @@ class Calls:
             note: Optional. A note or summary about the call.
             recording_url: Optional. URL to the call recording.
             called_at: Optional. The time the call occurred (ISO 8601). Defaults to now by API if not set.
-            subject: Optional. Subject or brief description of the call purpose/content.
             **kwargs: Additional fields for the call payload.
 
         Returns:
-            A dictionary containing the details of the newly created call log.
+            A dictionary containing the details of the newly created call log or an error string.
         """
         payload: Dict[str, Any] = {
             "personId": person_id,
@@ -107,7 +105,7 @@ class Calls:
         
         payload.update(kwargs)
         
-        return self._client.post("/calls", json_data=payload)
+        return self.client._post("calls", json_data=payload)
 
     def retrieve_call(self, call_id: int) -> Dict[str, Any]:
         """
@@ -119,22 +117,22 @@ class Calls:
         Returns:
             A dictionary containing the details of the call log.
         """
-        return self._client.get(f"/calls/{call_id}")
+        return self.client._get(f"calls/{call_id}")
 
-    def update_call(self, call_id: int, update_data: Dict[str, Any]) -> Dict[str, Any]:
+    def update_call(self, call_id: int, update_data: Dict[str, Any]) -> Union[Dict[str, Any], str]:
         """
         Updates an existing call log.
 
         Args:
             call_id: The ID of the call log to update.
             update_data: A dictionary containing the fields to update.
-                         Common updatable fields might include 'outcome', 'note', 'subject',
+                         Common updatable fields might include 'outcome', 'note',
                          or 'duration'. personId is generally not updatable.
 
         Returns:
-            A dictionary containing the details of the updated call log.
+            A dictionary containing the details of the updated call log or an error string.
         """
-        return self._client.put(f"/calls/{call_id}", json_data=update_data)
+        return self.client._put(f"calls/{call_id}", json_data=update_data)
 
     # GET /calls/{id} (Retrieve call)
     # PUT /calls/{id} (Update call) 

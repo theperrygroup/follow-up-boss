@@ -2,9 +2,9 @@
 API bindings for Follow Up Boss Pipelines endpoints.
 """
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union
 
-from .api_client import ApiClient
+from .client import FollowUpBossApiClient
 import logging
 
 logger = logging.getLogger(__name__)
@@ -14,14 +14,14 @@ class Pipelines:
     Provides access to the Pipelines endpoints of the Follow Up Boss API.
     """
 
-    def __init__(self, client: ApiClient):
+    def __init__(self, client: FollowUpBossApiClient):
         """
         Initializes the Pipelines resource.
 
         Args:
-            client: An instance of the ApiClient.
+            client: An instance of the FollowUpBossApiClient.
         """
-        self._client = client
+        self.client = client
 
     def list_pipelines(
         self,
@@ -52,7 +52,7 @@ class Pipelines:
             params["sort"] = sort
         params.update(kwargs)
         
-        return self._client.get("/pipelines", params=params)
+        return self.client._get("pipelines", params=params)
 
     def create_pipeline(
         self,
@@ -60,7 +60,7 @@ class Pipelines:
         # entity_type: Optional[str] = "Deal", # Pipelines are often for Deals
         # stages: Optional[list[Dict[str, Any]]] = None, # Optional: define stages during pipeline creation
         **kwargs: Any
-    ) -> Dict[str, Any]:
+    ) -> Union[Dict[str, Any], str]:
         """
         Creates a new pipeline.
 
@@ -72,7 +72,7 @@ class Pipelines:
             **kwargs: Additional fields for the pipeline payload.
 
         Returns:
-            A dictionary containing the details of the newly created pipeline.
+            A dictionary containing the details of the newly created pipeline or an error string.
         """
         payload: Dict[str, Any] = {"name": name}
         # if entity_type is not None:
@@ -82,7 +82,7 @@ class Pipelines:
         
         payload.update(kwargs)
         
-        return self._client.post("/pipelines", json_data=payload)
+        return self.client._post("pipelines", json_data=payload)
 
     def retrieve_pipeline(self, pipeline_id: int) -> Dict[str, Any]:
         """
@@ -94,9 +94,9 @@ class Pipelines:
         Returns:
             A dictionary containing the details of the pipeline.
         """
-        return self._client.get(f"/pipelines/{pipeline_id}")
+        return self.client._get(f"pipelines/{pipeline_id}")
 
-    def update_pipeline(self, pipeline_id: int, update_data: Dict[str, Any]) -> Dict[str, Any]:
+    def update_pipeline(self, pipeline_id: int, update_data: Dict[str, Any]) -> Union[Dict[str, Any], str]:
         """
         Updates an existing pipeline.
 
@@ -105,11 +105,11 @@ class Pipelines:
             update_data: A dictionary containing the fields to update (e.g., {"name": "New Name"}).
 
         Returns:
-            A dictionary containing the details of the updated pipeline.
+            A dictionary containing the details of the updated pipeline or an error string.
         """
-        return self._client.put(f"/pipelines/{pipeline_id}", json_data=update_data)
+        return self.client._put(f"pipelines/{pipeline_id}", json_data=update_data)
 
-    def delete_pipeline(self, pipeline_id: int) -> Dict[str, Any]:
+    def delete_pipeline(self, pipeline_id: int) -> Union[Dict[str, Any], str]:
         """
         Deletes a specific pipeline by its ID.
 
@@ -117,10 +117,10 @@ class Pipelines:
             pipeline_id: The ID of the pipeline to delete.
 
         Returns:
-            An empty dictionary if successful (API returns 204 No Content),
+            An empty dictionary or string if successful (API returns 204 No Content),
             or a dictionary with an error message if it fails.
         """
-        return self._client.delete(f"/pipelines/{pipeline_id}")
+        return self.client._delete(f"pipelines/{pipeline_id}")
 
     # GET /pipelines/{id} (Retrieve pipeline)
     # PUT /pipelines/{id} (Update pipeline)

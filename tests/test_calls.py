@@ -1,117 +1,178 @@
 """
-Test script for the Follow Up Boss Calls API endpoints.
+Test the Calls API.
 """
 
-import os
-import logging
-from datetime import datetime
-import sys
-from dotenv import load_dotenv
+import pytest
+import uuid
+import datetime
 from follow_up_boss_api.client import FollowUpBossApiClient
+from follow_up_boss_api.calls import Calls
+from follow_up_boss_api.people import People
+import os
 
-# Set up logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+@pytest.fixture
+def client():
+    """Create a Follow Up Boss API client for testing."""
+    return FollowUpBossApiClient(
+        api_key=os.getenv("FOLLOW_UP_BOSS_API_KEY"),
+        x_system=os.getenv("X_SYSTEM"),
+        x_system_key=os.getenv("X_SYSTEM_KEY")
+    )
 
-# Load environment variables
-load_dotenv()
+@pytest.fixture
+def calls_api(client):
+    """Create a Calls instance for testing."""
+    return Calls(client)
 
-# Ensure the API key is available
-API_KEY = os.getenv("FOLLOW_UP_BOSS_API_KEY")
-X_SYSTEM = os.getenv("X_SYSTEM")
-X_SYSTEM_KEY = os.getenv("X_SYSTEM_KEY")
+@pytest.fixture
+def people_api(client):
+    """Create a People instance for testing."""
+    return People(client)
 
-if not API_KEY:
-    logger.error("FOLLOW_UP_BOSS_API_KEY not found in environment variables")
-    sys.exit(1)
-
-# Create a client instance
-client = FollowUpBossApiClient(
-    api_key=API_KEY,
-    x_system=X_SYSTEM,
-    x_system_key=X_SYSTEM_KEY
-)
-
-def update_task_file(endpoint: str, success: bool):
-    """Update the task file to mark endpoints as completed."""
-    if not success:
-        return
+def get_test_person_id(people_api):
+    """Create a test person and return their ID."""
+    # Generate unique data to avoid conflicts
+    unique_suffix = uuid.uuid4().hex[:8]
+    email = f"calls_test_person_{unique_suffix}@example.com"
+    first_name = "CallsTest"
+    last_name = f"Person{unique_suffix}"
     
-    try:
-        with open("tasks/endpoint_tasks.md", "r") as f:
-            lines = f.readlines()
-        
-        for i, line in enumerate(lines):
-            if endpoint in line and "[ ]" in line:
-                lines[i] = line.replace("[ ]", "[x]")
-                break
-        
-        with open("tasks/endpoint_tasks.md", "w") as f:
-            f.writelines(lines)
-        
-        logger.info(f"Marked {endpoint} as completed in task file")
-    except Exception as e:
-        logger.error(f"Failed to update task file: {str(e)}")
-
-def test_calls_endpoints():
-    """Test the Calls endpoints of the Follow Up Boss API."""
-    
-    # First, create a test person to associate calls with
-    logger.info("Creating a test person...")
+    # Create the person with a phone number for call testing
     person_data = {
-        "firstName": "Calls",
-        "lastName": "TestPerson",
-        "emails": [{"value": "calls_test@example.com"}],
-        "phones": [{"value": "555-987-6543"}]
+        "firstName": first_name,
+        "lastName": last_name,
+        "emails": [
+            {
+                "value": email,
+                "type": "work"
+            }
+        ],
+        "phones": [
+            {
+                "value": "555-987-6543",
+                "type": "mobile"
+            }
+        ]
     }
-    person = client._post("people", json_data=person_data)
-    logger.info(f"Created test person: {person}")
     
-    if person and isinstance(person, dict) and 'id' in person:
-        person_id = person['id']
-        
-        # Test GET /calls (List calls)
-        logger.info("\nTesting GET /calls...")
-        calls = client._get("calls")
-        logger.info(f"Response: {calls}")
-        update_task_file("GET /v1/calls", True)
-        
-        # Test POST /calls (Create call)
-        logger.info("\nTesting POST /calls...")
-        call_data = {
-            "personId": person_id,
-            "phone": "555-987-6543",
-            "duration": 120,  # 2 minutes
-            "outcome": "Interested",  # Must be one of: Interested, Not Interested, Left Message, No Answer, Busy, Bad Number
-            "isIncoming": False,
-            "note": "Test call via API"
-        }
-        created_call = client._post("calls", json_data=call_data)
-        logger.info(f"Response: {created_call}")
-        
-        if created_call and isinstance(created_call, dict) and 'id' in created_call:
-            update_task_file("POST /v1/calls", True)
-            call_id = created_call['id']
-            
-            # Test GET /calls/{id} (Retrieve call)
-            logger.info(f"\nTesting GET /calls/{call_id}...")
-            call = client._get(f"calls/{call_id}")
-            logger.info(f"Response: {call}")
-            update_task_file("GET /v1/calls/{id}", True)
-            
-            # Test PUT /calls/{id} (Update call)
-            logger.info(f"\nTesting PUT /calls/{call_id}...")
-            update_data = {"note": "Updated test call note"}
-            updated_call = client._put(f"calls/{call_id}", json_data=update_data)
-            logger.info(f"Response: {updated_call}")
-            update_task_file("PUT /v1/calls/{id}", True)
-        
-        # Clean up - delete the test person
-        logger.info(f"\nCleaning up: Deleting test person (ID: {person_id})...")
-        client._delete(f"people/{person_id}")
-        logger.info("Test person deleted")
-    else:
-        logger.error("Failed to create test person. Cannot proceed with calls tests.")
+    response = people_api.create_person(person_data)
+    return response['id'], "555-987-6543"
 
-if __name__ == "__main__":
-    test_calls_endpoints() 
+def create_test_call(calls_api, people_api):
+    """Helper function to create a test call and return its ID."""
+    # Create a test person
+    person_id, phone = get_test_person_id(people_api)
+    
+    # Create call data
+    duration = 120  # 2 minutes in seconds
+    note = f"This is a test call created at {datetime.datetime.now().isoformat()}"
+    
+    # Create the call
+    response = calls_api.create_call(
+        person_id=person_id,
+        phone=phone,
+        duration=duration,
+        outcome="Left Message",
+        is_incoming=False,
+        note=note
+    )
+    
+    return response['id']
+
+def test_list_calls(calls_api):
+    """Test listing calls."""
+    params = {"limit": 5}  # Limit to 5 to keep response size manageable
+    response = calls_api.list_calls(**params)
+    
+    # Debug print
+    print("Response:", response)
+    
+    # Check basic structure of the response
+    assert isinstance(response, dict)
+    assert '_metadata' in response
+    assert 'calls' in response
+    
+    # Check metadata
+    assert 'collection' in response['_metadata']
+    assert response['_metadata']['collection'] == 'calls'
+    
+    # Check calls data (might be empty in test account)
+    assert isinstance(response['calls'], list)
+
+def test_create_call(calls_api, people_api):
+    """Test creating a call for a person."""
+    # Create a test person to associate the call with
+    person_id, phone = get_test_person_id(people_api)
+    
+    # Create call data
+    duration = 120  # 2 minutes in seconds
+    note = f"This is a test call created at {datetime.datetime.now().isoformat()}"
+    
+    # Valid outcomes from error message: "Interested", "Not Interested", "Left Message", "No Answer", "Busy", "Bad Number"
+    response = calls_api.create_call(
+        person_id=person_id,
+        phone=phone,
+        duration=duration,
+        outcome="Left Message",  # Valid call outcome from the API
+        is_incoming=False,       # Outgoing call
+        note=note
+    )
+    
+    # Debug print
+    print(f"Create Call Response:", response)
+    
+    # Check basic structure of the response
+    assert isinstance(response, dict)
+    assert 'id' in response
+    assert 'personId' in response
+    assert 'outcome' in response
+    assert response['personId'] == person_id
+    assert response['outcome'] == "Left Message"
+
+def test_retrieve_call(calls_api, people_api):
+    """Test retrieving a specific call."""
+    # Create a test call to retrieve
+    call_id = create_test_call(calls_api, people_api)
+    
+    # Retrieve the call
+    response = calls_api.retrieve_call(call_id)
+    
+    # Debug print
+    print(f"Retrieve Call {call_id} Response:", response)
+    
+    # Check basic structure of the response
+    assert isinstance(response, dict)
+    assert 'id' in response
+    assert response['id'] == call_id
+    assert 'personId' in response
+    assert 'outcome' in response
+
+def test_update_call(calls_api, people_api):
+    """Test updating a call."""
+    # Create a test call to update
+    call_id = create_test_call(calls_api, people_api)
+    
+    # Get original call to see what we can update
+    original_call = calls_api.retrieve_call(call_id)
+    print(f"Original Call:", original_call)
+    
+    # Update data - change outcome and duration
+    update_data = {
+        "outcome": "Interested",  # Change from "Left Message" to "Interested"
+        "duration": 180           # Change from 120 to 180 seconds
+    }
+    
+    # Update the call
+    response = calls_api.update_call(call_id, update_data)
+    
+    # Debug print
+    print(f"Update Call {call_id} Response:", response)
+    
+    # Check basic structure of the response
+    assert isinstance(response, dict)
+    assert 'id' in response
+    assert response['id'] == call_id
+    assert 'outcome' in response
+    assert 'duration' in response
+    assert response['outcome'] == "Interested"
+    assert response['duration'] == 180 

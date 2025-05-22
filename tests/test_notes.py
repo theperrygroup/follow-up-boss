@@ -1,115 +1,175 @@
 """
-Test script for the Follow Up Boss Notes API endpoints.
+Test the Notes API.
 """
 
-import os
-import logging
-import sys
-from dotenv import load_dotenv
+import pytest
+import uuid
 from follow_up_boss_api.client import FollowUpBossApiClient
+from follow_up_boss_api.notes import Notes
+from follow_up_boss_api.people import People
+import os
 
-# Set up logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+@pytest.fixture
+def client():
+    """Create a Follow Up Boss API client for testing."""
+    return FollowUpBossApiClient(
+        api_key=os.getenv("FOLLOW_UP_BOSS_API_KEY"),
+        x_system=os.getenv("X_SYSTEM"),
+        x_system_key=os.getenv("X_SYSTEM_KEY")
+    )
 
-# Load environment variables
-load_dotenv()
+@pytest.fixture
+def notes_api(client):
+    """Create a Notes instance for testing."""
+    return Notes(client)
 
-# Ensure the API key is available
-API_KEY = os.getenv("FOLLOW_UP_BOSS_API_KEY")
-X_SYSTEM = os.getenv("X_SYSTEM")
-X_SYSTEM_KEY = os.getenv("X_SYSTEM_KEY")
+@pytest.fixture
+def people_api(client):
+    """Create a People instance for testing."""
+    return People(client)
 
-if not API_KEY:
-    logger.error("FOLLOW_UP_BOSS_API_KEY not found in environment variables")
-    sys.exit(1)
-
-# Create a client instance
-client = FollowUpBossApiClient(
-    api_key=API_KEY,
-    x_system=X_SYSTEM,
-    x_system_key=X_SYSTEM_KEY
-)
-
-def test_notes_endpoints():
-    """Test the Notes endpoints of the Follow Up Boss API."""
+def get_test_person_id(people_api):
+    """Create a test person and return their ID."""
+    # Generate unique data to avoid conflicts
+    unique_suffix = uuid.uuid4().hex[:8]
+    email = f"note_test_person_{unique_suffix}@example.com"
+    first_name = "NoteTest"
+    last_name = f"Person{unique_suffix}"
     
-    # First, create a test person to associate notes with
-    logger.info("Creating a test person...")
+    # Create the person
     person_data = {
-        "firstName": "Notes",
-        "lastName": "TestPerson",
-        "emails": [{"value": "notes_test@example.com"}]
+        "firstName": first_name,
+        "lastName": last_name,
+        "emails": [
+            {
+                "value": email,
+                "type": "work"
+            }
+        ]
     }
-    person = client._post("people", json_data=person_data)
-    logger.info(f"Created test person: {person}")
     
-    if person and isinstance(person, dict) and 'id' in person:
-        person_id = person['id']
-        
-        # Test GET /notes (List notes)
-        logger.info("\nTesting GET /notes...")
-        notes = client._get("notes")
-        logger.info(f"Response: {notes}")
-        
-        # Test POST /notes (Create note)
-        logger.info("\nTesting POST /notes...")
-        note_data = {
-            "personId": person_id, 
-            "subject": "Test Note",
-            "body": "This is a test note"
-        }
-        created_note = client._post("notes", json_data=note_data)
-        logger.info(f"Response: {created_note}")
-        
-        if created_note and isinstance(created_note, dict) and 'id' in created_note:
-            note_id = created_note['id']
-            
-            # Test GET /notes/{id} (Retrieve note)
-            logger.info(f"\nTesting GET /notes/{note_id}...")
-            note = client._get(f"notes/{note_id}")
-            logger.info(f"Response: {note}")
-            
-            # Test PUT /notes/{id} (Update note)
-            logger.info(f"\nTesting PUT /notes/{note_id}...")
-            update_data = {"body": "This is an updated test note"}
-            updated_note = client._put(f"notes/{note_id}", json_data=update_data)
-            logger.info(f"Response: {updated_note}")
-            
-            # Test DELETE /notes/{id} (Delete note)
-            logger.info(f"\nTesting DELETE /notes/{note_id}...")
-            deleted = client._delete(f"notes/{note_id}")
-            logger.info(f"Response: {deleted}")
-            
-            # Update the endpoint tasks file if all operations were successful
-            try:
-                with open("tasks/endpoint_tasks.md", "r") as f:
-                    lines = f.readlines()
-                
-                # Update lines for notes endpoints
-                for i, line in enumerate(lines):
-                    if "POST /v1/notes" in line and "[ ]" in line:
-                        lines[i] = line.replace("[ ]", "[x]")
-                    elif "GET /v1/notes/{id}" in line and "[ ]" in line:
-                        lines[i] = line.replace("[ ]", "[x]")
-                    elif "PUT /v1/notes/{id}" in line and "[ ]" in line:
-                        lines[i] = line.replace("[ ]", "[x]")
-                    elif "DELETE /v1/notes/{id}" in line and "[ ]" in line:
-                        lines[i] = line.replace("[ ]", "[x]")
-                
-                with open("tasks/endpoint_tasks.md", "w") as f:
-                    f.writelines(lines)
-                
-                logger.info("Updated the endpoint tasks file for notes endpoints")
-            except Exception as e:
-                logger.error(f"Failed to update task file: {str(e)}")
-        
-        # Clean up - delete the test person
-        logger.info(f"\nCleaning up: Deleting test person (ID: {person_id})...")
-        client._delete(f"people/{person_id}")
-        logger.info("Test person deleted")
-    else:
-        logger.error("Failed to create test person. Cannot proceed with notes tests.")
+    response = people_api.create_person(person_data)
+    return response['id']
 
-if __name__ == "__main__":
-    test_notes_endpoints() 
+def create_test_note(notes_api, people_api):
+    """Helper function to create a test note and return its ID."""
+    # Create a test person to associate the note with
+    person_id = get_test_person_id(people_api)
+    
+    # Generate unique content for the note
+    subject = f"Test Note {uuid.uuid4().hex[:6]}"
+    body = f"This is a test note created at {uuid.uuid4().hex}"
+    
+    # Create the note
+    response = notes_api.create_note(person_id, subject, body)
+    return response['id'], subject, body
+
+def test_list_notes(notes_api):
+    """Test listing notes."""
+    params = {"limit": 5}  # Limit to 5 to keep response size manageable
+    response = notes_api.list_notes(params=params)
+    
+    # Debug print
+    print("Response:", response)
+    
+    # Check basic structure of the response
+    assert isinstance(response, dict)
+    assert '_metadata' in response
+    assert 'notes' in response
+    
+    # Check metadata
+    assert 'collection' in response['_metadata']
+    assert response['_metadata']['collection'] == 'notes'
+    
+    # Check notes data
+    assert isinstance(response['notes'], list)
+
+def test_create_note(notes_api, people_api):
+    """Test creating a note for a person."""
+    # Create a test person to associate the note with
+    person_id = get_test_person_id(people_api)
+    
+    # Generate unique content for the note
+    subject = f"Test Note {uuid.uuid4().hex[:6]}"
+    body = f"This is a test note created at {uuid.uuid4().hex}"
+    
+    # Create the note
+    response = notes_api.create_note(person_id, subject, body)
+    
+    # Debug print
+    print(f"Create Note Response:", response)
+    
+    # Check basic structure of the response
+    assert isinstance(response, dict)
+    assert 'id' in response
+    assert 'subject' in response
+    assert 'body' in response
+    assert 'personId' in response
+    assert response['subject'] == subject
+    assert response['body'] == body
+    assert response['personId'] == person_id
+
+def test_retrieve_note(notes_api, people_api):
+    """Test retrieving a specific note."""
+    # Create a test note to retrieve
+    note_id, subject, body = create_test_note(notes_api, people_api)
+    
+    # Retrieve the note
+    response = notes_api.retrieve_note(note_id)
+    
+    # Debug print
+    print(f"Retrieve Note {note_id} Response:", response)
+    
+    # Check basic structure of the response
+    assert isinstance(response, dict)
+    assert 'id' in response
+    assert response['id'] == note_id
+    assert 'subject' in response
+    assert response['subject'] == subject
+    assert 'body' in response
+    assert response['body'] == body
+
+def test_update_note(notes_api, people_api):
+    """Test updating a note."""
+    # Create a test note to update
+    note_id, _, _ = create_test_note(notes_api, people_api)
+    
+    # Generate new content for the update
+    new_subject = f"Updated Note {uuid.uuid4().hex[:6]}"
+    new_body = f"This note was updated at {uuid.uuid4().hex}"
+    
+    # Update the note
+    response = notes_api.update_note(note_id, subject=new_subject, body=new_body)
+    
+    # Debug print
+    print(f"Update Note {note_id} Response:", response)
+    
+    # Check basic structure of the response
+    assert isinstance(response, dict)
+    assert 'id' in response
+    assert response['id'] == note_id
+    assert 'subject' in response
+    assert response['subject'] == new_subject
+    assert 'body' in response
+    assert response['body'] == new_body
+
+def test_delete_note(notes_api, people_api):
+    """Test deleting a note."""
+    # Create a test note to delete
+    note_id, _, _ = create_test_note(notes_api, people_api)
+    
+    # Delete the note
+    response = notes_api.delete_note(note_id)
+    
+    # Debug print
+    print(f"Delete Note {note_id} Response:", response)
+    
+    # For successful deletion, the response is typically empty (or a success message)
+    # The key test is that we don't get an error
+    
+    # Try to retrieve the deleted note - should fail
+    with pytest.raises(Exception) as excinfo:
+        notes_api.retrieve_note(note_id)
+    
+    # Debug print
+    print(f"Attempting to retrieve deleted note exception:", excinfo.value) 
