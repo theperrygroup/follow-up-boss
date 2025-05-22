@@ -15,6 +15,8 @@ from .people import People
 from .users import Users
 from .appointment_types import AppointmentTypes
 from .people_relationships import PeopleRelationships
+from .events import Events
+from .action_plans import ActionPlans
 
 __all__ = [
     "FollowUpBossApiClient",
@@ -25,6 +27,8 @@ __all__ = [
     "Users",
     "AppointmentTypes",
     "PeopleRelationships",
+    "Events",
+    "ActionPlans",
 ]
 
 # Example of how one might initialize the client, though this might be better done in application code:

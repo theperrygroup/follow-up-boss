@@ -1,3 +1,4 @@
 pytest
 pytest-cov
-
+urllib3
+types-requests
