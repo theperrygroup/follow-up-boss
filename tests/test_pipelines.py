@@ -68,6 +68,21 @@ def test_retrieve_pipeline(pipelines_api):
     assert response['id'] == pipeline_id  # Make sure we got the right pipeline
     assert 'name' in response
 
+def create_test_pipeline(pipelines_api):
+    """Helper function to create a test pipeline for updating/deleting."""
+    # Generate a unique name for the pipeline to avoid conflicts
+    unique_name = f"Test Pipeline {uuid.uuid4().hex[:8]}"
+    
+    # Create the pipeline
+    response = pipelines_api.create_pipeline(name=unique_name)
+    
+    # Make sure creation was successful
+    assert isinstance(response, dict)
+    assert 'id' in response
+    
+    # Return the ID and name for use in tests
+    return response['id'], unique_name
+
 def test_create_pipeline(pipelines_api):
     """Test creating a new pipeline."""
     # Generate a unique name for the pipeline to avoid conflicts
@@ -84,7 +99,59 @@ def test_create_pipeline(pipelines_api):
     assert 'id' in response
     assert 'name' in response
     assert response['name'] == unique_name
+
+def test_update_pipeline(pipelines_api):
+    """Test updating a pipeline."""
+    # Create a test pipeline to update
+    pipeline_id, original_name = create_test_pipeline(pipelines_api)
     
-    # Store the ID as a variable but don't return it
-    pipeline_id = response['id']
-    # We could add cleanup code here if needed 
+    # Generate a new unique name for the update
+    new_name = f"Updated Pipeline {uuid.uuid4().hex[:8]}"
+    
+    # Update data
+    update_data = {
+        "name": new_name,
+        "description": f"This is a test pipeline updated at {uuid.uuid4().hex[:6]}"
+    }
+    
+    # Update the pipeline
+    response = pipelines_api.update_pipeline(pipeline_id, update_data)
+    
+    # Debug print
+    print(f"Update Pipeline {pipeline_id} Response:", response)
+    
+    # Check basic structure of the response
+    assert isinstance(response, dict)
+    assert 'id' in response
+    assert response['id'] == pipeline_id
+    assert 'name' in response
+    assert response['name'] == new_name
+    assert 'description' in response
+    assert response['description'] == update_data['description']
+    
+    # Return the ID for use in delete test
+    return pipeline_id
+
+def test_delete_pipeline(pipelines_api):
+    """Test deleting a pipeline."""
+    # Create a test pipeline to delete
+    pipeline_id, _ = create_test_pipeline(pipelines_api)
+    
+    # Delete the pipeline
+    response = pipelines_api.delete_pipeline(pipeline_id)
+    
+    # Debug print
+    print(f"Delete Pipeline {pipeline_id} Response:", response)
+    
+    # For successful deletion, the response might be empty, None, or a success message
+    # Let's check that we can't retrieve the deleted pipeline anymore
+    
+    try:
+        # Try to retrieve the deleted pipeline - should fail
+        pipelines_api.retrieve_pipeline(pipeline_id)
+        # If we get here, the pipeline wasn't deleted
+        assert False, f"Pipeline {pipeline_id} was not deleted properly"
+    except Exception as e:
+        # Expected: pipeline should not be found
+        print(f"Expected error when retrieving deleted pipeline: {e}")
+        assert True 

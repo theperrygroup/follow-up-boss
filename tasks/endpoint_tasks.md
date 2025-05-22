@@ -10,8 +10,8 @@
 - [x] POST /v1/people (Create person)
 - [x] GET /v1/people/{id} (Retrieve person)
 - [x] PUT /v1/people/{id} (Update person)
-- [ ] DELETE /v1/people/{id} (Delete person)
-- [ ] GET /v1/people/checkDuplicate (Check for duplicate people)
+- [x] DELETE /v1/people/{id} (Delete person)
+- [x] GET /v1/people/checkDuplicate (Check for duplicate people)
 - [ ] GET /v1/people/unclaimed (List unclaimed people)
 - [ ] POST /v1/people/claim (Claim an unclaimed person)
 - [ ] POST /v1/people/ignoreUnclaimed (Ignore an unclaimed person)
@@ -47,7 +47,7 @@
 
 ## Text Messages
 - [x] GET /v1/textMessages (List text messages)
-- [ ] POST /v1/textMessages (Create text message)
+- [x] POST /v1/textMessages (Create text message)
 - [x] GET /v1/textMessages/{id} (Retrieve text message)
 
 ## Users
@@ -145,8 +145,8 @@
 - [x] GET /v1/pipelines (List pipelines)
 - [x] POST /v1/pipelines (Create pipeline) # Tested: Works.
 - [x] GET /v1/pipelines/{id} (Retrieve pipeline)
-- [ ] PUT /v1/pipelines/{id} (Update pipeline)
-- [ ] DELETE /v1/pipelines/{id} (Delete pipeline)
+- [x] PUT /v1/pipelines/{id} (Update pipeline)
+- [x] DELETE /v1/pipelines/{id} (Delete pipeline)
 
 ## Deals
 - [ ] GET /v1/deals (List deals)

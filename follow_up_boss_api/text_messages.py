@@ -61,9 +61,11 @@ class TextMessages:
         self,
         person_id: int,
         message: str,
+        to_number: str,  # Added: Phone number the message is sent to
         # FUB User ID or FUB Number ID from which the message is sent or to which it is received
+        from_number: Optional[str] = None,  # Added: Number message is sent from
         contact_id: Optional[Union[int, str]] = None, 
-        direction: Optional[str] = "Outgoing", # Or "Incoming"
+        is_incoming: Optional[bool] = False,
         # status: Optional[str] = None, # e.g., "Sent", "Delivered", "Failed"
         # sent_at: Optional[str] = None, # ISO 8601, defaults to now if not set
         **kwargs: Any
@@ -75,9 +77,12 @@ class TextMessages:
         Args:
             person_id: The ID of the person associated with the text message.
             message: The content of the text message.
+            to_number: The phone number the message is sent to.
+            from_number: Optional. The phone number the message is sent from.
             contact_id: Optional. The ID of the FUB user or FUB phone number associated with sending/receiving.
                         This might be called `userId` or `fubNumberId` by the API.
-            direction: "Outgoing" or "Incoming". Defaults to "Outgoing".
+            is_incoming: Boolean indicating if message is incoming (True) or outgoing (False). 
+                        Defaults to False (outgoing).
             **kwargs: Additional fields for the text message payload.
 
         Returns:
@@ -86,8 +91,11 @@ class TextMessages:
         payload: Dict[str, Any] = {
             "personId": person_id,
             "message": message,
-            "direction": direction
+            "isIncoming": is_incoming,
+            "toNumber": to_number
         }
+        if from_number is not None:
+            payload["fromNumber"] = from_number
         if contact_id is not None:
             # The actual field name might be specific, e.g., "userId", "fubContactId"
             payload["contactId"] = contact_id 
