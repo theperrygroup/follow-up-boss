@@ -1,9 +1,9 @@
 # Follow Up Boss API Endpoints
 
 ## Events
-- [ ] GET /v1/events (List events)
-- [ ] POST /v1/events (Create event)
-- [ ] GET /v1/events/{id} (Retrieve event)
+- [x] GET /v1/events (List events)
+- [x] POST /v1/events (Create event)
+- [x] GET /v1/events/{id} (Retrieve event)
 
 ## People
 - [x] GET /v1/people (List people)
@@ -12,9 +12,9 @@
 - [x] PUT /v1/people/{id} (Update person)
 - [x] DELETE /v1/people/{id} (Delete person)
 - [x] GET /v1/people/checkDuplicate (Check for duplicate people)
-- [ ] GET /v1/people/unclaimed (List unclaimed people)
-- [ ] POST /v1/people/claim (Claim an unclaimed person)
-- [ ] POST /v1/people/ignoreUnclaimed (Ignore an unclaimed person)
+- [x] GET /v1/people/unclaimed (List unclaimed people)
+- [x] POST /v1/people/claim (Claim an unclaimed person)
+- [x] POST /v1/people/ignoreUnclaimed (Ignore an unclaimed person)
 
 ## Person Attachments
 - [ ] POST /v1/personAttachments (Add attachment to person) # BLOCKED: API Key Permissions (Confirmed 403 Forbidden: "You do not have access to this API endpoint.")
@@ -61,10 +61,10 @@
 - [x] GET /v1/smartLists/{id} (Retrieve Smart List)
 
 ## Action Plans
-- [ ] GET /v1/actionPlans (List action plans)
-- [ ] GET /v1/actionPlansPeople (List people in action plans)
-- [ ] POST /v1/actionPlansPeople (Add person to action plan)
-- [ ] PUT /v1/actionPlansPeople/{id} (Update person in action plan)
+- [x] GET /v1/actionPlans (List action plans)
+- [x] GET /v1/actionPlansPeople (List people in action plans)
+- [x] POST /v1/actionPlansPeople (Add person to action plan)
+- [x] PUT /v1/actionPlansPeople/{id} (Update person in action plan)
 
 ## Email Templates
 - [ ] GET /v1/templates (List email templates)
