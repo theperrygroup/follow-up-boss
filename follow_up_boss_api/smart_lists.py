@@ -4,7 +4,7 @@ API bindings for Follow Up Boss Smart Lists endpoints.
 
 from typing import Any, Dict, Optional
 
-from .api_client import ApiClient
+from .client import FollowUpBossApiClient
 import logging
 
 logger = logging.getLogger(__name__)
@@ -14,14 +14,14 @@ class SmartLists:
     Provides access to the Smart Lists endpoints of the Follow Up Boss API.
     """
 
-    def __init__(self, client: ApiClient):
+    def __init__(self, client: FollowUpBossApiClient):
         """
         Initializes the SmartLists resource.
 
         Args:
-            client: An instance of the ApiClient.
+            client: An instance of the FollowUpBossApiClient.
         """
-        self._client = client
+        self.client = client
 
     def list_smart_lists(
         self,
@@ -52,7 +52,7 @@ class SmartLists:
             params["sort"] = sort
         params.update(kwargs)
         
-        return self._client.get("/smartLists", params=params)
+        return self.client._get("smartLists", params=params)
 
     def retrieve_smart_list(self, smart_list_id: int) -> Dict[str, Any]:
         """
@@ -64,6 +64,6 @@ class SmartLists:
         Returns:
             A dictionary containing the details of the Smart List.
         """
-        return self._client.get(f"/smartLists/{smart_list_id}")
+        return self.client._get(f"smartLists/{smart_list_id}")
 
     # GET /smartLists/{id} (Retrieve Smart List) 

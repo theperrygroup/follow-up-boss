@@ -4,7 +4,7 @@ API bindings for Follow Up Boss Team Inboxes endpoints.
 
 from typing import Any, Dict, Optional
 
-from .api_client import ApiClient
+from .client import FollowUpBossApiClient
 import logging
 
 logger = logging.getLogger(__name__)
@@ -14,14 +14,14 @@ class TeamInboxes:
     Provides access to the Team Inboxes endpoints of the Follow Up Boss API.
     """
 
-    def __init__(self, client: ApiClient):
+    def __init__(self, client: FollowUpBossApiClient):
         """
         Initializes the TeamInboxes resource.
 
         Args:
-            client: An instance of the ApiClient.
+            client: An instance of the FollowUpBossApiClient.
         """
-        self._client = client
+        self.client = client
 
     def list_team_inboxes(
         self,
@@ -52,4 +52,4 @@ class TeamInboxes:
             params["sort"] = sort
         params.update(kwargs)
         
-        return self._client.get("/teamInboxes", params=params) 
+        return self.client._get("teamInboxes", params=params) 

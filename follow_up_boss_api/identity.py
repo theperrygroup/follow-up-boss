@@ -4,7 +4,7 @@ API bindings for Follow Up Boss Identity endpoint.
 
 from typing import Any, Dict
 
-from .api_client import ApiClient
+from .client import FollowUpBossApiClient
 import logging
 
 logger = logging.getLogger(__name__)
@@ -15,14 +15,14 @@ class Identity:
     This typically returns information about the authenticated API key and account.
     """
 
-    def __init__(self, client: ApiClient):
+    def __init__(self, client: FollowUpBossApiClient):
         """
         Initializes the Identity resource.
 
         Args:
-            client: An instance of the ApiClient.
+            client: An instance of the FollowUpBossApiClient.
         """
-        self._client = client
+        self.client = client
 
     def get_identity(self) -> Dict[str, Any]: 
         """
@@ -31,4 +31,4 @@ class Identity:
         Returns:
             A dictionary containing identity information.
         """
-        return self._client.get("/identity") 
+        return self.client._get("identity") 

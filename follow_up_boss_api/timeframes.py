@@ -4,7 +4,7 @@ API bindings for Follow Up Boss Timeframes endpoint.
 
 from typing import Any, Dict, Optional
 
-from .api_client import ApiClient
+from .client import FollowUpBossApiClient
 import logging
 
 logger = logging.getLogger(__name__)
@@ -15,14 +15,14 @@ class Timeframes:
     This endpoint likely lists predefined timeframes used in reporting or filtering.
     """
 
-    def __init__(self, client: ApiClient):
+    def __init__(self, client: FollowUpBossApiClient):
         """
         Initializes the Timeframes resource.
 
         Args:
-            client: An instance of the ApiClient.
+            client: An instance of the FollowUpBossApiClient.
         """
-        self._client = client
+        self.client = client
 
     def list_timeframes(self, **kwargs: Any) -> Dict[str, Any]: 
         """
@@ -37,4 +37,4 @@ class Timeframes:
         params: Dict[str, Any] = {}
         params.update(kwargs)
         
-        return self._client.get("/timeframes", params=params) 
+        return self.client._get("timeframes", params=params) 

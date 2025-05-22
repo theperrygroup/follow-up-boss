@@ -4,7 +4,7 @@ API bindings for Follow Up Boss Text Messages endpoints.
 
 from typing import Any, Dict, Optional, Union
 
-from .api_client import ApiClient
+from .client import FollowUpBossApiClient
 import logging
 
 logger = logging.getLogger(__name__)
@@ -14,14 +14,14 @@ class TextMessages:
     Provides access to the TextMessages endpoints of the Follow Up Boss API.
     """
 
-    def __init__(self, client: ApiClient):
+    def __init__(self, client: FollowUpBossApiClient):
         """
         Initializes the TextMessages resource.
 
         Args:
-            client: An instance of the ApiClient.
+            client: An instance of the FollowUpBossApiClient.
         """
-        self._client = client
+        self.client = client
 
     def list_text_messages(
         self,
@@ -55,7 +55,7 @@ class TextMessages:
             params["sort"] = sort
         params.update(kwargs)
         
-        return self._client.get("/textMessages", params=params)
+        return self.client._get("textMessages", params=params)
 
     def create_text_message(
         self,
@@ -94,7 +94,7 @@ class TextMessages:
         
         payload.update(kwargs)
         
-        return self._client.post("/textMessages", json_data=payload)
+        return self.client._post("textMessages", json_data=payload)
 
     def retrieve_text_message(self, text_message_id: int) -> Dict[str, Any]:
         """
@@ -106,6 +106,6 @@ class TextMessages:
         Returns:
             A dictionary containing the details of the text message log.
         """
-        return self._client.get(f"/textMessages/{text_message_id}")
+        return self.client._get(f"textMessages/{text_message_id}")
 
     # GET /textMessages/{id} (Retrieve text message) 

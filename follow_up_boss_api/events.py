@@ -5,7 +5,7 @@ Events are activities related to people, such as website visits, inquiries, etc.
 
 from typing import Any, Dict, Optional, List, Union
 
-from .api_client import ApiClient
+from .client import FollowUpBossApiClient
 import logging
 
 logger = logging.getLogger(__name__)
@@ -15,14 +15,14 @@ class Events:
     Provides access to the Events endpoints of the Follow Up Boss API.
     """
 
-    def __init__(self, client: ApiClient):
+    def __init__(self, client: FollowUpBossApiClient):
         """
         Initializes the Events resource.
 
         Args:
-            client: An instance of the ApiClient.
+            client: An instance of the FollowUpBossApiClient.
         """
-        self._client = client
+        self.client = client
 
     def list_events(
         self,
@@ -64,11 +64,12 @@ class Events:
             params["sort"] = sort
         params.update(kwargs)
         
-        return self._client.get("/events", params=params)
+        return self.client._get("events", params=params)
 
     def create_event(
         self,
-        type: str, 
+        type: Optional[str] = None, 
+        person: Optional[Dict[str, Any]] = None,
         person_id: Optional[int] = None,
         first_name: Optional[str] = None,
         last_name: Optional[str] = None,
@@ -95,6 +96,7 @@ class Events:
         Creates an event. This endpoint is versatile and can also create/update people.
         Args:
             type: The type of event.
+            person: Optional. Dict containing person data directly.
             person_id: Optional. ID of an existing person to associate the event with.
             first_name, last_name, email, phone: Optional. Person details if creating/updating a person.
             source: Optional. Source of the event/lead.
@@ -106,19 +108,33 @@ class Events:
             **kwargs: Allows for additional top-level fields or nested objects like 'customFields', 'tags'.
         Returns:
             A dictionary, typically representing the person associated with the event.
+        
+        Raises:
+            ValueError: If no person information is provided.
         """
-        payload: Dict[str, Any] = {"type": type}
-        person_data: Dict[str, Any] = {}
-        if person_id is not None: person_data["id"] = person_id
-        if first_name is not None: person_data["firstName"] = first_name
-        if last_name is not None: person_data["lastName"] = last_name
-        if email is not None: 
-            if "emails" not in person_data: person_data["emails"] = []
-            person_data["emails"].append({"value": email, "type": "unknown"})
-        if phone is not None:
-            if "phones" not in person_data: person_data["phones"] = []
-            person_data["phones"].append({"value": phone, "type": "unknown"})
-        if person_data: payload["person"] = person_data
+        payload: Dict[str, Any] = {}
+        if type is not None:
+            payload["type"] = type
+
+        # Handle the case where person dict is passed directly
+        if person is not None:
+            payload["person"] = person
+        else:
+            person_data: Dict[str, Any] = {}
+            if person_id is not None: person_data["id"] = person_id
+            if first_name is not None: person_data["firstName"] = first_name
+            if last_name is not None: person_data["lastName"] = last_name
+            if email is not None: 
+                if "emails" not in person_data: person_data["emails"] = []
+                person_data["emails"].append({"value": email, "type": "unknown"})
+            if phone is not None:
+                if "phones" not in person_data: person_data["phones"] = []
+                person_data["phones"].append({"value": phone, "type": "unknown"})
+            if person_data: payload["person"] = person_data
+
+        # Validate that person information is provided
+        if "person" not in payload:
+            raise ValueError("Person information must be provided when creating an event.")
         
         if source is not None: payload["source"] = source
         if source_url is not None: payload["sourceUrl"] = source_url
@@ -146,7 +162,12 @@ class Events:
             payload["campaign"] = campaign_data
             
         payload.update(kwargs)
-        return self._client.post("/events", json_data=payload)
+        
+        response = self.client._post("events", json_data=payload)
+        if isinstance(response, dict):
+            return response
+        # If response is not JSON, return it as a dict
+        return {"message": response} if isinstance(response, str) else {}
 
     def retrieve_event(self, event_id: Union[int, str]) -> Dict[str, Any]:
         """
@@ -158,6 +179,10 @@ class Events:
         Returns:
             A dictionary containing the details of the event.
         """
-        return self._client.get(f"/events/{event_id}")
-
-    # GET /events/{id} (Retrieve event)
+        response = self.client._get(f"events/{event_id}")
+        if isinstance(response, dict):
+            return response
+        else:
+            # If response is not a dict, log warning and return empty dict
+            logger.warning(f"Unexpected response type from retrieve_event: {type(response)}")
+            return {}

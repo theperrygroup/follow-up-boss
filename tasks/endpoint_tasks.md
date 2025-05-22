@@ -1,8 +1,8 @@
 # Follow Up Boss API Endpoints
 
 ## Events
-- [x] GET /v1/events (List events)
-- [x] POST /v1/events (Create event)
+- [ ] GET /v1/events (List events)
+- [ ] POST /v1/events (Create event)
 - [ ] GET /v1/events/{id} (Retrieve event)
 
 ## People
@@ -10,9 +10,9 @@
 - [x] POST /v1/people (Create person)
 - [x] GET /v1/people/{id} (Retrieve person)
 - [x] PUT /v1/people/{id} (Update person)
-- [x] DELETE /v1/people/{id} (Delete person)
-- [x] GET /v1/people/checkDuplicate (Check for duplicate people)
-- [x] GET /v1/people/unclaimed (List unclaimed people)
+- [ ] DELETE /v1/people/{id} (Delete person)
+- [ ] GET /v1/people/checkDuplicate (Check for duplicate people)
+- [ ] GET /v1/people/unclaimed (List unclaimed people)
 - [ ] POST /v1/people/claim (Claim an unclaimed person)
 - [ ] POST /v1/people/ignoreUnclaimed (Ignore an unclaimed person)
 
@@ -23,7 +23,7 @@
 - [ ] DELETE /v1/personAttachments/{id} (Delete person attachment) # BLOCKED: Prerequisite (POST) fails due to API Key Permissions.
 
 ## People Relationships
-- [ ] GET /v1/peopleRelationships (List people relationships) # Tested: Works (returns empty list on test account).
+- [x] GET /v1/peopleRelationships (List people relationships) # Tested: Works (returns empty list on test account).
 - [ ] POST /v1/peopleRelationships (Create people relationship) # BLOCKED: Payload structure unconfirmed; API returns 400 "Invalid fields in the request body: X" where X has included relatedPersonId, relatedId, person2Id, contactId, relatedPerson object. `personId` and `type` fields seem to be accepted.
 - [ ] GET /v1/peopleRelationships/{id} (Retrieve people relationship) # BLOCKED: Prerequisite (POST) fails.
 - [ ] PUT /v1/peopleRelationships/{id} (Update people relationship) # BLOCKED: Prerequisite (POST) fails.
@@ -46,7 +46,7 @@
 - [x] PUT /v1/calls/{id} (Update call)
 
 ## Text Messages
-- [ ] GET /v1/textMessages (List text messages)
+- [x] GET /v1/textMessages (List text messages)
 - [ ] POST /v1/textMessages (Create text message)
 - [ ] GET /v1/textMessages/{id} (Retrieve text message)
 
@@ -57,8 +57,8 @@
 - [x] GET /v1/me (Get current user)
 
 ## Smart Lists
-- [ ] GET /v1/smartLists (List Smart Lists)
-- [ ] GET /v1/smartLists/{id} (Retrieve Smart List)
+- [x] GET /v1/smartLists (List Smart Lists)
+- [x] GET /v1/smartLists/{id} (Retrieve Smart List)
 
 ## Action Plans
 - [ ] GET /v1/actionPlans (List action plans)
@@ -101,7 +101,7 @@
 - [ ] POST /v1/stages (Create stage) # Tested: Accepts pipelineId in payload with X-System headers, but created stage may not be correctly recognized by Deal creation.
 - [ ] GET /v1/stages/{id} (Retrieve stage)
 - [ ] PUT /v1/stages/{id} (Update stage)
-- [ ] DELETE /v1/stages/{id} (Delete stage) # BLOCKED: Requires `assignStageId` in payload, not yet implemented in test/wrapper.
+- [ ] DELETE /v1/stages/{id} (Delete stage)
 
 ## Tasks
 - [ ] GET /v1/tasks (List tasks)
@@ -139,12 +139,12 @@
 - [ ] DELETE /v1/webhooks/{id} (Delete webhook)
 
 ## Webhook Events
-- [ ] GET /v1/webhookEvents/{id} (Retrieve webhook event) # Tested: Wrapper works (404 for dummy ID as expected).
+- [x] GET /v1/webhookEvents/{id} (Retrieve webhook event) # Tested: Wrapper works (404 for dummy ID as expected).
 
 ## Pipelines
-- [ ] GET /v1/pipelines (List pipelines)
-- [ ] POST /v1/pipelines (Create pipeline) # Tested: Works.
-- [ ] GET /v1/pipelines/{id} (Retrieve pipeline)
+- [x] GET /v1/pipelines (List pipelines)
+- [x] POST /v1/pipelines (Create pipeline) # Tested: Works.
+- [x] GET /v1/pipelines/{id} (Retrieve pipeline)
 - [ ] PUT /v1/pipelines/{id} (Update pipeline)
 - [ ] DELETE /v1/pipelines/{id} (Delete pipeline)
 
@@ -184,7 +184,7 @@
 - [ ] DELETE /v1/teams/{id} (Delete team)
 
 ## Team Inboxes
-- [ ] GET /v1/teamInboxes (List team inboxes)
+- [x] GET /v1/teamInboxes (List team inboxes)
 
 ## Ponds
 - [ ] GET /v1/ponds (List ponds)
@@ -210,7 +210,7 @@
 - [ ] DELETE /v1/reactions/{refType}/{refId} (Delete reaction) # Tested: Works (payload {"body": emoji}, not {"emoji": emoji}).
 
 ## Threaded Replies
-- [ ] GET /v1/threadedReplies/{id} (Retrieve threaded reply) # Tested: Wrapper works (404 for dummy ID as expected).
+- [x] GET /v1/threadedReplies/{id} (Retrieve threaded reply) # Tested: Wrapper works (404 for dummy ID as expected).
 
 ## Timeframes
-- [ ] GET /v1/timeframes (List timeframes) 
+- [x] GET /v1/timeframes (List timeframes) 

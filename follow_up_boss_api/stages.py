@@ -103,18 +103,27 @@ class Stages:
         """
         return self._client.put(f"/stages/{stage_id}", json_data=update_data)
 
-    def delete_stage(self, stage_id: int) -> Dict[str, Any]:
+    def delete_stage(self, stage_id: int, assign_stage_id: Optional[int] = None) -> Dict[str, Any]:
         """
         Deletes a specific stage by its ID.
 
         Args:
             stage_id: The ID of the stage to delete.
+            assign_stage_id: Optional. The ID of the stage to which people in the deleted stage 
+                             should be reassigned. Required by the Follow Up Boss API.
 
         Returns:
             An empty dictionary if successful (API returns 204 No Content),
             or a dictionary with an error message if it fails.
+            
+        Raises:
+            ValueError: If assign_stage_id is not provided, as it's required by the API.
         """
-        return self._client.delete(f"/stages/{stage_id}")
+        if assign_stage_id is None:
+            raise ValueError("assign_stage_id is required when deleting a stage.")
+            
+        payload = {"assignStageId": assign_stage_id}
+        return self._client.delete(f"/stages/{stage_id}", json_data=payload)
 
     # GET /stages/{id} (Retrieve stage)
     # PUT /stages/{id} (Update stage)
