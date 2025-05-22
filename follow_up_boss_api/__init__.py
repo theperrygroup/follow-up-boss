@@ -20,6 +20,7 @@ from .action_plans import ActionPlans
 from .email_templates import EmailTemplates
 from .text_message_templates import TextMessageTemplates
 from .custom_fields import CustomFields
+from .tasks import Tasks
 
 __all__ = [
     "FollowUpBossApiClient",
@@ -35,6 +36,7 @@ __all__ = [
     "EmailTemplates",
     "TextMessageTemplates",
     "CustomFields",
+    "Tasks",
 ]
 
 # Example of how one might initialize the client, though this might be better done in application code:

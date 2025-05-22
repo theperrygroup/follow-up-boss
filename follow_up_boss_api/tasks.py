@@ -2,9 +2,9 @@
 API bindings for Follow Up Boss Tasks endpoints.
 """
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union
 
-from .api_client import ApiClient
+from .client import FollowUpBossApiClient
 import logging
 
 logger = logging.getLogger(__name__)
@@ -14,14 +14,14 @@ class Tasks:
     Provides access to the Tasks endpoints of the Follow Up Boss API.
     """
 
-    def __init__(self, client: ApiClient):
+    def __init__(self, client: FollowUpBossApiClient):
         """
         Initializes the Tasks resource.
 
         Args:
-            client: An instance of the ApiClient.
+            client: An instance of the FollowUpBossApiClient.
         """
-        self._client = client
+        self.client = client
 
     def list_tasks(
         self,
@@ -34,7 +34,7 @@ class Tasks:
         offset: Optional[int] = None,
         sort: Optional[str] = None,
         **kwargs: Any
-    ) -> Dict[str, Any]: 
+    ) -> Union[Dict[str, Any], str]: 
         """
         Retrieves a list of tasks.
 
@@ -71,7 +71,7 @@ class Tasks:
             params["sort"] = sort
         params.update(kwargs)
         
-        return self._client.get("/tasks", params=params)
+        return self.client._get("tasks", params=params)
 
     def create_task(
         self,
@@ -79,27 +79,42 @@ class Tasks:
         person_id: Optional[int] = None,
         assigned_to: Optional[int] = None, # This will be mapped to assigneeId
         due_date: Optional[str] = None, 
-        details: Optional[str] = None, # This will be mapped to description
+        details: Optional[str] = None, 
         **kwargs: Any
-    ) -> Dict[str, Any]:
+    ) -> Union[Dict[str, Any], str]:
         """
         Creates a new task.
+
+        Args:
+            name: The name/title of the task.
+            person_id: Optional. The ID of the person associated with this task.
+            assigned_to: Optional. User ID the task is assigned to.
+            due_date: Optional. The due date for the task in ISO 8601 format (YYYY-MM-DD).
+            details: Optional. Additional details or description for the task.
+            **kwargs: Additional fields for the task payload.
+
+        Returns:
+            A dictionary containing the details of the newly created task.
         """
         payload: Dict[str, Any] = {"name": name}
         if person_id is not None: 
             payload["personId"] = person_id
         if assigned_to is not None: 
-            payload["assigneeId"] = assigned_to # Try assigneeId
+            payload["assigneeId"] = assigned_to 
         if due_date is not None: 
             payload["dueDate"] = due_date
         if details is not None: 
-            payload["description"] = details # Try description
+            payload["notes"] = details  # Changed from description to notes based on API error
+        
+        # Remove any unexpected fields that might cause issues
+        if "description" in kwargs:
+            kwargs.pop("description")
         
         payload.update(kwargs)
         logger.debug(f"TASKS.CREATE_TASK: Final payload for POST /tasks: {payload}")
-        return self._client.post("/tasks", json_data=payload)
+        return self.client._post("tasks", json_data=payload)
 
-    def retrieve_task(self, task_id: int) -> Dict[str, Any]:
+    def retrieve_task(self, task_id: int) -> Union[Dict[str, Any], str]:
         """
         Retrieves a specific task by its ID.
 
@@ -109,9 +124,9 @@ class Tasks:
         Returns:
             A dictionary containing the details of the task.
         """
-        return self._client.get(f"/tasks/{task_id}")
+        return self.client._get(f"tasks/{task_id}")
 
-    def update_task(self, task_id: int, update_data: Dict[str, Any]) -> Dict[str, Any]:
+    def update_task(self, task_id: int, update_data: Dict[str, Any]) -> Union[Dict[str, Any], str]:
         """
         Updates an existing task.
 
@@ -123,9 +138,9 @@ class Tasks:
         Returns:
             A dictionary containing the details of the updated task.
         """
-        return self._client.put(f"/tasks/{task_id}", json_data=update_data)
+        return self.client._put(f"tasks/{task_id}", json_data=update_data)
 
-    def delete_task(self, task_id: int) -> Dict[str, Any]:
+    def delete_task(self, task_id: int) -> Union[Dict[str, Any], str]:
         """
         Deletes a specific task by its ID.
 
@@ -136,6 +151,6 @@ class Tasks:
             An empty dictionary if successful (API returns 204 No Content),
             or a dictionary with an error message if it fails.
         """
-        return self._client.delete(f"/tasks/{task_id}")
+        return self.client._delete(f"tasks/{task_id}")
 
     # DELETE /tasks/{id} (Delete task) 
