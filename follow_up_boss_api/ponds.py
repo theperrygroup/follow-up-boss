@@ -2,9 +2,9 @@
 API bindings for Follow Up Boss Ponds endpoints.
 """
 
-from typing import Any, Dict, Optional, List
+from typing import Any, Dict, Optional, List, Union
 
-from .api_client import ApiClient
+from .client import FollowUpBossApiClient
 import logging
 
 logger = logging.getLogger(__name__)
@@ -15,12 +15,12 @@ class Ponds:
     Ponds are used for managing leads that are not assigned to specific agents.
     """
 
-    def __init__(self, client: ApiClient):
+    def __init__(self, client: FollowUpBossApiClient):
         """
         Initializes the Ponds resource.
 
         Args:
-            client: An instance of the ApiClient.
+            client: An instance of the FollowUpBossApiClient.
         """
         self._client = client
 
@@ -31,7 +31,7 @@ class Ponds:
         sort: Optional[str] = None,
         # Add other relevant filters if specified by API docs (e.g., name)
         **kwargs: Any
-    ) -> Dict[str, Any]: 
+    ) -> Union[Dict[str, Any], str]: 
         """
         Retrieves a list of ponds in the account.
 
@@ -53,7 +53,7 @@ class Ponds:
             params["sort"] = sort
         params.update(kwargs)
         
-        return self._client.get("/ponds", params=params)
+        return self._client._get("ponds", params=params)
 
     def create_pond(
         self,
@@ -61,7 +61,7 @@ class Ponds:
         user_ids: Optional[List[int]] = None, # List of user IDs for pond members
         # Add other relevant fields if specified by API (e.g., roundRobinEnabled)
         **kwargs: Any
-    ) -> Dict[str, Any]:
+    ) -> Union[Dict[str, Any], str]:
         """
         Creates a new pond.
 
@@ -79,9 +79,9 @@ class Ponds:
         
         payload.update(kwargs)
         
-        return self._client.post("/ponds", json_data=payload)
+        return self._client._post("ponds", json_data=payload)
 
-    def retrieve_pond(self, pond_id: int) -> Dict[str, Any]:
+    def retrieve_pond(self, pond_id: int) -> Union[Dict[str, Any], str]:
         """
         Retrieves a specific pond by its ID.
 
@@ -93,7 +93,7 @@ class Ponds:
         """
         return self._client.get(f"/ponds/{pond_id}")
 
-    def update_pond(self, pond_id: int, update_data: Dict[str, Any]) -> Dict[str, Any]:
+    def update_pond(self, pond_id: int, update_data: Dict[str, Any]) -> Union[Dict[str, Any], str]:
         """
         Updates an existing pond.
 
@@ -106,7 +106,7 @@ class Ponds:
         """
         return self._client.put(f"/ponds/{pond_id}", json_data=update_data)
 
-    def delete_pond(self, pond_id: int) -> Dict[str, Any]:
+    def delete_pond(self, pond_id: int) -> Union[Dict[str, Any], str]:
         """
         Deletes a specific pond by its ID.
 

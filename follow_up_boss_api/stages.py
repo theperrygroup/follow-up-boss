@@ -2,9 +2,9 @@
 API bindings for Follow Up Boss Stages endpoints.
 """
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union
 
-from .api_client import ApiClient
+from .client import FollowUpBossApiClient
 import logging
 
 logger = logging.getLogger(__name__)
@@ -14,12 +14,12 @@ class Stages:
     Provides access to the Stages endpoints of the Follow Up Boss API.
     """
 
-    def __init__(self, client: ApiClient):
+    def __init__(self, client: FollowUpBossApiClient):
         """
         Initializes the Stages resource.
 
         Args:
-            client: An instance of the ApiClient.
+            client: An instance of the FollowUpBossApiClient.
         """
         self._client = client
 
@@ -41,7 +41,7 @@ class Stages:
         params: Dict[str, Any] = {}
         params.update(kwargs)
         
-        return self._client.get("/stages", params=params)
+        return self._client._get("stages", params=params)
 
     def create_stage(
         self,
@@ -50,7 +50,7 @@ class Stages:
         # entity_type: Optional[str] = "Person", 
         # order: Optional[int] = None, 
         **kwargs: Any
-    ) -> Dict[str, Any]:
+    ) -> Union[Dict[str, Any], str]:
         """
         Creates a new stage.
 
@@ -76,7 +76,7 @@ class Stages:
 
         payload.update(kwargs)
         
-        return self._client.post("/stages", json_data=payload)
+        return self._client._post("stages", json_data=payload)
 
     def retrieve_stage(self, stage_id: int) -> Dict[str, Any]:
         """
@@ -88,9 +88,9 @@ class Stages:
         Returns:
             A dictionary containing the details of the stage.
         """
-        return self._client.get(f"/stages/{stage_id}")
+        return self._client._get(f"stages/{stage_id}")
 
-    def update_stage(self, stage_id: int, update_data: Dict[str, Any]) -> Dict[str, Any]:
+    def update_stage(self, stage_id: int, update_data: Dict[str, Any]) -> Union[Dict[str, Any], str]:
         """
         Updates an existing stage.
 
@@ -101,9 +101,9 @@ class Stages:
         Returns:
             A dictionary containing the details of the updated stage.
         """
-        return self._client.put(f"/stages/{stage_id}", json_data=update_data)
+        return self._client._put(f"stages/{stage_id}", json_data=update_data)
 
-    def delete_stage(self, stage_id: int, assign_stage_id: Optional[int] = None) -> Dict[str, Any]:
+    def delete_stage(self, stage_id: int, assign_stage_id: Optional[int] = None) -> Union[Dict[str, Any], str]:
         """
         Deletes a specific stage by its ID.
 
@@ -123,7 +123,7 @@ class Stages:
             raise ValueError("assign_stage_id is required when deleting a stage.")
             
         payload = {"assignStageId": assign_stage_id}
-        return self._client.delete(f"/stages/{stage_id}", json_data=payload)
+        return self._client._delete(f"stages/{stage_id}", json_data=payload)
 
     # GET /stages/{id} (Retrieve stage)
     # PUT /stages/{id} (Update stage)

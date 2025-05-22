@@ -8,6 +8,7 @@ from follow_up_boss_api.client import FollowUpBossApiClient
 from follow_up_boss_api.email_templates import EmailTemplates
 import os
 import requests
+from follow_up_boss_api.client import FollowUpBossApiException
 
 @pytest.fixture
 def client():
@@ -310,21 +311,16 @@ def test_delete_email_template(email_templates_api):
         # For successful deletion, the response might be empty or a success message
         
         # Verify deletion by attempting to retrieve the template
-        try:
+        with pytest.raises(FollowUpBossApiException) as excinfo:
             email_templates_api.retrieve_email_template(template_id)
-            # If we get here, the template wasn't deleted
-            assert False, f"Template {template_id} was not deleted properly"
-        except requests.exceptions.HTTPError as e:
-            # Expected: template should not be found
-            assert e.response.status_code == 404
-            print(f"Expected error when retrieving deleted template: {e}")
-    
-    except requests.exceptions.HTTPError as e:
-        # If we get a permission error, skip the test
-        if e.response.status_code in [401, 403]:
-            pytest.skip(f"API key doesn't have permission to delete templates: {str(e)}")
-        else:
-            raise
+            
+        # Check that it was properly deleted (404 Not Found)
+        assert excinfo.value.status_code == 404
+            
+    except FollowUpBossApiException as e:
+        # If we get an unexpected exception, print it and fail
+        print(f"Unexpected error: {e}")
+        raise
 
 def test_retrieve_nonexistent_email_template(email_templates_api):
     """Test retrieving an email template that doesn't exist."""
@@ -332,9 +328,9 @@ def test_retrieve_nonexistent_email_template(email_templates_api):
     nonexistent_id = 99999999
     
     # Attempt to retrieve the template, expecting a 404
-    with pytest.raises(requests.exceptions.HTTPError) as excinfo:
+    with pytest.raises(FollowUpBossApiException) as excinfo:
         email_templates_api.retrieve_email_template(nonexistent_id)
     
     # Check that it's a 404 error
-    assert excinfo.value.response.status_code == 404
+    assert excinfo.value.status_code == 404
     print(f"Received expected 404 error: {excinfo.value}") 

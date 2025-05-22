@@ -2,9 +2,9 @@
 API bindings for Follow Up Boss Teams endpoints.
 """
 
-from typing import Any, Dict, Optional, List
+from typing import Any, Dict, Optional, List, Union
 
-from .api_client import ApiClient
+from .client import FollowUpBossApiClient
 import logging
 
 logger = logging.getLogger(__name__)
@@ -14,12 +14,12 @@ class Teams:
     Provides access to the Teams endpoints of the Follow Up Boss API.
     """
 
-    def __init__(self, client: ApiClient):
+    def __init__(self, client: FollowUpBossApiClient):
         """
         Initializes the Teams resource.
 
         Args:
-            client: An instance of the ApiClient.
+            client: An instance of the FollowUpBossApiClient.
         """
         self._client = client
 
@@ -51,7 +51,7 @@ class Teams:
             params["sort"] = sort
         params.update(kwargs)
         
-        return self._client.get("/teams", params=params)
+        return self._client._get("teams", params=params)
 
     def create_team(
         self,
@@ -59,7 +59,7 @@ class Teams:
         user_ids: Optional[List[int]] = None, # List of user IDs for team members
         leader_id: Optional[int] = None, # User ID of the team leader
         **kwargs: Any
-    ) -> Dict[str, Any]:
+    ) -> Union[Dict[str, Any], str]:
         """
         Creates a new team.
 
@@ -80,7 +80,7 @@ class Teams:
         
         payload.update(kwargs)
         
-        return self._client.post("/teams", json_data=payload)
+        return self._client._post("teams", json_data=payload)
 
     def retrieve_team(self, team_id: int) -> Dict[str, Any]:
         """
@@ -92,9 +92,9 @@ class Teams:
         Returns:
             A dictionary containing the details of the team.
         """
-        return self._client.get(f"/teams/{team_id}")
+        return self._client._get(f"teams/{team_id}")
 
-    def update_team(self, team_id: int, update_data: Dict[str, Any]) -> Dict[str, Any]:
+    def update_team(self, team_id: int, update_data: Dict[str, Any]) -> Union[Dict[str, Any], str]:
         """
         Updates an existing team.
 
@@ -105,9 +105,9 @@ class Teams:
         Returns:
             A dictionary containing the details of the updated team.
         """
-        return self._client.put(f"/teams/{team_id}", json_data=update_data)
+        return self._client._put(f"teams/{team_id}", json_data=update_data)
 
-    def delete_team(self, team_id: int) -> Dict[str, Any]:
+    def delete_team(self, team_id: int) -> Union[Dict[str, Any], str]:
         """
         Deletes a specific team by its ID.
 
@@ -118,7 +118,7 @@ class Teams:
             An empty dictionary if successful (API returns 204 No Content),
             or a dictionary with an error message if it fails.
         """
-        return self._client.delete(f"/teams/{team_id}")
+        return self._client._delete(f"teams/{team_id}")
 
     # GET /teams/{id} (Retrieve team)
     # PUT /teams/{id} (Update team)

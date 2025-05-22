@@ -5,6 +5,7 @@ Test the People API.
 import pytest
 import uuid
 import requests
+from follow_up_boss_api.client import FollowUpBossApiException
 from follow_up_boss_api.client import FollowUpBossApiClient
 from follow_up_boss_api.people import People
 import os
@@ -178,7 +179,7 @@ def test_delete_person(people_api):
     # The key test is that we don't get an error
     
     # Try to retrieve the deleted person - should fail with a 404
-    with pytest.raises(requests.exceptions.HTTPError) as excinfo:
+    with pytest.raises(FollowUpBossApiException) as excinfo:
         people_api.retrieve_person(person_id)
     
     # Check that it's a 404 error

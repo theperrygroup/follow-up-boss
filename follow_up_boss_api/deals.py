@@ -2,7 +2,7 @@
 API bindings for Follow Up Boss Deals endpoints.
 """
 
-from typing import Any, Dict, Optional, List
+from typing import Any, Dict, Optional, List, Union
 
 from .client import FollowUpBossApiClient
 import logging
@@ -80,7 +80,7 @@ class Deals:
         price: Optional[float] = None,
         close_date: Optional[str] = None, # YYYY-MM-DD
         **kwargs: Any
-    ) -> Dict[str, Any]:
+    ) -> Union[Dict[str, Any], str]:
         """
         Creates a new deal.
 
@@ -126,7 +126,7 @@ class Deals:
         """
         return self._client._get(f"deals/{deal_id}")
 
-    def update_deal(self, deal_id: int, update_data: Dict[str, Any]) -> Dict[str, Any]:
+    def update_deal(self, deal_id: int, update_data: Dict[str, Any]) -> Union[Dict[str, Any], str]:
         """
         Updates an existing deal.
 
@@ -139,7 +139,7 @@ class Deals:
         """
         return self._client._put(f"deals/{deal_id}", json_data=update_data)
 
-    def delete_deal(self, deal_id: int) -> Dict[str, Any]:
+    def delete_deal(self, deal_id: int) -> Union[Dict[str, Any], str]:
         """
         Deletes a specific deal by its ID.
 

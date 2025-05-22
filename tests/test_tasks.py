@@ -7,6 +7,7 @@ import uuid
 from datetime import datetime, timedelta
 import os
 import requests
+from follow_up_boss_api.client import FollowUpBossApiException
 import json
 from follow_up_boss_api.client import FollowUpBossApiClient
 from follow_up_boss_api.tasks import Tasks
@@ -197,11 +198,11 @@ def test_delete_task(tasks_api, test_task_data):
         print(delete_response)
         
         # Try to retrieve the deleted task - should fail with 404
-        with pytest.raises(requests.exceptions.HTTPError) as excinfo:
+        with pytest.raises(FollowUpBossApiException) as excinfo:
             tasks_api.retrieve_task(task_id)
             
         # Verify it's a 404 error
-        assert excinfo.value.response.status_code == 404
+        assert excinfo.value.status_code == 404
             
     except requests.exceptions.HTTPError as e:
         if e.response.status_code == 403:
@@ -215,9 +216,9 @@ def test_retrieve_nonexistent_task(tasks_api):
     nonexistent_id = 99999999
     
     # Attempt to retrieve the task, expect a 404
-    with pytest.raises(requests.exceptions.HTTPError) as excinfo:
+    with pytest.raises(FollowUpBossApiException) as excinfo:
         tasks_api.retrieve_task(nonexistent_id)
     
     # Verify it's a 404 error
-    assert excinfo.value.response.status_code == 404
+    assert excinfo.value.status_code == 404
     print(f"Received expected 404 error: {excinfo.value}") 

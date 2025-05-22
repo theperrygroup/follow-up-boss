@@ -4,7 +4,7 @@ API bindings for Follow Up Boss Webhooks endpoints.
 
 from typing import Any, Dict, Optional, Union
 
-from .api_client import ApiClient
+from .client import FollowUpBossApiClient
 import logging
 
 logger = logging.getLogger(__name__)
@@ -14,12 +14,12 @@ class Webhooks:
     Provides access to the Webhooks endpoints of the Follow Up Boss API.
     """
 
-    def __init__(self, client: ApiClient):
+    def __init__(self, client: FollowUpBossApiClient):
         """
         Initializes the Webhooks resource.
 
         Args:
-            client: An instance of the ApiClient.
+            client: An instance of the FollowUpBossApiClient.
         """
         self._client = client
 
@@ -30,7 +30,7 @@ class Webhooks:
         offset: Optional[int] = None,
         sort: Optional[str] = None,
         **kwargs: Any
-    ) -> Dict[str, Any]: 
+    ) -> Union[Dict[str, Any], str]: 
         """
         Retrieves a list of webhooks configured in the account.
 
@@ -53,7 +53,7 @@ class Webhooks:
             params["sort"] = sort
         params.update(kwargs)
         
-        return self._client.get("/webhooks", params=params)
+        return self._client._get("webhooks", params=params)
 
     def create_webhook(
         self,
@@ -62,7 +62,7 @@ class Webhooks:
         system: str,
         # secret: Optional[str] = None, # Optional secret for verifying payload
         **kwargs: Any
-    ) -> Dict[str, Any]:
+    ) -> Union[Dict[str, Any], str]:
         """
         Creates a new webhook subscription.
 
@@ -85,9 +85,9 @@ class Webhooks:
         #     payload["secret"] = secret
         payload.update(kwargs)
         
-        return self._client.post("/webhooks", json_data=payload)
+        return self._client._post("webhooks", json_data=payload)
 
-    def retrieve_webhook(self, webhook_id: int, system: str) -> Dict[str, Any]:
+    def retrieve_webhook(self, webhook_id: int, system: str) -> Union[Dict[str, Any], str]:
         """
         Retrieves a specific webhook by its ID.
 
@@ -100,7 +100,7 @@ class Webhooks:
         """
         return self._client.get(f"/webhooks/{webhook_id}", params={"system": system})
 
-    def update_webhook(self, webhook_id: int, system: str, update_data: Dict[str, Any]) -> Dict[str, Any]:
+    def update_webhook(self, webhook_id: int, system: str, update_data: Dict[str, Any]) -> Union[Dict[str, Any], str]:
         """
         Updates an existing webhook.
 
@@ -115,7 +115,7 @@ class Webhooks:
         params = {"system": system}
         return self._client.put(f"/webhooks/{webhook_id}", json_data=update_data, params=params)
 
-    def delete_webhook(self, webhook_id: int, system: str) -> Dict[str, Any]:
+    def delete_webhook(self, webhook_id: int, system: str) -> Union[Dict[str, Any], str]:
         """
         Deletes a specific webhook by its ID.
 
@@ -129,7 +129,7 @@ class Webhooks:
         """
         return self._client.delete(f"/webhooks/{webhook_id}", params={"system": system})
 
-    def retrieve_webhook_event(self, event_id: Union[int, str], system: str) -> Dict[str, Any]: # Event ID might be string
+    def retrieve_webhook_event(self, event_id: Union[int, str], system: str) -> Union[Dict[str, Any], str]: # Event ID might be string
         """
         Retrieves details of a specific webhook event by its ID.
 

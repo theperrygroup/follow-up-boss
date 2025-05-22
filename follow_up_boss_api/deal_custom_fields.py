@@ -2,9 +2,9 @@
 API bindings for Follow Up Boss Deal Custom Fields endpoints.
 """
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union
 
-from .api_client import ApiClient
+from .client import FollowUpBossApiClient
 import logging
 
 logger = logging.getLogger(__name__)
@@ -14,12 +14,12 @@ class DealCustomFields:
     Provides access to the Deal Custom Fields endpoints of the Follow Up Boss API.
     """
 
-    def __init__(self, client: ApiClient):
+    def __init__(self, client: FollowUpBossApiClient):
         """
         Initializes the DealCustomFields resource.
 
         Args:
-            client: An instance of the ApiClient.
+            client: An instance of the FollowUpBossApiClient.
         """
         self._client = client
 
@@ -27,7 +27,7 @@ class DealCustomFields:
         self,
         # Add relevant filters if specified by API docs (e.g., group)
         **kwargs: Any
-    ) -> Dict[str, Any]: 
+    ) -> Union[Dict[str, Any], str]: 
         """
         Retrieves a list of custom fields defined for deals.
 
@@ -40,7 +40,7 @@ class DealCustomFields:
         params: Dict[str, Any] = {}
         params.update(kwargs)
         
-        return self._client.get("/dealCustomFields", params=params)
+        return self._client._get("dealCustomFields", params=params)
 
     def create_deal_custom_field(
         self,
@@ -49,7 +49,7 @@ class DealCustomFields:
         options: Optional[list[str]] = None, # Required if type is "Dropdown"
         # entityType is implicitly "Deal" for this endpoint group
         **kwargs: Any
-    ) -> Dict[str, Any]:
+    ) -> Union[Dict[str, Any], str]:
         """
         Creates a new custom field specifically for deals.
 
@@ -78,9 +78,9 @@ class DealCustomFields:
         
         payload.update(kwargs)
         
-        return self._client.post("/dealCustomFields", json_data=payload)
+        return self._client._post("dealCustomFields", json_data=payload)
 
-    def retrieve_deal_custom_field(self, field_id: int) -> Dict[str, Any]:
+    def retrieve_deal_custom_field(self, field_id: int) -> Union[Dict[str, Any], str]:
         """
         Retrieves a specific deal custom field by its ID.
 
@@ -92,7 +92,7 @@ class DealCustomFields:
         """
         return self._client.get(f"/dealCustomFields/{field_id}")
 
-    def update_deal_custom_field(self, field_id: int, update_data: Dict[str, Any]) -> Dict[str, Any]:
+    def update_deal_custom_field(self, field_id: int, update_data: Dict[str, Any]) -> Union[Dict[str, Any], str]:
         """
         Updates an existing deal custom field.
 
@@ -105,7 +105,7 @@ class DealCustomFields:
         """
         return self._client.put(f"/dealCustomFields/{field_id}", json_data=update_data)
 
-    def delete_deal_custom_field(self, field_id: int) -> Dict[str, Any]:
+    def delete_deal_custom_field(self, field_id: int) -> Union[Dict[str, Any], str]:
         """
         Deletes a specific deal custom field by its ID.
 

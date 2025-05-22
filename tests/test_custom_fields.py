@@ -8,6 +8,7 @@ from follow_up_boss_api.client import FollowUpBossApiClient
 from follow_up_boss_api.custom_fields import CustomFields
 import os
 import requests
+from follow_up_boss_api.client import FollowUpBossApiException
 import json
 
 @pytest.fixture
@@ -162,10 +163,9 @@ def test_retrieve_nonexistent_custom_field(custom_fields_api):
     nonexistent_id = 99999999
     
     # Attempt to retrieve the field, expecting a 404
-    with pytest.raises(requests.exceptions.HTTPError) as excinfo:
+    with pytest.raises(FollowUpBossApiException) as excinfo:
         custom_fields_api.retrieve_custom_field(nonexistent_id)
     
     # Check that it's a 404 or 400 error
     # Some APIs return 400 Bad Request for non-existent resources
-    assert excinfo.value.response.status_code in [404, 400]
-    print(f"Received expected error: {excinfo.value}") 
+    assert excinfo.value.status_code in [404, 400] 
