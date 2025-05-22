@@ -38,16 +38,3 @@ __all__ = [
     "CustomFields",
     "Tasks",
 ]
-
-# Example of how one might initialize the client, though this might be better done in application code:
-# import os
-# from dotenv import load_dotenv
-# load_dotenv()
-# default_api_key = os.getenv("FOLLOW_UP_BOSS_API_KEY")
-# if default_api_key:
-#     # Note: If you use this example, ensure ApiClient here refers to FollowUpBossApiClient
-#     # For instance, by renaming or directly using FollowUpBossApiClient:
-#     # default_client = FollowUpBossApiClient(api_key=default_api_key)
-#     pass # Placeholder for example client init
-# else:
-#     default_client = None

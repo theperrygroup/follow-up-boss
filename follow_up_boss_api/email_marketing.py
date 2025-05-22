@@ -2,9 +2,9 @@
 API bindings for Follow Up Boss Email Marketing endpoints.
 """
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union
 
-from .api_client import ApiClient
+from .client import FollowUpBossApiClient
 import logging
 
 logger = logging.getLogger(__name__)
@@ -14,12 +14,12 @@ class EmailMarketing:
     Provides access to the Email Marketing endpoints of the Follow Up Boss API.
     """
 
-    def __init__(self, client: ApiClient):
+    def __init__(self, client: FollowUpBossApiClient):
         """
         Initializes the EmailMarketing resource.
 
         Args:
-            client: An instance of the ApiClient.
+            client: An instance of the FollowUpBossApiClient.
         """
         self._client = client
 
@@ -30,7 +30,7 @@ class EmailMarketing:
         sort: Optional[str] = None,
         # Add other relevant filters (e.g., campaignId, personId, type)
         **kwargs: Any
-    ) -> Dict[str, Any]:
+    ) -> Union[Dict[str, Any], str]:
         """
         Retrieves a list of email marketing events (e.g., opens, clicks).
 
@@ -52,7 +52,7 @@ class EmailMarketing:
             params["sort"] = sort
         params.update(kwargs)
         
-        return self._client.get("/emEvents", params=params)
+        return self._client._get("emEvents", params=params)
 
     def create_email_marketing_event(
         self,
@@ -63,7 +63,7 @@ class EmailMarketing:
         url: Optional[str] = None, # For click events, the URL clicked
         # created_at: Optional[str] = None, # ISO 8601, defaults to now if not provided
         **kwargs: Any
-    ) -> Dict[str, Any]:
+    ) -> Union[Dict[str, Any], str]:
         """
         Creates a new email marketing event.
 
@@ -94,7 +94,7 @@ class EmailMarketing:
         
         payload.update(kwargs)
         
-        return self._client.post("/emEvents", json_data=payload)
+        return self._client._post("emEvents", json_data=payload)
 
     def list_email_marketing_campaigns(
         self,
@@ -103,7 +103,7 @@ class EmailMarketing:
         sort: Optional[str] = None,
         # Add other relevant filters (e.g., status, name)
         **kwargs: Any
-    ) -> Dict[str, Any]:
+    ) -> Union[Dict[str, Any], str]:
         """
         Retrieves a list of email marketing campaigns.
 
@@ -125,7 +125,7 @@ class EmailMarketing:
             params["sort"] = sort
         params.update(kwargs)
         
-        return self._client.get("/emCampaigns", params=params)
+        return self._client._get("emCampaigns", params=params)
 
     def create_email_marketing_campaign(
         self,
@@ -133,7 +133,7 @@ class EmailMarketing:
         # Add other required fields like subject, fromName, fromEmail, listIds etc.
         # based on actual API requirements for creating a campaign.
         **kwargs: Any
-    ) -> Dict[str, Any]:
+    ) -> Union[Dict[str, Any], str]:
         """
         Creates a new email marketing campaign.
 
@@ -151,9 +151,9 @@ class EmailMarketing:
         }
         payload.update(kwargs)
         
-        return self._client.post("/emCampaigns", json_data=payload)
+        return self._client._post("emCampaigns", json_data=payload)
 
-    def update_email_marketing_campaign(self, campaign_id: int, update_data: Dict[str, Any]) -> Dict[str, Any]:
+    def update_email_marketing_campaign(self, campaign_id: int, update_data: Dict[str, Any]) -> Union[Dict[str, Any], str]:
         """
         Updates an existing email marketing campaign.
 

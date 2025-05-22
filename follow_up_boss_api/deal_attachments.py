@@ -3,10 +3,10 @@ Handles the Deal Attachments endpoints for the Follow Up Boss API.
 """
 
 import os
-from typing import Dict, Any, Optional, IO
+from typing import Dict, Any, Optional, IO, Union
 
 # Corrected import based on the new api_client.py structure
-from .api_client import ApiClient, FollowUpBossApiException
+from .client import FollowUpBossApiClient, FollowUpBossApiException
 
 # load_dotenv is handled by ApiClient, no need to call it here directly if ApiClient manages API key loading.
 
@@ -15,12 +15,12 @@ class DealAttachments:
     A class for interacting with the Deal Attachments part of the Follow Up Boss API.
     """
 
-    def __init__(self, client: ApiClient):
+    def __init__(self, client: FollowUpBossApiClient):
         """
         Initializes the DealAttachments resource.
 
         Args:
-            client: An instance of the ApiClient.
+            client: An instance of the FollowUpBossApiClient.
         """
         self.client = client
 
@@ -31,7 +31,7 @@ class DealAttachments:
         file_name: str,
         description: Optional[str] = None,
         category_id: Optional[int] = None
-    ) -> Dict[str, Any]:
+    ) -> Union[Dict[str, Any], str]:
         """
         Adds an attachment to a specific deal.
 
@@ -72,7 +72,7 @@ class DealAttachments:
             #   return {"status": "skipped", "reason": "API Key Permissions"}
             raise
 
-    def get_deal_attachment(self, attachment_id: int) -> Dict[str, Any]:
+    def get_deal_attachment(self, attachment_id: int) -> Union[Dict[str, Any], str]:
         """
         Retrieves a specific deal attachment.
 
@@ -96,7 +96,7 @@ class DealAttachments:
         attachment_id: int,
         description: Optional[str] = None,
         category_id: Optional[int] = None
-    ) -> Dict[str, Any]:
+    ) -> Union[Dict[str, Any], str]:
         """
         Updates a specific deal attachment.
 
@@ -129,7 +129,7 @@ class DealAttachments:
         except FollowUpBossApiException as e:
             raise
 
-    def delete_deal_attachment(self, attachment_id: int) -> Dict[str, Any]:
+    def delete_deal_attachment(self, attachment_id: int) -> Union[Dict[str, Any], str]:
         """
         Deletes a specific deal attachment.
 

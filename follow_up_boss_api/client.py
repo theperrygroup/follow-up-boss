@@ -14,6 +14,27 @@ BASE_URL = "https://api.followupboss.com/v1"
 X_SYSTEM = os.getenv("X_SYSTEM")
 X_SYSTEM_KEY = os.getenv("X_SYSTEM_KEY")
 
+class FollowUpBossApiException(Exception):
+    """
+    Custom exception for API-related errors.
+
+    Attributes:
+        status_code: HTTP status code of the error response.
+        message: Error message from the API or a default message.
+        response_data: The full JSON response data from the API, if available.
+    """
+    def __init__(self, message: str, status_code: Optional[int] = None, response_data: Optional[Dict[str, Any]] = None):
+        super().__init__(message)
+        self.message = message
+        self.status_code = status_code
+        self.response_data = response_data
+
+    def __str__(self):
+        if self.status_code:
+            return f"FollowUpBossApiException: [Status {self.status_code}] {self.message}"
+        else:
+            return f"FollowUpBossApiException: {self.message}"
+
 class FollowUpBossApiClient:
     """
     A client for interacting with the Follow Up Boss API.
@@ -59,13 +80,18 @@ class FollowUpBossApiClient:
         Returns:
             A dictionary of headers.
         """
-        return {
-            # "Authorization": f"Basic {self.api_key}", # This is handled by auth param
-            "X-System": self.x_system,
-            "X-System-Key": self.x_system_key,
+        headers = {
             "Content-Type": "application/json",
             "Accept": "application/json",
         }
+        
+        # Add system headers only if they exist
+        if self.x_system is not None:
+            headers["X-System"] = self.x_system
+        if self.x_system_key is not None:
+            headers["X-System-Key"] = self.x_system_key
+            
+        return headers
 
     def _request(
         self,
@@ -89,7 +115,7 @@ class FollowUpBossApiClient:
             The response from the API.
 
         Raises:
-            requests.exceptions.RequestException: If the request fails.
+            FollowUpBossApiException: If the API returns an error or the request fails.
         """
         url = f"{self.base_url}/{endpoint}"
         headers = self._get_headers()
@@ -109,12 +135,44 @@ class FollowUpBossApiClient:
             response.raise_for_status()  # Raise HTTPError for bad responses (4xx or 5xx)
             return response
         except requests.exceptions.HTTPError as http_err:
-            print(f"HTTP error occurred: {http_err}")
-            print(f"Response content: {http_err.response.content.decode('utf-8', errors='replace')}")
-            raise
+            error_message = f"HTTP error occurred: {http_err}"
+            try:
+                error_content = http_err.response.content.decode('utf-8', errors='replace')
+                print(f"{error_message}")
+                print(f"Response content: {error_content}")
+                
+                # Try to parse JSON error response if available
+                try:
+                    error_data = http_err.response.json()
+                    error_detail = error_data.get("title", error_content)
+                    if "errors" in error_data and isinstance(error_data["errors"], list) and error_data["errors"]:
+                        details = [str(err.get("detail", err)) for err in error_data["errors"]]
+                        error_detail += ": " + ", ".join(details)
+                    raise FollowUpBossApiException(
+                        message=error_detail,
+                        status_code=http_err.response.status_code,
+                        response_data=error_data
+                    ) from http_err
+                except ValueError:
+                    # If not JSON, just use the content as error message
+                    raise FollowUpBossApiException(
+                        message=error_content,
+                        status_code=http_err.response.status_code
+                    ) from http_err
+            except Exception:
+                # Fallback to original error if we can't parse response
+                status_code = None
+                # Try to extract status code from error message (e.g., "404 Client Error")
+                error_str = str(http_err)
+                if error_str.startswith(('4', '5')) and ' ' in error_str:
+                    try:
+                        status_code = int(error_str.split(' ')[0])
+                    except (ValueError, IndexError):
+                        pass
+                raise FollowUpBossApiException(message=str(http_err), status_code=status_code) from http_err
         except requests.exceptions.RequestException as req_err:
             print(f"Request exception occurred: {req_err}")
-            raise
+            raise FollowUpBossApiException(message=str(req_err)) from req_err
             
     def _get(self, endpoint: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Helper method for GET requests."""

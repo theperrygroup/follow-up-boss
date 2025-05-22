@@ -3,9 +3,9 @@ API bindings for Follow Up Boss Person Attachments endpoints.
 """
 
 import os
-from typing import Any, Dict, Optional, IO
+from typing import Any, Dict, Optional, IO, Union
 
-from .api_client import ApiClient, FollowUpBossApiException
+from .client import FollowUpBossApiClient, FollowUpBossApiException
 import logging
 
 logger = logging.getLogger(__name__)
@@ -15,12 +15,12 @@ class PersonAttachments:
     Provides access to the Person Attachments endpoints of the Follow Up Boss API.
     """
 
-    def __init__(self, client: ApiClient):
+    def __init__(self, client: FollowUpBossApiClient):
         """
         Initializes the PersonAttachments resource.
 
         Args:
-            client: An instance of the ApiClient.
+            client: An instance of the FollowUpBossApiClient.
         """
         self._client = client
 
@@ -31,7 +31,7 @@ class PersonAttachments:
         file_object: Optional[IO[bytes]] = None,
         file_name: Optional[str] = None,
         # description: Optional[str] = None, # If API supports description or other metadata
-    ) -> Dict[str, Any]:
+    ) -> Union[Dict[str, Any], str]:
         """
         Adds an attachment to a specific person.
         You must provide either file_path or file_object (with file_name).
@@ -66,7 +66,7 @@ class PersonAttachments:
                 with open(file_path, "rb") as f:
                     files_payload = {"file": (actual_file_name, f)}
                     # Note: ApiClient._request needs to handle 'files' and 'data' for multipart
-                    return self._client.post("/personAttachments", data=data_payload, files=files_payload)
+                    return self._client._post("personAttachments", data=data_payload, files=files_payload)
             except FileNotFoundError:
                 logger.error(f"File not found: {file_path}")
                 raise
@@ -75,12 +75,12 @@ class PersonAttachments:
                 raise
         elif file_object and file_name: # Should be true if file_path was not provided
             files_payload = {"file": (file_name, file_object)}
-            return self._client.post("/personAttachments", data=data_payload, files=files_payload)
+            return self._client._post("personAttachments", data=data_payload, files=files_payload)
         
         # This part should ideally not be reached if logic is correct
         raise RuntimeError("Unexpected state in add_attachment logic.")
 
-    def retrieve_attachment(self, attachment_id: int) -> Dict[str, Any]:
+    def retrieve_attachment(self, attachment_id: int) -> Union[Dict[str, Any], str]:
         """
         Retrieves details of a specific attachment.
 
@@ -92,7 +92,7 @@ class PersonAttachments:
         """
         return self._client.get(f"/personAttachments/{attachment_id}")
 
-    def update_attachment(self, attachment_id: int, update_data: Dict[str, Any]) -> Dict[str, Any]:
+    def update_attachment(self, attachment_id: int, update_data: Dict[str, Any]) -> Union[Dict[str, Any], str]:
         """
         Updates metadata of a specific attachment.
         Commonly, this might be used to update a file name or description.
@@ -107,7 +107,7 @@ class PersonAttachments:
         """
         return self._client.put(f"/personAttachments/{attachment_id}", json_data=update_data)
 
-    def delete_attachment(self, attachment_id: int) -> Dict[str, Any]:
+    def delete_attachment(self, attachment_id: int) -> Union[Dict[str, Any], str]:
         """
         Deletes a specific attachment by its ID.
 
@@ -127,7 +127,7 @@ class PersonAttachments:
         file_name: str,
         description: Optional[str] = None,
         category_id: Optional[int] = None
-    ) -> Dict[str, Any]:
+    ) -> Union[Dict[str, Any], str]:
         """
         Adds an attachment to a specific person.
 
@@ -168,7 +168,7 @@ class PersonAttachments:
             # Consider if this should be wrapped in FollowUpBossApiException or re-raised
             raise FollowUpBossApiException(f"File handling error for {file_name}: {str(e)}") from e
 
-    def get_person_attachment(self, attachment_id: int) -> Dict[str, Any]:
+    def get_person_attachment(self, attachment_id: int) -> Union[Dict[str, Any], str]:
         """
         Retrieves a specific person attachment.
 
@@ -193,7 +193,7 @@ class PersonAttachments:
         attachment_id: int,
         description: Optional[str] = None,
         category_id: Optional[int] = None # Assuming category_id and description can be updated
-    ) -> Dict[str, Any]:
+    ) -> Union[Dict[str, Any], str]:
         """
         Updates a specific person attachment.
         Note: FUB documentation for PUT /personAttachments/{id} indicates it updates fileName.
@@ -232,7 +232,7 @@ class PersonAttachments:
         except FollowUpBossApiException as e:
             raise
 
-    def delete_person_attachment(self, attachment_id: int) -> Dict[str, Any]:
+    def delete_person_attachment(self, attachment_id: int) -> Union[Dict[str, Any], str]:
         """
         Deletes a specific person attachment.
 

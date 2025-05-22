@@ -2,9 +2,9 @@
 API bindings for Follow Up Boss Groups endpoints.
 """
 
-from typing import Any, Dict, Optional, List
+from typing import Any, Dict, Optional, List, Union
 
-from .api_client import ApiClient
+from .client import FollowUpBossApiClient
 import logging
 
 logger = logging.getLogger(__name__)
@@ -15,12 +15,12 @@ class Groups:
     These are typically user groups for lead distribution, permissions, etc.
     """
 
-    def __init__(self, client: ApiClient):
+    def __init__(self, client: FollowUpBossApiClient):
         """
         Initializes the Groups resource.
 
         Args:
-            client: An instance of the ApiClient.
+            client: An instance of the FollowUpBossApiClient.
         """
         self._client = client
 
@@ -31,7 +31,7 @@ class Groups:
         sort: Optional[str] = None,
         # Add other relevant filters (e.g., name, type)
         **kwargs: Any
-    ) -> Dict[str, Any]: 
+    ) -> Union[Dict[str, Any], str]: 
         """
         Retrieves a list of groups.
 
@@ -53,9 +53,9 @@ class Groups:
             params["sort"] = sort
         params.update(kwargs)
         
-        return self._client.get("/groups", params=params)
+        return self._client._get("groups", params=params)
 
-    def get_group_round_robin_status(self, group_id: int) -> Dict[str, Any]:
+    def get_group_round_robin_status(self, group_id: int) -> Union[Dict[str, Any], str]:
         """
         Retrieves the round robin status for a specific group.
 
@@ -88,7 +88,7 @@ class Groups:
         name: str,
         user_ids: Optional[List[int]] = None, # List of user IDs to be members of the group
         **kwargs: Any
-    ) -> Dict[str, Any]:
+    ) -> Union[Dict[str, Any], str]:
         """
         Creates a new group.
 
@@ -106,9 +106,9 @@ class Groups:
         
         payload.update(kwargs)
         
-        return self._client.post("/groups", json_data=payload)
+        return self._client._post("groups", json_data=payload)
 
-    def retrieve_group(self, group_id: int) -> Dict[str, Any]:
+    def retrieve_group(self, group_id: int) -> Union[Dict[str, Any], str]:
         """
         Retrieves a specific group by its ID.
 
@@ -120,7 +120,7 @@ class Groups:
         """
         return self._client.get(f"/groups/{group_id}")
 
-    def update_group(self, group_id: int, update_data: Dict[str, Any]) -> Dict[str, Any]:
+    def update_group(self, group_id: int, update_data: Dict[str, Any]) -> Union[Dict[str, Any], str]:
         """
         Updates an existing group.
 
@@ -133,7 +133,7 @@ class Groups:
         """
         return self._client.put(f"/groups/{group_id}", json_data=update_data)
 
-    def delete_group(self, group_id: int) -> Dict[str, Any]:
+    def delete_group(self, group_id: int) -> Union[Dict[str, Any], str]:
         """
         Deletes a specific group by its ID.
 

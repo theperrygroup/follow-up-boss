@@ -2,9 +2,9 @@
 API bindings for Follow Up Boss Appointment Outcomes endpoints.
 """
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union
 
-from .api_client import ApiClient
+from .client import FollowUpBossApiClient
 import logging
 
 logger = logging.getLogger(__name__)
@@ -14,12 +14,12 @@ class AppointmentOutcomes:
     Provides access to the Appointment Outcomes endpoints of the Follow Up Boss API.
     """
 
-    def __init__(self, client: ApiClient):
+    def __init__(self, client: FollowUpBossApiClient):
         """
         Initializes the AppointmentOutcomes resource.
 
         Args:
-            client: An instance of the ApiClient.
+            client: An instance of the FollowUpBossApiClient.
         """
         self._client = client
 
@@ -30,7 +30,7 @@ class AppointmentOutcomes:
         sort: Optional[str] = None,
         # Add other relevant filters if specified by API docs
         **kwargs: Any
-    ) -> Dict[str, Any]: 
+    ) -> Union[Dict[str, Any], str]: 
         """
         Retrieves a list of appointment outcomes defined in the account.
 
@@ -52,14 +52,14 @@ class AppointmentOutcomes:
             params["sort"] = sort
         params.update(kwargs)
         
-        return self._client.get("/appointmentOutcomes", params=params)
+        return self._client._get("appointmentOutcomes", params=params)
 
     def create_appointment_outcome(
         self,
         name: str,
         is_successful: Optional[bool] = None, # Indicates if this outcome means the appointment was successful
         **kwargs: Any
-    ) -> Dict[str, Any]:
+    ) -> Union[Dict[str, Any], str]:
         """
         Creates a new appointment outcome.
 
@@ -76,9 +76,9 @@ class AppointmentOutcomes:
             payload["isSuccessful"] = is_successful
         payload.update(kwargs)
         
-        return self._client.post("/appointmentOutcomes", json_data=payload)
+        return self._client._post("appointmentOutcomes", json_data=payload)
 
-    def retrieve_appointment_outcome(self, outcome_id: int) -> Dict[str, Any]:
+    def retrieve_appointment_outcome(self, outcome_id: int) -> Union[Dict[str, Any], str]:
         """
         Retrieves a specific appointment outcome by its ID.
 
@@ -90,7 +90,7 @@ class AppointmentOutcomes:
         """
         return self._client.get(f"/appointmentOutcomes/{outcome_id}")
 
-    def update_appointment_outcome(self, outcome_id: int, update_data: Dict[str, Any]) -> Dict[str, Any]:
+    def update_appointment_outcome(self, outcome_id: int, update_data: Dict[str, Any]) -> Union[Dict[str, Any], str]:
         """
         Updates an existing appointment outcome.
 
@@ -103,7 +103,7 @@ class AppointmentOutcomes:
         """
         return self._client.put(f"/appointmentOutcomes/{outcome_id}", json_data=update_data)
 
-    def delete_appointment_outcome(self, outcome_id: int) -> Dict[str, Any]:
+    def delete_appointment_outcome(self, outcome_id: int) -> Union[Dict[str, Any], str]:
         """
         Deletes a specific appointment outcome by its ID.
 

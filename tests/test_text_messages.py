@@ -11,6 +11,7 @@ from follow_up_boss_api.text_messages import TextMessages
 from follow_up_boss_api.people import People
 import os
 import requests
+from follow_up_boss_api.client import FollowUpBossApiException
 
 @pytest.fixture
 def client():
@@ -149,7 +150,7 @@ def test_retrieve_text_message_not_found(text_messages_api):
     non_existent_id = 9999999
     
     # Attempt to retrieve the non-existent text message, expecting a 404
-    with pytest.raises(requests.exceptions.HTTPError) as excinfo:
+    with pytest.raises(FollowUpBossApiException) as excinfo:
         text_messages_api.retrieve_text_message(non_existent_id)
     
     # Check that it's a 404 error

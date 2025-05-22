@@ -2,9 +2,9 @@
 API bindings for Follow Up Boss Inbox Apps endpoints.
 """
 
-from typing import Any, Dict, Optional, List
+from typing import Any, Dict, Optional, List, Union
 
-from .api_client import ApiClient, FollowUpBossApiException
+from .client import FollowUpBossApiClient, FollowUpBossApiException
 import logging
 
 logger = logging.getLogger(__name__)
@@ -15,16 +15,16 @@ class InboxApps:
     These endpoints are typically used for integrating third-party messaging services.
     """
 
-    def __init__(self, client: ApiClient):
+    def __init__(self, client: FollowUpBossApiClient):
         """
         Initializes the InboxApps resource.
 
         Args:
-            client: An instance of the ApiClient.
+            client: An instance of the FollowUpBossApiClient.
         """
         self.client = client
 
-    def install_app(self, name: str, type: str, settings: Dict[str, Any]) -> Dict[str, Any]:
+    def install_app(self, name: str, type: str, settings: Dict[str, Any]) -> Union[Dict[str, Any], str]:
         """
         Installs a new inbox app.
 
@@ -56,7 +56,7 @@ class InboxApps:
         user_id: Optional[int] = None, # FUB User ID if sent by a user
         external_id: Optional[str] = None, # ID from the external messaging service
         timestamp: Optional[str] = None # ISO 8601 timestamp
-    ) -> Dict[str, Any]:
+    ) -> Union[Dict[str, Any], str]:
         """
         Adds a message to an inbox app conversation.
         """
@@ -80,7 +80,7 @@ class InboxApps:
         app_id: int,
         status: Optional[str] = None, # e.g., "delivered", "read", "failed"
         failure_reason: Optional[str] = None
-    ) -> Dict[str, Any]:
+    ) -> Union[Dict[str, Any], str]:
         """
         Updates the status of a message in an inbox app.
         """
@@ -101,7 +101,7 @@ class InboxApps:
     # For brevity, only implementing install, add_message, and update_message for now.
     # The rest can be added following their specific payload requirements.
 
-    def deactivate_app(self, app_id: int) -> Dict[str, Any]:
+    def deactivate_app(self, app_id: int) -> Union[Dict[str, Any], str]:
         """
         Deactivates (uninstalls) an inbox app.
 
@@ -117,26 +117,26 @@ class InboxApps:
         return self.client.delete(endpoint, json_data=payload)
 
     # Placeholder for other methods from endpoint_tasks.md if needed later
-    def add_note_to_conversation(self, conversation_id: str, contact_id: int, body: str, **kwargs) -> Dict[str, Any]:
+    def add_note_to_conversation(self, conversation_id: str, contact_id: int, body: str, **kwargs) -> Union[Dict[str, Any], str]:
         # Actual payload needs to be defined based on API docs
         payload = {"conversationId": conversation_id, "contactId": contact_id, "body": body, **kwargs}
         return self.client.post("/inboxApps/addNote", json_data=payload)
 
-    def update_conversation(self, conversation_id: str, **kwargs) -> Dict[str, Any]:
+    def update_conversation(self, conversation_id: str, **kwargs) -> Union[Dict[str, Any], str]:
         payload = {"conversationId": conversation_id, **kwargs}
         return self.client.put("/inboxApps/updateConversation", json_data=payload)
 
-    def get_participants(self, conversation_id: str, **kwargs) -> Dict[str, Any]:
+    def get_participants(self, conversation_id: str, **kwargs) -> Union[Dict[str, Any], str]:
         params = {"conversationId": conversation_id, **kwargs}
         return self.client.get("/inboxApps/getParticipants", params=params)
 
-    def add_participant(self, conversation_id: str, contact_id: Optional[int] = None, user_id: Optional[int] = None, **kwargs) -> Dict[str, Any]:
+    def add_participant(self, conversation_id: str, contact_id: Optional[int] = None, user_id: Optional[int] = None, **kwargs) -> Union[Dict[str, Any], str]:
         payload = {"conversationId": conversation_id, **kwargs}
         if contact_id: payload["contactId"] = contact_id
         if user_id: payload["userId"] = user_id
         return self.client.post("/inboxApps/addParticipant", json_data=payload)
 
-    def remove_participant(self, conversation_id: str, contact_id: Optional[int] = None, user_id: Optional[int] = None, **kwargs) -> Dict[str, Any]:
+    def remove_participant(self, conversation_id: str, contact_id: Optional[int] = None, user_id: Optional[int] = None, **kwargs) -> Union[Dict[str, Any], str]:
         # DELETE for this might expect IDs in query params or body.
         # Assuming body for now, similar to other app operations.
         payload = {"conversationId": conversation_id, **kwargs}

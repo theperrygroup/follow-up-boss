@@ -10,6 +10,7 @@ from follow_up_boss_api.events import Events
 from follow_up_boss_api.people import People
 import os
 import requests
+from follow_up_boss_api.client import FollowUpBossApiException
 
 @pytest.fixture
 def client():
@@ -174,7 +175,7 @@ def test_retrieve_event_not_found(events_api):
     non_existent_id = 9999999
     
     # Attempt to retrieve the non-existent event, expecting a 404
-    with pytest.raises(requests.exceptions.HTTPError) as excinfo:
+    with pytest.raises(FollowUpBossApiException) as excinfo:
         events_api.retrieve_event(non_existent_id)
     
     # Check that it's a 404 error
