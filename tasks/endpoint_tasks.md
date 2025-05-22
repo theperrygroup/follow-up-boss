@@ -104,11 +104,11 @@
 - [ ] DELETE /v1/stages/{id} (Delete stage)
 
 ## Tasks
-- [ ] GET /v1/tasks (List tasks)
-- [ ] POST /v1/tasks (Create task)
-- [ ] GET /v1/tasks/{id} (Retrieve task)
-- [ ] PUT /v1/tasks/{id} (Update task)
-- [ ] DELETE /v1/tasks/{id} (Delete task)
+- [x] GET /v1/tasks (List tasks)
+- [x] POST /v1/tasks (Create task)
+- [x] GET /v1/tasks/{id} (Retrieve task)
+- [x] PUT /v1/tasks/{id} (Update task)
+- [x] DELETE /v1/tasks/{id} (Delete task)
 
 ## Appointments
 - [ ] GET /v1/appointments (List appointments)

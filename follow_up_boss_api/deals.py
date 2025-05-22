@@ -4,7 +4,7 @@ API bindings for Follow Up Boss Deals endpoints.
 
 from typing import Any, Dict, Optional, List
 
-from .api_client import ApiClient
+from .client import FollowUpBossApiClient
 import logging
 
 logger = logging.getLogger(__name__)
@@ -14,12 +14,12 @@ class Deals:
     Provides access to the Deals endpoints of the Follow Up Boss API.
     """
 
-    def __init__(self, client: ApiClient):
+    def __init__(self, client: FollowUpBossApiClient):
         """
         Initializes the Deals resource.
 
         Args:
-            client: An instance of the ApiClient.
+            client: An instance of the FollowUpBossApiClient.
         """
         self._client = client
 
@@ -68,7 +68,7 @@ class Deals:
             params["sort"] = sort
         params.update(kwargs)
         
-        return self._client.get("/deals", params=params)
+        return self._client._get("deals", params=params)
 
     def create_deal(
         self,
@@ -112,7 +112,7 @@ class Deals:
         
         payload.update(kwargs)
         logger.debug(f"DEALS.CREATE_DEAL: Final payload before POST: {payload}")
-        return self._client.post("/deals", json_data=payload)
+        return self._client._post("deals", json_data=payload)
 
     def retrieve_deal(self, deal_id: int) -> Dict[str, Any]:
         """
@@ -124,7 +124,7 @@ class Deals:
         Returns:
             A dictionary containing the details of the deal.
         """
-        return self._client.get(f"/deals/{deal_id}")
+        return self._client._get(f"deals/{deal_id}")
 
     def update_deal(self, deal_id: int, update_data: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -137,7 +137,7 @@ class Deals:
         Returns:
             A dictionary containing the details of the updated deal.
         """
-        return self._client.put(f"/deals/{deal_id}", json_data=update_data)
+        return self._client._put(f"deals/{deal_id}", json_data=update_data)
 
     def delete_deal(self, deal_id: int) -> Dict[str, Any]:
         """
@@ -150,7 +150,7 @@ class Deals:
             An empty dictionary if successful (API returns 204 No Content),
             or a dictionary with an error message if it fails.
         """
-        return self._client.delete(f"/deals/{deal_id}")
+        return self._client._delete(f"deals/{deal_id}")
 
     # GET /deals/{id} (Retrieve deal)
     # PUT /deals/{id} (Update deal)
