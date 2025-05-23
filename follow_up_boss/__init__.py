@@ -4,7 +4,7 @@ Follow Up Boss API Client
 A comprehensive Python client library for the Follow Up Boss API.
 """
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 
 # Core client
 from .client import FollowUpBossApiClient

@@ -205,6 +205,9 @@ For questions, issues, or feature requests, please:
 
 ## Changelog
 
+### Version 0.1.2
+- Removed appointment test log file logging
+
 ### Version 0.1.1
 - Updated website URL to https://theperry.group
 
