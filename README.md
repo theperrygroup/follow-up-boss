@@ -205,6 +205,9 @@ For questions, issues, or feature requests, please:
 
 ## Changelog
 
+### Version 0.1.1
+- Updated website URL to https://theperry.group
+
 ### Version 0.1.0
 - Initial release
 - Complete API coverage for all Follow Up Boss endpoints
