@@ -3,8 +3,8 @@ Test the Team Inboxes API.
 """
 
 import pytest
-from follow_up_boss_api.client import FollowUpBossApiClient
-from follow_up_boss_api.team_inboxes import TeamInboxes
+from follow_up_boss.client import FollowUpBossApiClient
+from follow_up_boss.team_inboxes import TeamInboxes
 import os
 
 @pytest.fixture

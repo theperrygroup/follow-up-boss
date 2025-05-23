@@ -6,9 +6,9 @@ import pytest
 import os
 import io
 from datetime import datetime
-from follow_up_boss_api.client import FollowUpBossApiClient, FollowUpBossApiException
-from follow_up_boss_api.deals import Deals
-from follow_up_boss_api.deal_attachments import DealAttachments
+from follow_up_boss.client import FollowUpBossApiClient, FollowUpBossApiException
+from follow_up_boss.deals import Deals
+from follow_up_boss.deal_attachments import DealAttachments
 import uuid
 
 @pytest.fixture

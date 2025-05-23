@@ -4,8 +4,8 @@ Test the Webhook Events API.
 
 import pytest
 import uuid
-from follow_up_boss_api.client import FollowUpBossApiClient
-from follow_up_boss_api.webhook_events import WebhookEvents
+from follow_up_boss.client import FollowUpBossApiClient
+from follow_up_boss.webhook_events import WebhookEvents
 import os
 
 @pytest.fixture

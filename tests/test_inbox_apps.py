@@ -5,8 +5,8 @@ Test the Inbox Apps API.
 import pytest
 import os
 import uuid
-from follow_up_boss_api.client import FollowUpBossApiClient, FollowUpBossApiException
-from follow_up_boss_api.inbox_apps import InboxApps
+from follow_up_boss.client import FollowUpBossApiClient, FollowUpBossApiException
+from follow_up_boss.inbox_apps import InboxApps
 
 
 @pytest.fixture

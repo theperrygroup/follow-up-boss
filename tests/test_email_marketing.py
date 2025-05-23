@@ -5,9 +5,9 @@ Test the Email Marketing API.
 import pytest
 import os
 import uuid
-from follow_up_boss_api.client import FollowUpBossApiClient, FollowUpBossApiException
-from follow_up_boss_api.email_marketing import EmailMarketing
-from follow_up_boss_api.people import People
+from follow_up_boss.client import FollowUpBossApiClient, FollowUpBossApiException
+from follow_up_boss.email_marketing import EmailMarketing
+from follow_up_boss.people import People
 
 
 @pytest.fixture

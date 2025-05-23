@@ -4,8 +4,8 @@ Test the Threaded Replies API.
 
 import pytest
 import uuid
-from follow_up_boss_api.client import FollowUpBossApiClient
-from follow_up_boss_api.threaded_replies import ThreadedReplies
+from follow_up_boss.client import FollowUpBossApiClient
+from follow_up_boss.threaded_replies import ThreadedReplies
 import os
 
 @pytest.fixture

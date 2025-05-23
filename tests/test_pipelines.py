@@ -4,8 +4,8 @@ Test the Pipelines API.
 
 import pytest
 import uuid
-from follow_up_boss_api.client import FollowUpBossApiClient
-from follow_up_boss_api.pipelines import Pipelines
+from follow_up_boss.client import FollowUpBossApiClient
+from follow_up_boss.pipelines import Pipelines
 import os
 
 @pytest.fixture

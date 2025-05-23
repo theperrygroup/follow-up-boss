@@ -5,8 +5,8 @@ Test the Webhooks API.
 import pytest
 import os
 import uuid
-from follow_up_boss_api.client import FollowUpBossApiClient, FollowUpBossApiException
-from follow_up_boss_api.webhooks import Webhooks
+from follow_up_boss.client import FollowUpBossApiClient, FollowUpBossApiException
+from follow_up_boss.webhooks import Webhooks
 
 
 @pytest.fixture

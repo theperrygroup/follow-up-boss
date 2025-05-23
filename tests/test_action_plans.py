@@ -4,9 +4,9 @@ Test the Action Plans API.
 
 import pytest
 import uuid
-from follow_up_boss_api.client import FollowUpBossApiClient, FollowUpBossApiException
-from follow_up_boss_api.action_plans import ActionPlans
-from follow_up_boss_api.people import People
+from follow_up_boss.client import FollowUpBossApiClient, FollowUpBossApiException
+from follow_up_boss.action_plans import ActionPlans
+from follow_up_boss.people import People
 import os
 import requests
 

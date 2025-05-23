@@ -1,0 +1,13 @@
+include README.md
+include LICENSE
+include STYLE_GUIDE.md
+include requirements.txt
+include requirements-dev.txt
+recursive-exclude tests *
+recursive-exclude .pytest_cache *
+recursive-exclude __pycache__ *
+recursive-exclude *.pyc
+recursive-exclude .mypy_cache *
+recursive-exclude venv *
+recursive-exclude .git *
+recursive-exclude .DS_Store * 

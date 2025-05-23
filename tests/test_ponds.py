@@ -5,9 +5,9 @@ Test the Ponds API.
 import pytest
 import os
 import uuid
-from follow_up_boss_api.client import FollowUpBossApiClient, FollowUpBossApiException
-from follow_up_boss_api.ponds import Ponds
-from follow_up_boss_api.users import Users
+from follow_up_boss.client import FollowUpBossApiClient, FollowUpBossApiException
+from follow_up_boss.ponds import Ponds
+from follow_up_boss.users import Users
 import requests
 
 

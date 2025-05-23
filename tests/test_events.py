@@ -5,12 +5,12 @@ Test the Events API.
 import pytest
 import uuid
 import datetime
-from follow_up_boss_api.client import FollowUpBossApiClient
-from follow_up_boss_api.events import Events
-from follow_up_boss_api.people import People
+from follow_up_boss.client import FollowUpBossApiClient
+from follow_up_boss.events import Events
+from follow_up_boss.people import People
 import os
 import requests
-from follow_up_boss_api.client import FollowUpBossApiException
+from follow_up_boss.client import FollowUpBossApiException
 
 @pytest.fixture
 def client():

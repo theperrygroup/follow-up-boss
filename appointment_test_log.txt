@@ -1,0 +1,133 @@
+Starting appointment creation test
+Expected error with minimal payload: Status 400 - 400 Client Error: Bad Request for url: https://api.followupboss.com/v1/appointments
+Using appointment type ID: 29
+Using person: ActionTest Persondcfa6c9d (ID: 1480)
+Current user: The Perry Group (ID: 1)
+
+--- Attempt 1 ---
+Payload: {
+  "title": "Permission Test Appointment",
+  "description": "Testing if this is a permissions issue"
+}
+Failed: Status 400 - 400 Client Error: Bad Request for url: https://api.followupboss.com/v1/appointments
+
+--- Attempt 2 ---
+Payload: {
+  "title": "Date Fields Test",
+  "date": "2025-05-24",
+  "startTime": "09:00:00",
+  "endTime": "10:00:00"
+}
+Failed: Status 400 - 400 Client Error: Bad Request for url: https://api.followupboss.com/v1/appointments
+
+--- Attempt 3 ---
+Payload: {
+  "title": "Combined DateTime Test",
+  "startDateTime": "2025-05-24T09:00:00",
+  "endDateTime": "2025-05-24T10:00:00"
+}
+Failed: Status 400 - 400 Client Error: Bad Request for url: https://api.followupboss.com/v1/appointments
+
+--- Attempt 4 ---
+Payload: {
+  "title": "Start/End Date Test",
+  "startDate": "2025-05-24",
+  "endDate": "2025-05-25",
+  "startTime": "09:00:00",
+  "endTime": "10:00:00"
+}
+Failed: Status 400 - 400 Client Error: Bad Request for url: https://api.followupboss.com/v1/appointments
+
+--- Attempt 5 ---
+Payload: {
+  "title": "Type Only Test",
+  "appointmentTypeId": 29
+}
+Failed: Status 400 - 400 Client Error: Bad Request for url: https://api.followupboss.com/v1/appointments
+
+--- Attempt 6 ---
+Payload: {
+  "title": "Date + Type Test",
+  "date": "2025-05-24",
+  "startTime": "09:00:00",
+  "endTime": "10:00:00",
+  "appointmentTypeId": 29
+}
+Failed: Status 400 - 400 Client Error: Bad Request for url: https://api.followupboss.com/v1/appointments
+
+--- Attempt 7 ---
+Payload: {
+  "title": "Simple Test Appointment",
+  "description": "Test appointment with simplified payload",
+  "location": "Test Location",
+  "date": "2025-05-24",
+  "startTime": "09:00:00",
+  "endTime": "10:00:00",
+  "appointmentTypeId": 29
+}
+Failed: Status 400 - 400 Client Error: Bad Request for url: https://api.followupboss.com/v1/appointments
+
+--- Attempt 8 ---
+Payload: {
+  "title": "Test Appointment with Attendees",
+  "description": "Test appointment with attendees",
+  "location": "Test Location",
+  "date": "2025-05-24",
+  "startTime": "09:00:00",
+  "endTime": "10:00:00",
+  "appointmentTypeId": 29,
+  "attendees": [
+    {
+      "id": 1480,
+      "type": "person"
+    }
+  ]
+}
+Failed: Status 400 - 400 Client Error: Bad Request for url: https://api.followupboss.com/v1/appointments
+
+--- Attempt 9 ---
+Payload: {
+  "title": "Test Appointment with Invitees",
+  "description": "Test appointment with invitees",
+  "location": "Test Location",
+  "date": "2025-05-24",
+  "startTime": "09:00:00",
+  "endTime": "10:00:00",
+  "appointmentTypeId": 29,
+  "invitees": [
+    {
+      "id": 1480,
+      "type": "person"
+    }
+  ]
+}
+Failed: Status 400 - 400 Client Error: Bad Request for url: https://api.followupboss.com/v1/appointments
+
+--- Attempt 10 ---
+Payload: {
+  "title": "Minimal Test Appointment",
+  "date": "2025-05-24",
+  "startTime": "09:00:00",
+  "endTime": "10:00:00",
+  "appointmentTypeId": 29
+}
+Failed: Status 400 - 400 Client Error: Bad Request for url: https://api.followupboss.com/v1/appointments
+
+--- Attempt 11 ---
+Payload: {
+  "title": "Test Appointment with Host",
+  "description": "Test appointment with host",
+  "location": "Test Location",
+  "date": "2025-05-24",
+  "startTime": "09:00:00",
+  "endTime": "10:00:00",
+  "appointmentTypeId": 29,
+  "hostId": 1
+}
+Failed: Status 400 - 400 Client Error: Bad Request for url: https://api.followupboss.com/v1/appointments
+
+All payload attempts failed. This might indicate:
+1. API requires specific fields we haven't included
+2. The account might lack appropriate permissions for appointment creation
+3. There may be business rules (like appointment types requiring specific fields)
+4. Date formats might need to follow a different pattern

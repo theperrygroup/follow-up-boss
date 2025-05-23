@@ -3,8 +3,8 @@ Test the Identity API.
 """
 
 import pytest
-from follow_up_boss_api.client import FollowUpBossApiClient
-from follow_up_boss_api.identity import Identity
+from follow_up_boss.client import FollowUpBossApiClient
+from follow_up_boss.identity import Identity
 import os
 
 @pytest.fixture

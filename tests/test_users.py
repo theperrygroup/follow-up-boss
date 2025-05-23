@@ -3,8 +3,8 @@ Test the Users API.
 """
 
 import pytest
-from follow_up_boss_api.client import FollowUpBossApiClient
-from follow_up_boss_api.users import Users
+from follow_up_boss.client import FollowUpBossApiClient
+from follow_up_boss.users import Users
 import os
 
 @pytest.fixture

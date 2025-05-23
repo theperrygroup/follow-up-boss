@@ -3,8 +3,8 @@ Test the Timeframes API.
 """
 
 import pytest
-from follow_up_boss_api.client import FollowUpBossApiClient
-from follow_up_boss_api.timeframes import Timeframes
+from follow_up_boss.client import FollowUpBossApiClient
+from follow_up_boss.timeframes import Timeframes
 import os
 
 @pytest.fixture

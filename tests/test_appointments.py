@@ -5,8 +5,8 @@ Test the Appointments API.
 import pytest
 import uuid
 from datetime import datetime, timedelta, timezone
-from follow_up_boss_api.client import FollowUpBossApiClient, FollowUpBossApiException
-from follow_up_boss_api.appointments import Appointments
+from follow_up_boss.client import FollowUpBossApiClient, FollowUpBossApiException
+from follow_up_boss.appointments import Appointments
 import os
 import json
 
@@ -86,7 +86,7 @@ def test_create_appointment_date_formats():
     appointments_api = Appointments(client)
     
     # Get appointment types to use a valid type ID
-    from follow_up_boss_api.appointment_types import AppointmentTypes
+    from follow_up_boss.appointment_types import AppointmentTypes
     types_api = AppointmentTypes(client)
     types_response = types_api.list_appointment_types()
     
@@ -103,7 +103,7 @@ def test_create_appointment_date_formats():
     print(f"Using appointment type ID: {appointment_type_id}")
     
     # Get a person ID to associate with the appointment
-    from follow_up_boss_api.people import People
+    from follow_up_boss.people import People
     people_api = People(client)
     people_response = people_api.list_people(params={"limit": 1})
     
@@ -346,7 +346,7 @@ def test_create_appointment_simplified():
                         log("Error indicates missing required fields")
         
         # Get appointment types
-        from follow_up_boss_api.appointment_types import AppointmentTypes
+        from follow_up_boss.appointment_types import AppointmentTypes
         types_api = AppointmentTypes(client)
         types_response = types_api.list_appointment_types()
         
@@ -364,7 +364,7 @@ def test_create_appointment_simplified():
         log(f"Using appointment type ID: {appointment_type_id}")
         
         # Get a person to be an attendee
-        from follow_up_boss_api.people import People
+        from follow_up_boss.people import People
         people_api = People(client)
         people_response = people_api.list_people(params={"limit": 1})
         
@@ -376,7 +376,7 @@ def test_create_appointment_simplified():
         log(f"Using person: {person['firstName']} {person.get('lastName', '')} (ID: {person['id']})")
         
         # Get the current user
-        from follow_up_boss_api.users import Users
+        from follow_up_boss.users import Users
         users_api = Users(client)
         me_response = users_api.get_current_user()
         log(f"Current user: {me_response.get('name', 'Unknown')} (ID: {me_response.get('id', 'Unknown')})")
@@ -627,7 +627,7 @@ def test_book_appointment_with_documentation_format():
     appointments_api = Appointments(client)
     
     # Get appointment types
-    from follow_up_boss_api.appointment_types import AppointmentTypes
+    from follow_up_boss.appointment_types import AppointmentTypes
     types_api = AppointmentTypes(client)
     types_response = types_api.list_appointment_types()
     
@@ -644,7 +644,7 @@ def test_book_appointment_with_documentation_format():
     print(f"Using appointment type ID: {appointment_type_id}")
     
     # Get a person to be an attendee
-    from follow_up_boss_api.people import People
+    from follow_up_boss.people import People
     people_api = People(client)
     people_response = people_api.list_people(params={"limit": 1})
     
@@ -655,7 +655,7 @@ def test_book_appointment_with_documentation_format():
     print(f"Using person: {person['firstName']} {person.get('lastName', '')} (ID: {person['id']})")
     
     # Get the current user
-    from follow_up_boss_api.users import Users
+    from follow_up_boss.users import Users
     users_api = Users(client)
     me_response = users_api.get_current_user()
     user_id = me_response.get('id')

@@ -7,12 +7,12 @@ import sys
 import time
 sys.path.insert(0, '.')
 
-from follow_up_boss_api.client import FollowUpBossApiClient
-from follow_up_boss_api.people import People
-from follow_up_boss_api.tasks import Tasks
-from follow_up_boss_api.appointments import Appointments
-from follow_up_boss_api.email_templates import EmailTemplates
-from follow_up_boss_api.custom_fields import CustomFields
+from follow_up_boss.client import FollowUpBossApiClient
+from follow_up_boss.people import People
+from follow_up_boss.tasks import Tasks
+from follow_up_boss.appointments import Appointments
+from follow_up_boss.email_templates import EmailTemplates
+from follow_up_boss.custom_fields import CustomFields
 
 def test_corrected_apis():
     client = FollowUpBossApiClient()

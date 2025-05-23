@@ -4,8 +4,8 @@ Test the Appointment Outcomes API.
 
 import pytest
 import uuid
-from follow_up_boss_api.client import FollowUpBossApiClient, FollowUpBossApiException
-from follow_up_boss_api.appointment_outcomes import AppointmentOutcomes
+from follow_up_boss.client import FollowUpBossApiClient, FollowUpBossApiException
+from follow_up_boss.appointment_outcomes import AppointmentOutcomes
 import os
 
 @pytest.fixture

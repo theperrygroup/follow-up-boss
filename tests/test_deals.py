@@ -5,12 +5,12 @@ Test the Deals API.
 import pytest
 import os
 from datetime import datetime, timedelta
-from follow_up_boss_api.client import FollowUpBossApiClient, FollowUpBossApiException
-from follow_up_boss_api.deals import Deals
-from follow_up_boss_api.pipelines import Pipelines
-from follow_up_boss_api.stages import Stages
-from follow_up_boss_api.users import Users
-from follow_up_boss_api.people import People
+from follow_up_boss.client import FollowUpBossApiClient, FollowUpBossApiException
+from follow_up_boss.deals import Deals
+from follow_up_boss.pipelines import Pipelines
+from follow_up_boss.stages import Stages
+from follow_up_boss.users import Users
+from follow_up_boss.people import People
 
 @pytest.fixture
 def client():

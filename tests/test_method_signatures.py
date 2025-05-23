@@ -7,7 +7,7 @@ import sys
 import inspect
 sys.path.insert(0, '.')
 
-from follow_up_boss_api.client import FollowUpBossApiClient
+from follow_up_boss.client import FollowUpBossApiClient
 
 def analyze_api_signatures():
     client = FollowUpBossApiClient()
@@ -16,7 +16,7 @@ def analyze_api_signatures():
 
     # Calls API
     try:
-        from follow_up_boss_api.calls import Calls
+        from follow_up_boss.calls import Calls
         calls_api = Calls(client)
         sig = inspect.signature(calls_api.create_call)
         print(f'Calls.create_call: {sig}')
@@ -25,7 +25,7 @@ def analyze_api_signatures():
 
     # Text Messages API  
     try:
-        from follow_up_boss_api.text_messages import TextMessages
+        from follow_up_boss.text_messages import TextMessages
         text_api = TextMessages(client)
         sig = inspect.signature(text_api.create_text_message)
         print(f'TextMessages.create_text_message: {sig}')
@@ -34,7 +34,7 @@ def analyze_api_signatures():
 
     # Webhooks API
     try:
-        from follow_up_boss_api.webhooks import Webhooks
+        from follow_up_boss.webhooks import Webhooks
         webhooks_api = Webhooks(client)
         sig = inspect.signature(webhooks_api.create_webhook)
         print(f'Webhooks.create_webhook: {sig}')
@@ -43,7 +43,7 @@ def analyze_api_signatures():
 
     # Deals API
     try:
-        from follow_up_boss_api.deals import Deals
+        from follow_up_boss.deals import Deals
         deals_api = Deals(client)
         sig = inspect.signature(deals_api.create_deal)
         print(f'Deals.create_deal: {sig}')
@@ -52,7 +52,7 @@ def analyze_api_signatures():
 
     # Email Marketing API
     try:
-        from follow_up_boss_api.email_marketing import EmailMarketing
+        from follow_up_boss.email_marketing import EmailMarketing
         em_api = EmailMarketing(client)
         methods = [m for m in dir(em_api) if not m.startswith('_')]
         print(f'EmailMarketing available methods: {methods}')
@@ -61,7 +61,7 @@ def analyze_api_signatures():
 
     # Action Plans API
     try:
-        from follow_up_boss_api.action_plans import ActionPlans
+        from follow_up_boss.action_plans import ActionPlans
         ap_api = ActionPlans(client)
         methods = [m for m in dir(ap_api) if not m.startswith('_')]
         print(f'ActionPlans available methods: {methods}')
@@ -70,7 +70,7 @@ def analyze_api_signatures():
 
     # Groups API (to understand the user requirement issue)
     try:
-        from follow_up_boss_api.groups import Groups
+        from follow_up_boss.groups import Groups
         groups_api = Groups(client)
         sig = inspect.signature(groups_api.create_group)
         print(f'Groups.create_group: {sig}')
