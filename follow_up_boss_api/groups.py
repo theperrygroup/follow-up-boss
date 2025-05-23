@@ -81,7 +81,7 @@ class Groups:
         # However, the test test_get_group_round_robin_status passes group_id, implying it IS per group.
         # Let's assume the path is /groups/{group_id}/roundRobin for now.
         # If error, will try /groups/roundRobin with groupId as param.
-        return self._client.get(f"/groups/{group_id}/roundRobin")
+        return self._client._get(f"groups/{group_id}/roundRobin")
 
     def create_group(
         self,
@@ -102,7 +102,7 @@ class Groups:
         """
         payload: Dict[str, Any] = {"name": name}
         if user_ids is not None:
-            payload["userIds"] = user_ids # Or 'members', API specific
+            payload["users"] = user_ids  # Try "users" instead of "userIds"
         
         payload.update(kwargs)
         
@@ -118,7 +118,7 @@ class Groups:
         Returns:
             A dictionary containing the details of the group.
         """
-        return self._client.get(f"/groups/{group_id}")
+        return self._client._get(f"groups/{group_id}")
 
     def update_group(self, group_id: int, update_data: Dict[str, Any]) -> Union[Dict[str, Any], str]:
         """
@@ -131,7 +131,7 @@ class Groups:
         Returns:
             A dictionary containing the details of the updated group.
         """
-        return self._client.put(f"/groups/{group_id}", json_data=update_data)
+        return self._client._put(f"groups/{group_id}", json_data=update_data)
 
     def delete_group(self, group_id: int) -> Union[Dict[str, Any], str]:
         """
@@ -144,7 +144,7 @@ class Groups:
             An empty dictionary if successful (API returns 204 No Content),
             or a dictionary with an error message if it fails.
         """
-        return self._client.delete(f"/groups/{group_id}")
+        return self._client._delete(f"groups/{group_id}")
 
     # GET /groups/roundRobin (Get group round robin status)
     # POST /groups (Create group)

@@ -135,13 +135,15 @@ def test_create_person(people_api):
     assert isinstance(response['emails'], list)
     assert any(e['value'] == email for e in response['emails'])
     
-    # Return the ID for use in other tests like update_person
-    return response['id']
+    # Verify that we got a valid person ID
+    assert isinstance(response['id'], int)
+    assert response['id'] > 0
+    print(f"Person created successfully with ID: {response['id']}")
 
 def test_update_person(people_api):
     """Test updating a person."""
-    # First, create a person to update
-    person_id = test_create_person(people_api)
+    # First, create a person to update using the helper function
+    person_id = create_test_person(people_api)
     
     # Generate a new unique name for the update
     new_last_name = f"UpdatedPerson{uuid.uuid4().hex[:6]}"
@@ -162,7 +164,7 @@ def test_update_person(people_api):
     assert 'id' in response
     assert response['id'] == person_id
     assert 'lastName' in response
-    assert response['lastName'] == new_last_name 
+    assert response['lastName'] == new_last_name
 
 def test_delete_person(people_api):
     """Test deleting a person."""

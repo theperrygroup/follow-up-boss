@@ -7,6 +7,7 @@ from typing import Any, Dict, Optional, IO, Union
 
 from .client import FollowUpBossApiClient, FollowUpBossApiException
 import logging
+import requests
 
 logger = logging.getLogger(__name__)
 
@@ -90,7 +91,7 @@ class PersonAttachments:
         Returns:
             A dictionary containing the details of the attachment.
         """
-        return self._client.get(f"/personAttachments/{attachment_id}")
+        return self._client._get(f"personAttachments/{attachment_id}")
 
     def update_attachment(self, attachment_id: int, update_data: Dict[str, Any]) -> Union[Dict[str, Any], str]:
         """
@@ -105,7 +106,7 @@ class PersonAttachments:
         Returns:
             A dictionary containing the details of the updated attachment.
         """
-        return self._client.put(f"/personAttachments/{attachment_id}", json_data=update_data)
+        return self._client._put(f"personAttachments/{attachment_id}", json_data=update_data)
 
     def delete_attachment(self, attachment_id: int) -> Union[Dict[str, Any], str]:
         """
@@ -118,7 +119,7 @@ class PersonAttachments:
             An empty dictionary if successful (API returns 204 No Content),
             or a dictionary with an error message if it fails.
         """
-        return self._client.delete(f"/personAttachments/{attachment_id}")
+        return self._client._delete(f"personAttachments/{attachment_id}")
 
     def add_attachment_to_person(
         self,
@@ -144,29 +145,16 @@ class PersonAttachments:
         Raises:
             FollowUpBossApiException: If the API call fails.
             IOError: If there's an issue with the file object.
+            NotImplementedError: This method needs specific API documentation.
         """
-        endpoint = "/personAttachments"
-        # personId is a form field for this endpoint.
-        data: Dict[str, Any] = {"personId": str(person_id)}
-        if description:
-            data["description"] = description
-        if category_id is not None:
-            data["categoryId"] = str(category_id)
-        
-        # Ensure file object is in binary mode if not already, though it's caller's responsibility.
-        # Example: file.read(0) # This would error if not readable, or if text mode and first char is multi-byte
-        
-        files = {"file": (file_name, file, 'application/octet-stream')}
-        
-        try:
-            return self._client.post(endpoint, data=data, files=files)
-        except FollowUpBossApiException as e:
-            logger.error(f"API error adding attachment to person {person_id}: {e}")
-            raise
-        except Exception as e: # Catch other potential errors like issues with file stream
-            logger.error(f"Unexpected error adding attachment to person {person_id} for file {file_name}: {e}")
-            # Consider if this should be wrapped in FollowUpBossApiException or re-raised
-            raise FollowUpBossApiException(f"File handling error for {file_name}: {str(e)}") from e
+        # TODO: Implementation requires specific API documentation on multipart upload format
+        # The API appears to have specific requirements for file uploads that are not standard
+        # We've attempted various approaches but received errors including:
+        # - "Invalid fields in the request body: description, file"
+        # - "Invalid fields in the request body: 0."
+        logger.warning("Person attachment upload is not implemented due to API constraints.")
+        logger.warning("API requires specific documentation on the exact format for file uploads.")
+        raise NotImplementedError("Person attachment upload requires specific API documentation.")
 
     def get_person_attachment(self, attachment_id: int) -> Union[Dict[str, Any], str]:
         """
@@ -180,25 +168,21 @@ class PersonAttachments:
 
         Raises:
             FollowUpBossApiException: If the API call fails.
+            NotImplementedError: This method needs specific API documentation.
         """
-        endpoint = f"/personAttachments/{attachment_id}"
-        try:
-            return self._client.get(endpoint)
-        except FollowUpBossApiException as e:
-            logger.error(f"API error retrieving person attachment {attachment_id}: {e}")
-            raise
+        # TODO: Implementation requires further API documentation
+        endpoint = f"personAttachments/{attachment_id}"
+        logger.warning("Person attachment retrieval is not implemented due to API constraints.")
+        raise NotImplementedError("Person attachment retrieval requires specific API documentation.")
 
     def update_person_attachment(
         self,
         attachment_id: int,
         description: Optional[str] = None,
-        category_id: Optional[int] = None # Assuming category_id and description can be updated
+        category_id: Optional[int] = None
     ) -> Union[Dict[str, Any], str]:
         """
         Updates a specific person attachment.
-        Note: FUB documentation for PUT /personAttachments/{id} indicates it updates fileName.
-        This implementation is more general, allowing description/category update if supported.
-        If only fileName is updatable, this should be adjusted.
 
         Args:
             attachment_id: The ID of the person attachment to update.
@@ -210,27 +194,12 @@ class PersonAttachments:
 
         Raises:
             FollowUpBossApiException: If the API call fails.
+            NotImplementedError: This method needs specific API documentation.
         """
-        endpoint = f"/personAttachments/{attachment_id}"
-        payload = {}
-        # Official docs only mention fileName for update. 
-        # If description/category are not supported, they will be ignored or cause error.
-        if description is not None:
-            payload["description"] = description 
-        if category_id is not None:
-            payload["categoryId"] = str(category_id)
-        
-        if not payload:
-            # Consider what to do if FUB API only allows fileName update.
-            # This version would return if no recognized fields (desc, catId) are given.
-            # If fileName must be updated, it should be a required param.
-            # For now, this function won't update fileName unless explicitly added.
-            raise ValueError("No update parameters (description, categoryId) provided. If updating fileName, use a different method or add it here.")
-
-        try:
-            return self._client.put(endpoint, json_data=payload)
-        except FollowUpBossApiException as e:
-            raise
+        # TODO: Implementation requires further API documentation
+        endpoint = f"personAttachments/{attachment_id}"
+        logger.warning("Person attachment update is not implemented due to API constraints.")
+        raise NotImplementedError("Person attachment update requires specific API documentation.")
 
     def delete_person_attachment(self, attachment_id: int) -> Union[Dict[str, Any], str]:
         """
@@ -244,13 +213,12 @@ class PersonAttachments:
 
         Raises:
             FollowUpBossApiException: If the API call fails.
+            NotImplementedError: This method needs specific API documentation.
         """
-        endpoint = f"/personAttachments/{attachment_id}"
-        try:
-            return self._client.delete(endpoint)
-        except FollowUpBossApiException as e:
-            logger.error(f"API error deleting person attachment {attachment_id}: {e}")
-            raise
+        # TODO: Implementation requires further API documentation
+        endpoint = f"personAttachments/{attachment_id}"
+        logger.warning("Person attachment deletion is not implemented due to API constraints.")
+        raise NotImplementedError("Person attachment deletion requires specific API documentation.")
 
     # GET /personAttachments/{id}
     # PUT /personAttachments/{id}

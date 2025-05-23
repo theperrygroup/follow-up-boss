@@ -135,8 +135,9 @@ def test_create_email_template(email_templates_api):
         assert response['name'] == name
         assert response['subject'] == subject
         
-        # Return the template ID for use in subsequent tests
-        return response['id']
+        # Verify that we got a valid ID (should be a positive integer)
+        assert isinstance(response['id'], int)
+        assert response['id'] > 0
     except requests.exceptions.HTTPError as e:
         # If we get a permission error, skip the test
         if e.response.status_code in [401, 403]:

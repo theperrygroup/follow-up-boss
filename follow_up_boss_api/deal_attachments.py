@@ -3,42 +3,54 @@ Handles the Deal Attachments endpoints for the Follow Up Boss API.
 """
 
 import os
+import logging
 from typing import Dict, Any, Optional, IO, Union
 
 # Corrected import based on the new api_client.py structure
 from .client import FollowUpBossApiClient, FollowUpBossApiException
 
 # load_dotenv is handled by ApiClient, no need to call it here directly if ApiClient manages API key loading.
+logger = logging.getLogger(__name__)
 
 class DealAttachments:
     """
     A class for interacting with the Deal Attachments part of the Follow Up Boss API.
     """
 
-    def __init__(self, client: FollowUpBossApiClient):
+    def __init__(self, client: FollowUpBossApiClient) -> None:
         """
         Initializes the DealAttachments resource.
 
         Args:
             client: An instance of the FollowUpBossApiClient.
         """
-        self.client = client
+        self._client = client
 
     def add_attachment_to_deal(
         self,
         deal_id: int,
-        file: IO,
-        file_name: str,
+        uri: Optional[str] = None,
+        file: Optional[IO] = None,
+        file_name: Optional[str] = None,
         description: Optional[str] = None,
         category_id: Optional[int] = None
     ) -> Union[Dict[str, Any], str]:
         """
         Adds an attachment to a specific deal.
 
+        There are two ways to add attachments:
+        1. Provide a URI to an externally hosted file
+        2. Upload a file directly (not implemented due to API constraints)
+
+        According to the API docs: "The URI should be a link to a file location stored OUTSIDE of Follow Up Boss. 
+        If a URI is not provided, the API will treat the request as an attempt to upload a file to our servers and return a 403."
+
         Args:
             deal_id: The ID of the deal to add the attachment to.
-            file: The file object to upload.
-            file_name: The name of the file.
+            uri: A link to a file location stored outside of Follow Up Boss.
+            file: The file object to upload (e.g., open('file.txt', 'rb')).
+                  Note: Direct file upload is not implemented due to API constraints.
+            file_name: The name of the file as it should appear in FUB.
             description: Optional description for the attachment.
             category_id: Optional ID of the category for the attachment.
 
@@ -47,32 +59,30 @@ class DealAttachments:
 
         Raises:
             FollowUpBossApiException: If the API call fails.
+            NotImplementedError: If attempting to upload a file directly.
         """
-        endpoint = f"/dealAttachments"
-        data = {"dealId": str(deal_id)}
+        if file is not None:
+            # TODO: Implementation requires specific API documentation on multipart upload format
+            logger.warning("Deal attachment direct upload is not implemented due to API constraints.")
+            logger.warning("API requires specific documentation on the exact format for file uploads.")
+            raise NotImplementedError("Deal attachment direct upload requires specific API documentation.")
+            
+        if not uri:
+            raise ValueError("Either 'uri' or 'file' must be provided. URI to external file is required.")
+            
+        payload: Dict[str, Any] = {
+            "dealId": deal_id,
+            "uri": uri
+        }
+        
         if description:
-            data["description"] = description
+            payload["description"] = description
         if category_id is not None:
-            data["categoryId"] = str(category_id)
+            payload["categoryId"] = str(category_id)  # Convert to string as the API might expect it
         
-        files = {"file": (file_name, file, 'application/octet-stream')} # Common MIME type for binary files
-        
-        # The API documentation for POST /v1/dealAttachments is not explicitly clear on whether
-        # dealId, description, categoryId are part of 'data' (form fields) or 'json_data'.
-        # Typically, when 'files' are involved, other parameters are sent as 'data' (form fields).
-        # If the API expects these as JSON, this might need adjustment.
-        # Based on POST /v1/personAttachments, it's likely form data.
-        try:
-            return self.client.post(endpoint, data=data, files=files)
-        except FollowUpBossApiException as e:
-            # Log or handle the specific "BLOCKED: API Key Permissions" scenario if needed.
-            # For now, re-raise the exception.
-            # Example: if "403 Forbidden" in str(e) and "API Key Permissions" in self.client.last_error_details:
-            #   print("Skipping deal attachment due to API key permissions.")
-            #   return {"status": "skipped", "reason": "API Key Permissions"}
-            raise
+        return self._client._post("dealAttachments", json_data=payload)
 
-    def get_deal_attachment(self, attachment_id: int) -> Union[Dict[str, Any], str]:
+    def get_deal_attachment(self, attachment_id: int) -> Dict[str, Any]:
         """
         Retrieves a specific deal attachment.
 
@@ -81,15 +91,8 @@ class DealAttachments:
 
         Returns:
             A dictionary containing the deal attachment details.
-
-        Raises:
-            FollowUpBossApiException: If the API call fails.
         """
-        endpoint = f"/dealAttachments/{attachment_id}"
-        try:
-            return self.client.get(endpoint)
-        except FollowUpBossApiException as e:
-            raise
+        return self._client._get(f"dealAttachments/{attachment_id}")
 
     def update_deal_attachment(
         self,
@@ -107,27 +110,18 @@ class DealAttachments:
 
         Returns:
             A dictionary containing the API response for the updated attachment.
-
-        Raises:
-            FollowUpBossApiException: If the API call fails.
         """
-        endpoint = f"/dealAttachments/{attachment_id}"
         payload = {}
         if description is not None: # Allow empty string for description if intended
             payload["description"] = description
         if category_id is not None:
-            payload["categoryId"] = str(category_id)
+            payload["categoryId"] = str(category_id)  # Convert to string as the API might expect it
         
         if not payload:
-            # Or raise a ValueError("No update parameters provided")
+            # Return early if no changes to make
             return {"message": "No update parameters provided, no action taken."}
 
-        try:
-            # Assuming PUT uses JSON payload for updates, common practice.
-            # If it uses form-data, change to self.client.put(endpoint, data=payload)
-            return self.client.put(endpoint, json_data=payload)
-        except FollowUpBossApiException as e:
-            raise
+        return self._client._put(f"dealAttachments/{attachment_id}", json_data=payload)
 
     def delete_deal_attachment(self, attachment_id: int) -> Union[Dict[str, Any], str]:
         """
@@ -138,13 +132,6 @@ class DealAttachments:
 
         Returns:
             A dictionary containing the API response (usually empty on success for DELETE).
-
-        Raises:
-            FollowUpBossApiException: If the API call fails.
         """
-        endpoint = f"/dealAttachments/{attachment_id}"
-        try:
-            return self.client.delete(endpoint)
-        except FollowUpBossApiException as e:
-            raise
+        return self._client._delete(f"dealAttachments/{attachment_id}")
 

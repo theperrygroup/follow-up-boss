@@ -100,6 +100,7 @@ class FollowUpBossApiClient:
         params: Optional[Dict[str, Any]] = None,
         data: Optional[Dict[str, Any]] = None,
         json: Optional[Dict[str, Any]] = None,
+        files: Optional[Dict[str, Any]] = None,
     ) -> requests.Response:
         """
         Makes a request to the Follow Up Boss API.
@@ -110,6 +111,7 @@ class FollowUpBossApiClient:
             params: URL parameters for the request.
             data: Form data for the request body.
             json: JSON data for the request body.
+            files: Files to upload.
 
         Returns:
             The response from the API.
@@ -121,6 +123,20 @@ class FollowUpBossApiClient:
         headers = self._get_headers()
         auth = (self.api_key, "") # API Key as username, empty password
 
+        # If we have files, we should not set Content-Type, let requests set it with the boundary
+        if files:
+            headers.pop("Content-Type", None)
+            
+        # Debug output for request
+        print(f"\n=== API Request ===")
+        print(f"Method: {method}")
+        print(f"URL: {url}")
+        print(f"Headers: {headers}")
+        print(f"Params: {params}")
+        print(f"JSON: {json}")
+        print(f"Data: {data}")
+        print(f"Files: {files}")
+
         try:
             response = requests.request(
                 method,
@@ -130,8 +146,19 @@ class FollowUpBossApiClient:
                 params=params,
                 data=data,
                 json=json,
+                files=files,
                 timeout=30  # Adding a timeout for requests
             )
+            
+            # Debug output for response
+            print(f"\n=== API Response ===")
+            print(f"Status: {response.status_code}")
+            print(f"Headers: {dict(response.headers)}")
+            try:
+                print(f"Response JSON: {response.json()}")
+            except Exception:
+                print(f"Response Text: {response.text}")
+            
             response.raise_for_status()  # Raise HTTPError for bad responses (4xx or 5xx)
             return response
         except requests.exceptions.HTTPError as http_err:
@@ -179,18 +206,18 @@ class FollowUpBossApiClient:
         response = self._request("GET", endpoint, params=params)
         return response.json()
 
-    def _post(self, endpoint: str, params: Optional[Dict[str, Any]] = None, data: Optional[Dict[str, Any]] = None, json_data: Optional[Dict[str, Any]] = None) -> Union[Dict[str, Any], str]:
+    def _post(self, endpoint: str, params: Optional[Dict[str, Any]] = None, data: Optional[Dict[str, Any]] = None, json_data: Optional[Dict[str, Any]] = None, files: Optional[Dict[str, Any]] = None) -> Union[Dict[str, Any], str]:
         """Helper method for POST requests."""
-        response = self._request("POST", endpoint, params=params, data=data, json=json_data)
+        response = self._request("POST", endpoint, params=params, data=data, json=json_data, files=files)
         try:
             return response.json()
         except requests.exceptions.JSONDecodeError:
              # Handle cases where response might not be JSON (e.g., 204 No Content)
             return response.text
 
-    def _put(self, endpoint: str, data: Optional[Dict[str, Any]] = None, json_data: Optional[Dict[str, Any]] = None) -> Union[Dict[str, Any], str]:
+    def _put(self, endpoint: str, data: Optional[Dict[str, Any]] = None, json_data: Optional[Dict[str, Any]] = None, files: Optional[Dict[str, Any]] = None) -> Union[Dict[str, Any], str]:
         """Helper method for PUT requests."""
-        response = self._request("PUT", endpoint, data=data, json=json_data)
+        response = self._request("PUT", endpoint, data=data, json=json_data, files=files)
         try:
             return response.json()
         except requests.exceptions.JSONDecodeError:

@@ -132,8 +132,10 @@ def test_create_text_message(text_messages_api, people_api):
         print(f"Actual phone (last 10 digits): {actual_phone_last_10}")
         assert actual_phone_last_10 == expected_phone_last_10
         
-        # Test passed, return the created message ID for potential future use
-        return response['id']
+        # Verify that we got a valid message ID
+        assert isinstance(response['id'], int)
+        assert response['id'] > 0
+        print(f"Text message created successfully with ID: {response['id']}")
     except requests.exceptions.HTTPError as e:
         # Get the response content for more detailed error information
         print(f"HTTP Error creating text message: {str(e)}")

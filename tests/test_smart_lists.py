@@ -31,22 +31,23 @@ def test_list_smart_lists(smart_lists_api):
     # Check basic structure of the response
     assert isinstance(response, dict)
     assert '_metadata' in response
-    assert 'smartlists' in response  # Note the lowercase 'l'
+    assert 'smartlists' in response
     
     # Check metadata
     assert 'collection' in response['_metadata']
     assert response['_metadata']['collection'] == 'smartlists'
     
-    # Check smart lists data (might be empty in test account)
+    # Check smart lists data
     assert isinstance(response['smartlists'], list)
     
-    # Return the data for use in other tests
-    return response
+    # Verify that the response is valid
+    assert response is not None
+    print(f"Successfully listed {len(response['smartlists'])} smart lists")
 
 def test_retrieve_smart_list(smart_lists_api):
     """Test retrieving a specific smart list."""
     # First, get a list of smart lists to find a valid ID
-    list_response = test_list_smart_lists(smart_lists_api)
+    list_response = smart_lists_api.list_smart_lists()
     
     # Make sure we have at least one smart list
     if not list_response['smartlists']:

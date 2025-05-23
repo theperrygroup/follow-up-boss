@@ -19,7 +19,7 @@ class Notes:
         Args:
             client: An instance of the FollowUpBossApiClient.
         """
-        self.client = client
+        self._client = client
 
     def list_notes(self, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
@@ -32,7 +32,7 @@ class Notes:
         Returns:
             A dictionary containing the list of notes and pagination info.
         """
-        return self.client._get("notes", params=params)
+        return self._client._get("notes", params=params)
 
     def create_note(
         self, person_id: int, subject: str, body: str, is_html: Optional[bool] = None, type_id: Optional[int] = None
@@ -59,7 +59,33 @@ class Notes:
             payload["isHtml"] = is_html
         if type_id is not None:
             payload["typeId"] = type_id
-        return self.client._post("notes", json_data=payload)
+        return self._client._post("notes", json_data=payload)
+    
+    def create_note_from_dict(self, note_data: Dict[str, Any]) -> Union[Dict[str, Any], str]:
+        """
+        Creates a new note using a dictionary of note data.
+        
+        This is a more flexible alternative to create_note when you have a dictionary
+        of note data already prepared.
+
+        Args:
+            note_data: A dictionary containing the note data. Must include at minimum:
+                      - personId: The ID of the person to associate the note with
+                      - subject: The subject/title of the note
+                      - body: The content of the note
+                      
+        Returns:
+            A dictionary containing the details of the created note or an error string.
+            
+        Raises:
+            ValueError: If required fields are missing from note_data.
+        """
+        required_fields = ['personId', 'subject', 'body']
+        for field in required_fields:
+            if field not in note_data:
+                raise ValueError(f"Missing required field '{field}' in note_data")
+                
+        return self._client._post("notes", json_data=note_data)
 
     def retrieve_note(self, note_id: int, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
@@ -72,7 +98,7 @@ class Notes:
         Returns:
             A dictionary containing the details of the note.
         """
-        return self.client._get(f"notes/{note_id}", params=params)
+        return self._client._get(f"notes/{note_id}", params=params)
 
     def update_note(
         self, note_id: int, subject: Optional[str] = None, body: Optional[str] = None, is_html: Optional[bool] = None
@@ -103,7 +129,7 @@ class Notes:
             # Consider returning self.retrieve_note(note_id) or raising ValueError
             return self.retrieve_note(note_id) # Or some other appropriate response for no-op
 
-        return self.client._put(f"notes/{note_id}", json_data=payload)
+        return self._client._put(f"notes/{note_id}", json_data=payload)
 
     def delete_note(self, note_id: int) -> Union[Dict[str, Any], str]:
         """
@@ -115,7 +141,7 @@ class Notes:
         Returns:
             An empty string if successful, or a dictionary/string with error information.
         """
-        return self.client._delete(f"notes/{note_id}")
+        return self._client._delete(f"notes/{note_id}")
 
     # GET /notes/{id}
     # PUT /notes/{id}

@@ -1,8 +1,8 @@
 """
-API bindings for Follow Up Boss Email Marketing endpoints.
+Handles the Email Marketing endpoints for the Follow Up Boss API.
 """
 
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 from .client import FollowUpBossApiClient
 import logging
@@ -11,10 +11,10 @@ logger = logging.getLogger(__name__)
 
 class EmailMarketing:
     """
-    Provides access to the Email Marketing endpoints of the Follow Up Boss API.
+    A class for interacting with the Email Marketing endpoints of the Follow Up Boss API.
     """
 
-    def __init__(self, client: FollowUpBossApiClient):
+    def __init__(self, client: FollowUpBossApiClient) -> None:
         """
         Initializes the EmailMarketing resource.
 
@@ -24,148 +24,139 @@ class EmailMarketing:
         self._client = client
 
     def list_email_marketing_events(
-        self,
-        limit: Optional[int] = None,
-        offset: Optional[int] = None,
-        sort: Optional[str] = None,
-        # Add other relevant filters (e.g., campaignId, personId, type)
-        **kwargs: Any
-    ) -> Union[Dict[str, Any], str]:
+        self, params: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """
-        Retrieves a list of email marketing events (e.g., opens, clicks).
+        Retrieves a list of email marketing events.
 
         Args:
-            limit: The maximum number of results to return.
-            offset: The number of results to skip for pagination.
-            sort: The field to sort by (e.g., 'created').
-            **kwargs: Additional query parameters to filter the results.
+            params: Optional query parameters to filter the results.
 
         Returns:
-            A dictionary containing the list of email marketing events and pagination info.
+            A dictionary containing the list of email marketing events.
         """
-        params: Dict[str, Any] = {}
-        if limit is not None:
-            params["limit"] = limit
-        if offset is not None:
-            params["offset"] = offset
-        if sort is not None:
-            params["sort"] = sort
-        params.update(kwargs)
-        
         return self._client._get("emEvents", params=params)
 
     def create_email_marketing_event(
         self,
+        event_type: str,
         person_id: int,
-        event_type: str, # e.g., "Sent", "Open", "Click", "Bounce", "Spam", "Unsubscribe"
-        campaign_id: Optional[int] = None, # ID of the email marketing campaign
-        email_id: Optional[int] = None, # ID of the specific email sent, if applicable
-        url: Optional[str] = None, # For click events, the URL clicked
-        # created_at: Optional[str] = None, # ISO 8601, defaults to now if not provided
+        campaign_id: Optional[int] = None,
+        email_id: Optional[int] = None,
+        email_address: Optional[str] = None,
         **kwargs: Any
     ) -> Union[Dict[str, Any], str]:
         """
         Creates a new email marketing event.
 
         Args:
-            person_id: The ID of the person associated with the event.
-            event_type: Type of the event (e.g., "Open", "Click").
-            campaign_id: Optional. ID of the associated email campaign.
-            email_id: Optional. ID of the specific marketing email, if different from campaign.
-            url: Optional. For 'Click' events, the URL that was clicked.
-            # created_at: Optional. Timestamp of the event.
-            **kwargs: Additional fields for the event payload.
+            event_type: The type of event (e.g., "open", "click", "unsubscribe").
+            person_id: The ID of the person associated with this event.
+            campaign_id: Optional. The ID of the campaign associated with this event.
+            email_id: Optional. The ID of the email associated with this event.
+            email_address: Optional. The email address associated with this event.
+            **kwargs: Additional fields for the event.
 
         Returns:
             A dictionary containing the details of the newly created event.
         """
-        payload: Dict[str, Any] = {
+        event_data: Dict[str, Any] = {
+            "type": event_type,
             "personId": person_id,
-            "type": event_type
+            "recipient": email_address or f"person{person_id}@example.com"
         }
+
         if campaign_id is not None:
-            payload["campaignId"] = campaign_id
+            event_data["campaignId"] = campaign_id
         if email_id is not None:
-            payload["emailId"] = email_id # Or possibly 'marketingEmailId' etc.
-        if url is not None and event_type.lower() == "click":
-            payload["url"] = url
-        # if created_at is not None:
-        #     payload["createdAt"] = created_at
-        
-        payload.update(kwargs)
-        
+            event_data["emailId"] = email_id
+
+        event_data.update(kwargs)
+
+        # Wrap in emEvents as expected by API
+        payload = {
+            "emEvents": [event_data]
+        }
+
         return self._client._post("emEvents", json_data=payload)
 
     def list_email_marketing_campaigns(
-        self,
-        limit: Optional[int] = None,
-        offset: Optional[int] = None,
-        sort: Optional[str] = None,
-        # Add other relevant filters (e.g., status, name)
-        **kwargs: Any
-    ) -> Union[Dict[str, Any], str]:
+        self, params: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """
         Retrieves a list of email marketing campaigns.
 
         Args:
-            limit: The maximum number of results to return.
-            offset: The number of results to skip for pagination.
-            sort: The field to sort by (e.g., 'name', 'created').
-            **kwargs: Additional query parameters to filter the results.
+            params: Optional query parameters to filter the results.
 
         Returns:
-            A dictionary containing the list of email marketing campaigns and pagination info.
+            A dictionary containing the list of email marketing campaigns.
         """
-        params: Dict[str, Any] = {}
-        if limit is not None:
-            params["limit"] = limit
-        if offset is not None:
-            params["offset"] = offset
-        if sort is not None:
-            params["sort"] = sort
-        params.update(kwargs)
-        
         return self._client._get("emCampaigns", params=params)
 
     def create_email_marketing_campaign(
         self,
         name: str,
-        # Add other required fields like subject, fromName, fromEmail, listIds etc.
-        # based on actual API requirements for creating a campaign.
+        subject: str,
+        body: str,
         **kwargs: Any
     ) -> Union[Dict[str, Any], str]:
         """
         Creates a new email marketing campaign.
 
         Args:
-            name: The name of the email marketing campaign.
-            **kwargs: Additional fields for the campaign payload (e.g., subject, 
-                      fromName, fromEmail, listIds, htmlBody, textBody, status).
-                      Refer to FUB API documentation for required/optional fields.
+            name: The name of the campaign.
+            subject: The subject line of the campaign.
+            body: The HTML body of the campaign.
+            **kwargs: Additional fields for the campaign.
 
         Returns:
             A dictionary containing the details of the newly created campaign.
         """
         payload: Dict[str, Any] = {
-            "name": name
+            "name": name,
+            "subject": subject,
+            "origin": "API",  # Required field
+            "originId": 1  # Required field - using a default value
         }
+
         payload.update(kwargs)
-        
+
         return self._client._post("emCampaigns", json_data=payload)
 
-    def update_email_marketing_campaign(self, campaign_id: int, update_data: Dict[str, Any]) -> Union[Dict[str, Any], str]:
+    def update_email_marketing_campaign(
+        self,
+        campaign_id: int,
+        name: Optional[str] = None,
+        subject: Optional[str] = None,
+        body: Optional[str] = None,
+        **kwargs: Any
+    ) -> Union[Dict[str, Any], str]:
         """
         Updates an existing email marketing campaign.
 
         Args:
             campaign_id: The ID of the campaign to update.
-            update_data: A dictionary containing the fields to update 
-                         (e.g., {"name": "New Campaign Name", "status": "Active"}).
+            name: Optional. The new name of the campaign.
+            subject: Optional. The new subject line of the campaign.
+            body: Optional. The new HTML body of the campaign.
+            **kwargs: Additional fields to update.
 
         Returns:
             A dictionary containing the details of the updated campaign.
         """
-        return self._client.put(f"/emCampaigns/{campaign_id}", json_data=update_data)
+        payload: Dict[str, Any] = {}
+
+        if name is not None:
+            payload["name"] = name
+        if subject is not None:
+            payload["subject"] = subject
+        if body is not None:
+            payload["body"] = body
+
+        payload.update(kwargs)
+
+        return self._client._put(f"emCampaigns/{campaign_id}", json_data=payload)
 
     # POST /emEvents (Create email marketing event)
     # GET /emCampaigns (List email marketing campaigns)
