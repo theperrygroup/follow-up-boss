@@ -21,7 +21,7 @@ class AppointmentTypes:
         Args:
             client: An instance of the FollowUpBossApiClient.
         """
-        self.client = client
+        self._client = client
 
     def list_appointment_types(
         self,
@@ -36,7 +36,7 @@ class AppointmentTypes:
         Returns:
             A dictionary containing the list of appointment types and pagination information.
         """
-        return self.client._get("appointmentTypes", params=params)
+        return self._client._get("appointmentTypes", params=params)
 
     def create_appointment_type(
         self,
@@ -57,7 +57,7 @@ class AppointmentTypes:
         if params:
             payload.update(params)
         
-        return self.client._post("appointmentTypes", json_data=payload)
+        return self._client._post("appointmentTypes", json_data=payload)
 
     def retrieve_appointment_type(self, appt_type_id: int) -> Dict[str, Any]:
         """
@@ -69,7 +69,7 @@ class AppointmentTypes:
         Returns:
             A dictionary containing the details of the appointment type.
         """
-        return self.client._get(f"appointmentTypes/{appt_type_id}")
+        return self._client._get(f"appointmentTypes/{appt_type_id}")
 
     def update_appointment_type(self, appt_type_id: int, update_data: Dict[str, Any]) -> Union[Dict[str, Any], str]:
         """
@@ -82,7 +82,7 @@ class AppointmentTypes:
         Returns:
             A dictionary containing the details of the updated appointment type or an error string.
         """
-        return self.client._put(f"appointmentTypes/{appt_type_id}", json_data=update_data)
+        return self._client._put(f"appointmentTypes/{appt_type_id}", json_data=update_data)
 
     def delete_appointment_type(self, appt_type_id: int) -> Union[Dict[str, Any], str]:
         """
@@ -94,7 +94,7 @@ class AppointmentTypes:
         Returns:
             An empty string if successful, or a dictionary/string with error information.
         """
-        return self.client._delete(f"appointmentTypes/{appt_type_id}")
+        return self._client._delete(f"appointmentTypes/{appt_type_id}")
 
     # GET /appointmentTypes/{id} (Retrieve appointment type)
     # PUT /appointmentTypes/{id} (Update appointment type)

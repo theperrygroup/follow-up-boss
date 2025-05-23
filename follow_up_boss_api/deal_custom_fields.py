@@ -1,8 +1,8 @@
 """
-API bindings for Follow Up Boss Deal Custom Fields endpoints.
+Handles the Deal Custom Fields endpoints for the Follow Up Boss API.
 """
 
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 from .client import FollowUpBossApiClient
 import logging
@@ -11,10 +11,10 @@ logger = logging.getLogger(__name__)
 
 class DealCustomFields:
     """
-    Provides access to the Deal Custom Fields endpoints of the Follow Up Boss API.
+    A class for interacting with the Deal Custom Fields endpoints of the Follow Up Boss API.
     """
 
-    def __init__(self, client: FollowUpBossApiClient):
+    def __init__(self, client: FollowUpBossApiClient) -> None:
         """
         Initializes the DealCustomFields resource.
 
@@ -24,63 +24,52 @@ class DealCustomFields:
         self._client = client
 
     def list_deal_custom_fields(
-        self,
-        # Add relevant filters if specified by API docs (e.g., group)
-        **kwargs: Any
-    ) -> Union[Dict[str, Any], str]: 
+        self, params: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """
-        Retrieves a list of custom fields defined for deals.
+        Retrieves a list of deal custom fields.
 
         Args:
-            **kwargs: Additional query parameters to filter the results.
+            params: Optional query parameters to filter the results.
 
         Returns:
             A dictionary containing the list of deal custom fields.
         """
-        params: Dict[str, Any] = {}
-        params.update(kwargs)
-        
         return self._client._get("dealCustomFields", params=params)
 
     def create_deal_custom_field(
         self,
         name: str,
-        type: str, # E.g., "Text", "Date", "Number", "Dropdown"
-        options: Optional[list[str]] = None, # Required if type is "Dropdown"
-        # entityType is implicitly "Deal" for this endpoint group
+        field_type: str,
+        show_in_form: bool = True,
         **kwargs: Any
     ) -> Union[Dict[str, Any], str]:
         """
-        Creates a new custom field specifically for deals.
+        Creates a new deal custom field.
 
         Args:
             name: The name of the custom field.
-            type: The data type of the custom field (Text, Date, Number, Dropdown).
-            options: Optional. A list of string options, required if type is "Dropdown".
-            **kwargs: Additional fields for the payload.
+            field_type: The type of the field (e.g., "text", "select", "date").
+            show_in_form: Whether to show this field in forms.
+            **kwargs: Additional fields for the custom field.
 
         Returns:
-            A dictionary containing the details of the newly created deal custom field.
-        
-        Raises:
-            ValueError: If type is "Dropdown" and options are not provided.
+            A dictionary containing the details of the newly created custom field.
+            
+        Note:
+            This operation may require admin permissions.
         """
-        if type.lower() == "dropdown" and not options:
-            raise ValueError("Argument 'options' is required when custom field type is 'Dropdown'.")
-
         payload: Dict[str, Any] = {
             "name": name,
-            "type": type,
-            # "entityType": "Deal" # Usually implied by the endpoint itself
+            "type": field_type,
+            "showInForm": show_in_form
         }
-        if options:
-            payload["options"] = options
-        
+
         payload.update(kwargs)
-        
+
         return self._client._post("dealCustomFields", json_data=payload)
 
-    def retrieve_deal_custom_field(self, field_id: int) -> Union[Dict[str, Any], str]:
+    def retrieve_deal_custom_field(self, field_id: int) -> Dict[str, Any]:
         """
         Retrieves a specific deal custom field by its ID.
 
@@ -88,22 +77,46 @@ class DealCustomFields:
             field_id: The ID of the deal custom field to retrieve.
 
         Returns:
-            A dictionary containing the details of the deal custom field.
+            A dictionary containing the deal custom field details.
         """
-        return self._client.get(f"/dealCustomFields/{field_id}")
+        return self._client._get(f"dealCustomFields/{field_id}")
 
-    def update_deal_custom_field(self, field_id: int, update_data: Dict[str, Any]) -> Union[Dict[str, Any], str]:
+    def update_deal_custom_field(
+        self,
+        field_id: int,
+        name: Optional[str] = None,
+        field_type: Optional[str] = None,
+        show_in_form: Optional[bool] = None,
+        **kwargs: Any
+    ) -> Union[Dict[str, Any], str]:
         """
         Updates an existing deal custom field.
 
         Args:
             field_id: The ID of the deal custom field to update.
-            update_data: A dictionary containing the fields to update (e.g., {"name": "New Name"}).
+            name: Optional. The new name of the custom field.
+            field_type: Optional. The new type of the field.
+            show_in_form: Optional. Whether to show this field in forms.
+            **kwargs: Additional fields to update.
 
         Returns:
-            A dictionary containing the details of the updated deal custom field.
+            A dictionary containing the details of the updated custom field.
+            
+        Note:
+            This operation may require admin permissions.
         """
-        return self._client.put(f"/dealCustomFields/{field_id}", json_data=update_data)
+        payload: Dict[str, Any] = {}
+
+        if name is not None:
+            payload["name"] = name
+        if field_type is not None:
+            payload["type"] = field_type
+        if show_in_form is not None:
+            payload["showInForm"] = show_in_form
+
+        payload.update(kwargs)
+
+        return self._client._put(f"dealCustomFields/{field_id}", json_data=payload)
 
     def delete_deal_custom_field(self, field_id: int) -> Union[Dict[str, Any], str]:
         """
@@ -113,10 +126,12 @@ class DealCustomFields:
             field_id: The ID of the deal custom field to delete.
 
         Returns:
-            An empty dictionary if successful (API returns 204 No Content),
-            or a dictionary with an error message if it fails.
+            An empty dictionary if successful.
+            
+        Note:
+            This operation may require admin permissions.
         """
-        return self._client.delete(f"/dealCustomFields/{field_id}")
+        return self._client._delete(f"dealCustomFields/{field_id}")
 
     # GET /dealCustomFields/{id} (Retrieve deal custom field)
     # PUT /dealCustomFields/{id} (Update deal custom field)

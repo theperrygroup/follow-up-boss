@@ -88,7 +88,7 @@ class AppointmentOutcomes:
         Returns:
             A dictionary containing the details of the appointment outcome.
         """
-        return self._client.get(f"/appointmentOutcomes/{outcome_id}")
+        return self._client._get(f"appointmentOutcomes/{outcome_id}")
 
     def update_appointment_outcome(self, outcome_id: int, update_data: Dict[str, Any]) -> Union[Dict[str, Any], str]:
         """
@@ -101,20 +101,26 @@ class AppointmentOutcomes:
         Returns:
             A dictionary containing the details of the updated appointment outcome.
         """
-        return self._client.put(f"/appointmentOutcomes/{outcome_id}", json_data=update_data)
+        return self._client._put(f"appointmentOutcomes/{outcome_id}", json_data=update_data)
 
-    def delete_appointment_outcome(self, outcome_id: int) -> Union[Dict[str, Any], str]:
+    def delete_appointment_outcome(self, outcome_id: int, assign_outcome_id: int) -> Union[Dict[str, Any], str]:
         """
         Deletes a specific appointment outcome by its ID.
 
         Args:
             outcome_id: The ID of the appointment outcome to delete.
+            assign_outcome_id: The ID of the appointment outcome to which appointments 
+                              with the deleted outcome should be reassigned.
 
         Returns:
             An empty dictionary if successful (API returns 204 No Content),
             or a dictionary with an error message if it fails.
+            
+        Raises:
+            ValueError: If assign_outcome_id is not provided, as it's required by the API.
         """
-        return self._client.delete(f"/appointmentOutcomes/{outcome_id}")
+        payload = {"assignOutcomeId": assign_outcome_id}
+        return self._client._delete(f"appointmentOutcomes/{outcome_id}", json_data=payload)
 
     # GET /appointmentOutcomes/{id} (Retrieve appointment outcome)
     # PUT /appointmentOutcomes/{id} (Update appointment outcome)

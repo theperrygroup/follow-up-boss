@@ -106,8 +106,9 @@ def test_create_event(events_api, people_api):
         if 'id' in response:
             assert response['id'] == person_id
         
-        # Return the response for potential future use
-        return response
+        # Verify that the event was created successfully
+        assert response is not None
+        print(f"Event created successfully for person {person_id}")
     except requests.exceptions.HTTPError as e:
         # Get the response content for more detailed error information
         print(f"HTTP Error creating event: {str(e)}")
@@ -159,8 +160,10 @@ def test_create_event_with_new_person(events_api):
         if 'lastName' in response:
             assert response['lastName'] == last_name
         
-        # Return the person ID for potential future use
-        return response['id']
+        # Verify that we got a valid person ID
+        assert isinstance(response['id'], int)
+        assert response['id'] > 0
+        print(f"Event with new person created successfully, person ID: {response['id']}")
     except requests.exceptions.HTTPError as e:
         print(f"HTTP Error creating event with new person: {str(e)}")
         print(f"Response content: {e.response.content if hasattr(e, 'response') else 'No response content'}")

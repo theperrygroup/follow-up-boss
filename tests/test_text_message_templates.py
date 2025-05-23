@@ -117,8 +117,10 @@ def test_create_text_message_template(text_message_templates_api):
         message_field = 'message' if 'message' in response else 'body'
         assert body in response[message_field]
         
-        # Return the template ID for potential future use
-        return response['id']
+        # Verify that we got a valid template ID
+        assert isinstance(response['id'], int)
+        assert response['id'] > 0
+        print(f"Text message template created successfully with ID: {response['id']}")
     except requests.exceptions.HTTPError as e:
         # If we get a permission error, skip the test
         if e.response.status_code in [401, 403]:

@@ -41,13 +41,14 @@ def test_list_pipelines(pipelines_api):
     # Check pipelines data (might be empty in test account)
     assert isinstance(response['pipelines'], list)
     
-    # Return the data for use in other tests
-    return response
+    # Verify that the response is valid
+    assert response is not None
+    print(f"Successfully listed {len(response['pipelines'])} pipelines")
 
 def test_retrieve_pipeline(pipelines_api):
     """Test retrieving a specific pipeline."""
     # First, get a list of pipelines to find a valid ID
-    list_response = test_list_pipelines(pipelines_api)
+    list_response = pipelines_api.list_pipelines()
     
     # Make sure we have at least one pipeline
     if not list_response['pipelines']:
@@ -129,8 +130,10 @@ def test_update_pipeline(pipelines_api):
     assert 'description' in response
     assert response['description'] == update_data['description']
     
-    # Return the ID for use in delete test
-    return pipeline_id
+    # Verify that we got a valid ID
+    assert isinstance(response['id'], int)
+    assert response['id'] > 0
+    print(f"Pipeline {pipeline_id} updated successfully")
 
 def test_delete_pipeline(pipelines_api):
     """Test deleting a pipeline."""

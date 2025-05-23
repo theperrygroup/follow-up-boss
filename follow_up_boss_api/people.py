@@ -22,7 +22,7 @@ class People:
         Args:
             client: An instance of the FollowUpBossApiClient.
         """
-        self.client = client
+        self._client = client
 
     def list_people(
         self, 
@@ -38,7 +38,7 @@ class People:
         Returns:
             A dictionary containing the list of people and pagination information.
         """
-        return self.client._get("people", params=params)
+        return self._client._get("people", params=params)
 
     def create_person(self, person_data: Dict[str, Any]) -> Union[Dict[str, Any], str]:
         """
@@ -50,7 +50,7 @@ class People:
         Returns:
             A dictionary containing the details of the newly created person or an error string.
         """
-        return self.client._post("people", json_data=person_data)
+        return self._client._post("people", json_data=person_data)
 
     def retrieve_person(self, person_id: int, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
@@ -63,7 +63,7 @@ class People:
         Returns:
             A dictionary containing the details of the person.
         """
-        return self.client._get(f"people/{person_id}", params=params)
+        return self._client._get(f"people/{person_id}", params=params)
 
     def update_person(self, person_id: int, update_data: Dict[str, Any]) -> Union[Dict[str, Any], str]:
         """
@@ -76,7 +76,7 @@ class People:
         Returns:
             A dictionary containing the details of the updated person or an error string.
         """
-        return self.client._put(f"people/{person_id}", json_data=update_data)
+        return self._client._put(f"people/{person_id}", json_data=update_data)
 
     def delete_person(self, person_id: int) -> Union[Dict[str, Any], str]:
         """
@@ -88,7 +88,7 @@ class People:
         Returns:
             An empty string if successful, or a dictionary/string with error information.
         """
-        return self.client._delete(f"people/{person_id}")
+        return self._client._delete(f"people/{person_id}")
 
     def check_duplicate(
         self, 
@@ -109,7 +109,7 @@ class People:
         """
         if not params or not any(key in params for key in ["email", "phone"]):
             raise ValueError("Params must include at least 'email' or 'phone' to check for duplicates.")
-        return self.client._get("people/checkDuplicate", params=params)
+        return self._client._get("people/checkDuplicate", params=params)
 
     def list_unclaimed_people(
         self, 
@@ -124,7 +124,7 @@ class People:
         Returns:
             A dictionary containing the list of unclaimed people and pagination information.
         """
-        return self.client._get("people/unclaimed", params=params)
+        return self._client._get("people/unclaimed", params=params)
 
     def claim_person(self, payload: Dict[str, Any]) -> Union[Dict[str, Any], str]:
         """
@@ -137,7 +137,7 @@ class People:
         Returns:
             A dictionary containing the API response or an error string.
         """
-        return self.client._post("people/claim", json_data=payload)
+        return self._client._post("people/claim", json_data=payload)
 
     def ignore_unclaimed_person(self, payload: Dict[str, Any]) -> Union[Dict[str, Any], str]:
         """
@@ -149,4 +149,4 @@ class People:
         Returns:
             A dictionary containing the API response or an error string.
         """
-        return self.client._post("people/ignoreUnclaimed", json_data=payload)
+        return self._client._post("people/ignoreUnclaimed", json_data=payload)

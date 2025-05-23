@@ -1,21 +1,20 @@
 """
-API bindings for Follow Up Boss Ponds endpoints.
+Handles the Ponds endpoints for the Follow Up Boss API.
 """
 
-from typing import Any, Dict, Optional, List, Union
+from typing import Any, Dict, List, Optional, Union
 
 from .client import FollowUpBossApiClient
-import logging
 
-logger = logging.getLogger(__name__)
 
 class Ponds:
     """
-    Provides access to the Ponds endpoints of the Follow Up Boss API.
-    Ponds are used for managing leads that are not assigned to specific agents.
+    A class for interacting with the Ponds endpoints of the Follow Up Boss API.
+    
+    Ponds are lead routing systems that distribute leads based on various criteria.
     """
 
-    def __init__(self, client: FollowUpBossApiClient):
+    def __init__(self, client: FollowUpBossApiClient) -> None:
         """
         Initializes the Ponds resource.
 
@@ -24,42 +23,24 @@ class Ponds:
         """
         self._client = client
 
-    def list_ponds(
-        self,
-        limit: Optional[int] = None,
-        offset: Optional[int] = None,
-        sort: Optional[str] = None,
-        # Add other relevant filters if specified by API docs (e.g., name)
-        **kwargs: Any
-    ) -> Union[Dict[str, Any], str]: 
+    def list_ponds(self, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
-        Retrieves a list of ponds in the account.
+        Retrieves a list of ponds.
 
         Args:
-            limit: The maximum number of results to return.
-            offset: The number of results to skip for pagination.
-            sort: The field to sort by (e.g., 'name', 'created').
-            **kwargs: Additional query parameters to filter the results.
+            params: Optional. Additional query parameters to filter the results.
 
         Returns:
-            A dictionary containing the list of ponds and pagination information.
+            A dictionary containing the list of ponds.
         """
-        params: Dict[str, Any] = {}
-        if limit is not None:
-            params["limit"] = limit
-        if offset is not None:
-            params["offset"] = offset
-        if sort is not None:
-            params["sort"] = sort
-        params.update(kwargs)
-        
         return self._client._get("ponds", params=params)
 
     def create_pond(
         self,
         name: str,
-        user_ids: Optional[List[int]] = None, # List of user IDs for pond members
-        # Add other relevant fields if specified by API (e.g., roundRobinEnabled)
+        user_ids: Optional[List[int]] = None,
+        is_default: Optional[bool] = None,
+        description: Optional[str] = None,
         **kwargs: Any
     ) -> Union[Dict[str, Any], str]:
         """
@@ -67,21 +48,25 @@ class Ponds:
 
         Args:
             name: The name of the pond.
-            user_ids: Optional. A list of user IDs to add as members to this pond.
-            **kwargs: Additional fields for the pond payload.
+            user_ids: Optional. List of user IDs (NOTE: API only accepts name field for creation).
+            is_default: Optional. Whether this is the default pond (NOTE: Ignored by API).
+            description: Optional. A description of the pond (NOTE: Ignored by API).
+            **kwargs: Additional fields for the pond (NOTE: Most will be ignored by API).
 
         Returns:
             A dictionary containing the details of the newly created pond.
+            
+        Note:
+            The Follow Up Boss Ponds API only accepts the "name" field for creation.
+            All other fields are ignored. Use update_pond() to modify other properties after creation.
         """
-        payload: Dict[str, Any] = {"name": name}
-        if user_ids is not None:
-            payload["userIds"] = user_ids # Or 'users', 'members' - API specific
-        
-        payload.update(kwargs)
-        
+        payload: Dict[str, Any] = {
+            "name": name
+        }
+
         return self._client._post("ponds", json_data=payload)
 
-    def retrieve_pond(self, pond_id: int) -> Union[Dict[str, Any], str]:
+    def retrieve_pond(self, pond_id: int) -> Dict[str, Any]:
         """
         Retrieves a specific pond by its ID.
 
@@ -89,36 +74,73 @@ class Ponds:
             pond_id: The ID of the pond to retrieve.
 
         Returns:
-            A dictionary containing the details of the pond.
+            A dictionary containing the pond details.
         """
-        return self._client.get(f"/ponds/{pond_id}")
+        return self._client._get(f"ponds/{pond_id}")
 
-    def update_pond(self, pond_id: int, update_data: Dict[str, Any]) -> Union[Dict[str, Any], str]:
+    def update_pond(
+        self,
+        pond_id: int,
+        name: Optional[str] = None,
+        user_ids: Optional[List[int]] = None,
+        is_default: Optional[bool] = None,
+        description: Optional[str] = None,
+        **kwargs: Any
+    ) -> Union[Dict[str, Any], str]:
         """
         Updates an existing pond.
 
         Args:
             pond_id: The ID of the pond to update.
-            update_data: A dictionary containing the fields to update (e.g., {"name": "New Pond Name"}).
+            name: Optional. The name of the pond.
+            user_ids: Optional. List of user IDs that participate in this pond.
+            is_default: Optional. Whether this is the default pond.
+            description: Optional. A description of the pond.
+            **kwargs: Additional fields to update.
 
         Returns:
             A dictionary containing the details of the updated pond.
         """
-        return self._client.put(f"/ponds/{pond_id}", json_data=update_data)
+        payload: Dict[str, Any] = {}
 
-    def delete_pond(self, pond_id: int) -> Union[Dict[str, Any], str]:
+        if name is not None:
+            payload["name"] = name
+        if user_ids is not None:
+            payload["users"] = user_ids
+        if is_default is not None:
+            payload["default"] = is_default
+        if description is not None:
+            payload["note"] = description
+
+        payload.update(kwargs)
+
+        return self._client._put(f"ponds/{pond_id}", json_data=payload)
+
+    def delete_pond(self, pond_id: int, assign_to: Optional[int] = None) -> Union[Dict[str, Any], str]:
         """
         Deletes a specific pond by its ID.
 
         Args:
             pond_id: The ID of the pond to delete.
+            assign_to: Optional. User ID to assign existing leads in this pond to.
+                      If not provided, will try to use the current user.
 
         Returns:
-            An empty dictionary if successful (API returns 204 No Content),
-            or a dictionary with an error message if it fails.
+            An empty dictionary if successful.
+            
+        Note:
+            The Follow Up Boss API requires an "assignTo" parameter when deleting ponds
+            to specify where to move any existing leads in the pond.
         """
-        return self._client.delete(f"/ponds/{pond_id}")
-
-    # GET /ponds/{id} (Retrieve pond)
-    # PUT /ponds/{id} (Update pond)
-    # DELETE /ponds/{id} (Delete pond) 
+        # API requires assignTo parameter for deletion
+        if assign_to is None:
+            # Try to get current user ID
+            try:
+                me = self._client._get("me")
+                assign_to = me.get("id", 1)  # Default to 1 if can't get current user
+            except:
+                assign_to = 1  # Fallback default
+        
+        # Add assignTo as URL parameter
+        url = f"ponds/{pond_id}?assignTo={assign_to}"
+        return self._client._delete(url) 
