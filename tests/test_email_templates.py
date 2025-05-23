@@ -4,11 +4,11 @@ Test the Email Templates API.
 
 import pytest
 import uuid
-from follow_up_boss_api.client import FollowUpBossApiClient
-from follow_up_boss_api.email_templates import EmailTemplates
+from follow_up_boss.client import FollowUpBossApiClient
+from follow_up_boss.email_templates import EmailTemplates
 import os
 import requests
-from follow_up_boss_api.client import FollowUpBossApiException
+from follow_up_boss.client import FollowUpBossApiException
 
 @pytest.fixture
 def client():

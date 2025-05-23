@@ -4,9 +4,9 @@ Test the Notes API.
 
 import pytest
 import uuid
-from follow_up_boss_api.client import FollowUpBossApiClient
-from follow_up_boss_api.notes import Notes
-from follow_up_boss_api.people import People
+from follow_up_boss.client import FollowUpBossApiClient
+from follow_up_boss.notes import Notes
+from follow_up_boss.people import People
 import os
 
 @pytest.fixture

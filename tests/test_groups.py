@@ -4,9 +4,9 @@ Test the Groups API.
 
 import pytest
 import uuid
-from follow_up_boss_api.client import FollowUpBossApiClient, FollowUpBossApiException
-from follow_up_boss_api.groups import Groups
-from follow_up_boss_api.users import Users
+from follow_up_boss.client import FollowUpBossApiClient, FollowUpBossApiException
+from follow_up_boss.groups import Groups
+from follow_up_boss.users import Users
 import os
 
 @pytest.fixture

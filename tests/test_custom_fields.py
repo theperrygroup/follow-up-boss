@@ -4,11 +4,11 @@ Test the Custom Fields API.
 
 import pytest
 import uuid
-from follow_up_boss_api.client import FollowUpBossApiClient
-from follow_up_boss_api.custom_fields import CustomFields
+from follow_up_boss.client import FollowUpBossApiClient
+from follow_up_boss.custom_fields import CustomFields
 import os
 import requests
-from follow_up_boss_api.client import FollowUpBossApiException
+from follow_up_boss.client import FollowUpBossApiException
 import json
 
 @pytest.fixture

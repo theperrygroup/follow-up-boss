@@ -5,8 +5,8 @@ Test the Teams API.
 import pytest
 import os
 import uuid
-from follow_up_boss_api.client import FollowUpBossApiClient, FollowUpBossApiException
-from follow_up_boss_api.teams import Teams
+from follow_up_boss.client import FollowUpBossApiClient, FollowUpBossApiException
+from follow_up_boss.teams import Teams
 
 
 @pytest.fixture

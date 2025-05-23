@@ -7,10 +7,10 @@ import uuid
 from datetime import datetime, timedelta
 import os
 import requests
-from follow_up_boss_api.client import FollowUpBossApiException
+from follow_up_boss.client import FollowUpBossApiException
 import json
-from follow_up_boss_api.client import FollowUpBossApiClient
-from follow_up_boss_api.tasks import Tasks
+from follow_up_boss.client import FollowUpBossApiClient
+from follow_up_boss.tasks import Tasks
 
 
 @pytest.fixture

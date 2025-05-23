@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 # Add the project root to the Python path
 sys.path.insert(0, os.path.abspath('.'))
 
-from follow_up_boss_api.client import FollowUpBossApiClient, FollowUpBossApiException
+from follow_up_boss.client import FollowUpBossApiClient, FollowUpBossApiException
 
 def main():
     """Main validation function."""
@@ -34,7 +34,7 @@ def main():
     print("Testing: Events API - Create Event")
     print("="*60)
     try:
-        from follow_up_boss_api.events import Events
+        from follow_up_boss.events import Events
         events_api = Events(client)
         
         result = events_api.create_event(
@@ -59,7 +59,7 @@ def main():
     print("Testing: People API - Create Person")
     print("="*60)
     try:
-        from follow_up_boss_api.people import People
+        from follow_up_boss.people import People
         people_api = People(client)
         
         person_data = {
@@ -85,7 +85,7 @@ def main():
     print("Testing: Notes API - Create Note")
     print("="*60)
     try:
-        from follow_up_boss_api.notes import Notes
+        from follow_up_boss.notes import Notes
         notes_api = Notes(client)
         
         # Use the person created above or create a new one
@@ -124,7 +124,7 @@ def main():
     print("Testing: Tasks API - Create Task")
     print("="*60)
     try:
-        from follow_up_boss_api.tasks import Tasks
+        from follow_up_boss.tasks import Tasks
         tasks_api = Tasks(client)
         
         # Check method signature first
@@ -154,7 +154,7 @@ def main():
     print("Testing: Appointments API - Create Appointment")
     print("="*60)
     try:
-        from follow_up_boss_api.appointments import Appointments
+        from follow_up_boss.appointments import Appointments
         appointments_api = Appointments(client)
         
         # Check method signature first
@@ -183,7 +183,7 @@ def main():
     print("Testing: Email Templates API - Create Template")
     print("="*60)
     try:
-        from follow_up_boss_api.email_templates import EmailTemplates
+        from follow_up_boss.email_templates import EmailTemplates
         templates_api = EmailTemplates(client)
         
         # Check what methods are available
@@ -210,7 +210,7 @@ def main():
     print("Testing: Custom Fields API - Create Field")
     print("="*60)
     try:
-        from follow_up_boss_api.custom_fields import CustomFields
+        from follow_up_boss.custom_fields import CustomFields
         fields_api = CustomFields(client)
         
         # Check method signature first

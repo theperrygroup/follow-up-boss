@@ -4,10 +4,10 @@ Test the Reactions API.
 
 import pytest
 import os
-from follow_up_boss_api.client import FollowUpBossApiClient, FollowUpBossApiException
-from follow_up_boss_api.reactions import Reactions
-from follow_up_boss_api.notes import Notes
-from follow_up_boss_api.people import People
+from follow_up_boss.client import FollowUpBossApiClient, FollowUpBossApiException
+from follow_up_boss.reactions import Reactions
+from follow_up_boss.notes import Notes
+from follow_up_boss.people import People
 
 @pytest.fixture
 def client():

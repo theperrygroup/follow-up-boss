@@ -6,12 +6,12 @@ import pytest
 import uuid
 import datetime
 import re
-from follow_up_boss_api.client import FollowUpBossApiClient
-from follow_up_boss_api.text_messages import TextMessages
-from follow_up_boss_api.people import People
+from follow_up_boss.client import FollowUpBossApiClient
+from follow_up_boss.text_messages import TextMessages
+from follow_up_boss.people import People
 import os
 import requests
-from follow_up_boss_api.client import FollowUpBossApiException
+from follow_up_boss.client import FollowUpBossApiException
 
 @pytest.fixture
 def client():

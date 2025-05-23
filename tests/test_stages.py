@@ -4,9 +4,9 @@ Test the Stages API.
 
 import pytest
 import uuid
-from follow_up_boss_api.client import FollowUpBossApiClient, FollowUpBossApiException
-from follow_up_boss_api.stages import Stages
-from follow_up_boss_api.pipelines import Pipelines
+from follow_up_boss.client import FollowUpBossApiClient, FollowUpBossApiException
+from follow_up_boss.stages import Stages
+from follow_up_boss.pipelines import Pipelines
 import os
 
 @pytest.fixture

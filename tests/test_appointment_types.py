@@ -4,8 +4,8 @@ Test the Appointment Types API.
 
 import pytest
 import uuid
-from follow_up_boss_api.client import FollowUpBossApiClient, FollowUpBossApiException
-from follow_up_boss_api.appointment_types import AppointmentTypes
+from follow_up_boss.client import FollowUpBossApiClient, FollowUpBossApiException
+from follow_up_boss.appointment_types import AppointmentTypes
 import os
 
 @pytest.fixture

@@ -4,7 +4,7 @@ Pytest configuration file.
 import os
 import pytest
 from dotenv import load_dotenv
-from follow_up_boss_api.client import FollowUpBossApiClient
+from follow_up_boss.client import FollowUpBossApiClient
 
 # Load environment variables from .env file
 load_dotenv()

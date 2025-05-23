@@ -5,8 +5,8 @@ Test the Deal Custom Fields API.
 import pytest
 import os
 import uuid
-from follow_up_boss_api.client import FollowUpBossApiClient, FollowUpBossApiException
-from follow_up_boss_api.deal_custom_fields import DealCustomFields
+from follow_up_boss.client import FollowUpBossApiClient, FollowUpBossApiException
+from follow_up_boss.deal_custom_fields import DealCustomFields
 
 
 @pytest.fixture

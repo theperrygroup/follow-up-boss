@@ -3,8 +3,8 @@ Test the Smart Lists API.
 """
 
 import pytest
-from follow_up_boss_api.client import FollowUpBossApiClient
-from follow_up_boss_api.smart_lists import SmartLists
+from follow_up_boss.client import FollowUpBossApiClient
+from follow_up_boss.smart_lists import SmartLists
 import os
 
 @pytest.fixture

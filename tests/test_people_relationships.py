@@ -1,9 +1,9 @@
 import os
 import pytest
 from dotenv import load_dotenv
-from follow_up_boss_api.client import FollowUpBossApiClient, FollowUpBossApiException
-from follow_up_boss_api.people_relationships import PeopleRelationships
-from follow_up_boss_api.people import People
+from follow_up_boss.client import FollowUpBossApiClient, FollowUpBossApiException
+from follow_up_boss.people_relationships import PeopleRelationships
+from follow_up_boss.people import People
 
 # Load environment variables from .env file
 load_dotenv()
