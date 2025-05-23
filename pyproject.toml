@@ -9,7 +9,7 @@ description = "A Python client library for the Follow Up Boss API"
 readme = "README.md"
 license = {text = "MIT"}
 authors = [
-    {name = "The Perry Group", email = "contact@theperrygroup.com"},
+    {name = "The Perry Group", email = "contact@theperry.group"},
 ]
 keywords = ["followupboss", "api", "client", "real-estate", "crm"]
 classifiers = [
