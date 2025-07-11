@@ -2,12 +2,13 @@
 API bindings for Follow Up Boss Text Message Templates endpoints.
 """
 
+import logging
 from typing import Any, Dict, Optional, Union
 
 from .client import FollowUpBossApiClient
-import logging
 
 logger = logging.getLogger(__name__)
+
 
 class TextMessageTemplates:
     """
@@ -29,7 +30,7 @@ class TextMessageTemplates:
         offset: Optional[int] = None,
         sort: Optional[str] = None,
         # Add other relevant filters (e.g., shared)
-        **kwargs: Any
+        **kwargs: Any,
     ) -> Dict[str, Any]:
         """
         Retrieves a list of text message templates.
@@ -51,15 +52,15 @@ class TextMessageTemplates:
         if sort is not None:
             params["sort"] = sort
         params.update(kwargs)
-        
+
         return self.client._get("textMessageTemplates", params=params)
 
     def create_text_message_template(
         self,
         name: str,
-        body: str, # Text content of the template
+        body: str,  # Text content of the template
         # shared: Optional[bool] = False, # If API supports 'shared' flag
-        **kwargs: Any
+        **kwargs: Any,
     ) -> Union[Dict[str, Any], str]:
         """
         Creates a new text message template.
@@ -73,15 +74,12 @@ class TextMessageTemplates:
         Returns:
             A dictionary containing the details of the newly created template or an error string.
         """
-        payload: Dict[str, Any] = {
-            "name": name,
-            "message": body
-        }
+        payload: Dict[str, Any] = {"name": name, "message": body}
         # if shared is not None:
         #     payload["shared"] = shared
-        
+
         payload.update(kwargs)
-        
+
         return self.client._post("textMessageTemplates", json_data=payload)
 
     def retrieve_text_message_template(self, template_id: int) -> Dict[str, Any]:
@@ -96,26 +94,30 @@ class TextMessageTemplates:
         """
         return self.client._get(f"textMessageTemplates/{template_id}")
 
-    def update_text_message_template(self, template_id: int, update_data: Dict[str, Any]) -> Union[Dict[str, Any], str]:
+    def update_text_message_template(
+        self, template_id: int, update_data: Dict[str, Any]
+    ) -> Union[Dict[str, Any], str]:
         """
         Updates an existing text message template.
 
         Args:
             template_id: The ID of the text message template to update.
-            update_data: A dictionary containing the fields to update 
+            update_data: A dictionary containing the fields to update
                          (e.g., {"name": "New Name", "body": "New Body"}).
 
         Returns:
             A dictionary containing the details of the updated template or an error string.
         """
-        return self.client._put(f"textMessageTemplates/{template_id}", json_data=update_data)
+        return self.client._put(
+            f"textMessageTemplates/{template_id}", json_data=update_data
+        )
 
     def merge_text_message_template(
-        self, 
-        body: str, 
-        merge_fields: Dict[str, Any], 
+        self,
+        body: str,
+        merge_fields: Dict[str, Any],
         template_id: Optional[int] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> Union[Dict[str, Any], str]:
         """
         Merges field data into a text message template body.
@@ -129,18 +131,17 @@ class TextMessageTemplates:
         Returns:
             A dictionary containing the merged body, or an error string.
         """
-        payload: Dict[str, Any] = {
-            "body": body,
-            "mergeFields": merge_fields
-        }
+        payload: Dict[str, Any] = {"body": body, "mergeFields": merge_fields}
         if template_id is not None:
             payload["templateId"] = template_id
-        
+
         payload.update(kwargs)
-        
+
         return self.client._post("textMessageTemplates/merge", json_data=payload)
 
-    def delete_text_message_template(self, template_id: int) -> Union[Dict[str, Any], str]:
+    def delete_text_message_template(
+        self, template_id: int
+    ) -> Union[Dict[str, Any], str]:
         """
         Deletes a specific text message template by its ID.
 
@@ -156,4 +157,4 @@ class TextMessageTemplates:
     # GET /textMessageTemplates/{id} (Retrieve text message template)
     # PUT /textMessageTemplates/{id} (Update text message template)
     # POST /textMessageTemplates/merge (Merge text message template)
-    # DELETE /textMessageTemplates/{id} (Delete text message template) 
+    # DELETE /textMessageTemplates/{id} (Delete text message template)

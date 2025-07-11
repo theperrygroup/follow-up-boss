@@ -2,12 +2,13 @@
 API bindings for Follow Up Boss Pipelines endpoints.
 """
 
+import logging
 from typing import Any, Dict, Optional, Union
 
 from .client import FollowUpBossApiClient
-import logging
 
 logger = logging.getLogger(__name__)
+
 
 class Pipelines:
     """
@@ -29,8 +30,8 @@ class Pipelines:
         offset: Optional[int] = None,
         sort: Optional[str] = None,
         # Add other relevant filters (e.g., entityType like 'Deal')
-        **kwargs: Any
-    ) -> Dict[str, Any]: 
+        **kwargs: Any,
+    ) -> Dict[str, Any]:
         """
         Retrieves a list of pipelines.
 
@@ -51,7 +52,7 @@ class Pipelines:
         if sort is not None:
             params["sort"] = sort
         params.update(kwargs)
-        
+
         return self.client._get("pipelines", params=params)
 
     def create_pipeline(
@@ -59,7 +60,7 @@ class Pipelines:
         name: str,
         # entity_type: Optional[str] = "Deal", # Pipelines are often for Deals
         # stages: Optional[list[Dict[str, Any]]] = None, # Optional: define stages during pipeline creation
-        **kwargs: Any
+        **kwargs: Any,
     ) -> Union[Dict[str, Any], str]:
         """
         Creates a new pipeline.
@@ -79,9 +80,9 @@ class Pipelines:
         #     payload["entityType"] = entity_type
         # if stages is not None:
         #     payload["stages"] = stages # API structure for this needs verification
-        
+
         payload.update(kwargs)
-        
+
         return self.client._post("pipelines", json_data=payload)
 
     def retrieve_pipeline(self, pipeline_id: int) -> Dict[str, Any]:
@@ -96,7 +97,9 @@ class Pipelines:
         """
         return self.client._get(f"pipelines/{pipeline_id}")
 
-    def update_pipeline(self, pipeline_id: int, update_data: Dict[str, Any]) -> Union[Dict[str, Any], str]:
+    def update_pipeline(
+        self, pipeline_id: int, update_data: Dict[str, Any]
+    ) -> Union[Dict[str, Any], str]:
         """
         Updates an existing pipeline.
 
@@ -124,4 +127,4 @@ class Pipelines:
 
     # GET /pipelines/{id} (Retrieve pipeline)
     # PUT /pipelines/{id} (Update pipeline)
-    # DELETE /pipelines/{id} (Delete pipeline) 
+    # DELETE /pipelines/{id} (Delete pipeline)

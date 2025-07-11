@@ -38,7 +38,7 @@ class Webhooks:
         url: str,
         event_types: List[str],
         name: Optional[str] = None,
-        secret: Optional[str] = None
+        secret: Optional[str] = None,
     ) -> Union[Dict[str, Any], str]:
         """
         Creates a new webhook.
@@ -54,7 +54,9 @@ class Webhooks:
         """
         payload: Dict[str, Any] = {
             "url": url,
-            "event": event_types[0] if event_types else "peopleCreated"  # Use valid event: peopleCreated, peopleUpdated, etc.
+            "event": (
+                event_types[0] if event_types else "peopleCreated"
+            ),  # Use valid event: peopleCreated, peopleUpdated, etc.
         }
 
         if secret:
@@ -81,7 +83,7 @@ class Webhooks:
         event_types: Optional[List[str]] = None,
         name: Optional[str] = None,
         secret: Optional[str] = None,
-        active: Optional[bool] = None
+        active: Optional[bool] = None,
     ) -> Union[Dict[str, Any], str]:
         """
         Updates an existing webhook.
@@ -126,4 +128,4 @@ class Webhooks:
 
     # GET /webhooks/{id} (Retrieve webhook)
     # PUT /webhooks/{id} (Update webhook)
-    # DELETE /webhooks/{id} (Delete webhook) 
+    # DELETE /webhooks/{id} (Delete webhook)

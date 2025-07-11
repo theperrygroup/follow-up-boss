@@ -10,7 +10,7 @@ from .client import FollowUpBossApiClient
 class Ponds:
     """
     A class for interacting with the Ponds endpoints of the Follow Up Boss API.
-    
+
     Ponds are lead routing systems that distribute leads based on various criteria.
     """
 
@@ -41,7 +41,7 @@ class Ponds:
         user_ids: Optional[List[int]] = None,
         is_default: Optional[bool] = None,
         description: Optional[str] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> Union[Dict[str, Any], str]:
         """
         Creates a new pond.
@@ -55,14 +55,12 @@ class Ponds:
 
         Returns:
             A dictionary containing the details of the newly created pond.
-            
+
         Note:
             The Follow Up Boss Ponds API only accepts the "name" field for creation.
             All other fields are ignored. Use update_pond() to modify other properties after creation.
         """
-        payload: Dict[str, Any] = {
-            "name": name
-        }
+        payload: Dict[str, Any] = {"name": name}
 
         return self._client._post("ponds", json_data=payload)
 
@@ -85,7 +83,7 @@ class Ponds:
         user_ids: Optional[List[int]] = None,
         is_default: Optional[bool] = None,
         description: Optional[str] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> Union[Dict[str, Any], str]:
         """
         Updates an existing pond.
@@ -116,7 +114,9 @@ class Ponds:
 
         return self._client._put(f"ponds/{pond_id}", json_data=payload)
 
-    def delete_pond(self, pond_id: int, assign_to: Optional[int] = None) -> Union[Dict[str, Any], str]:
+    def delete_pond(
+        self, pond_id: int, assign_to: Optional[int] = None
+    ) -> Union[Dict[str, Any], str]:
         """
         Deletes a specific pond by its ID.
 
@@ -127,7 +127,7 @@ class Ponds:
 
         Returns:
             An empty dictionary if successful.
-            
+
         Note:
             The Follow Up Boss API requires an "assignTo" parameter when deleting ponds
             to specify where to move any existing leads in the pond.
@@ -140,7 +140,7 @@ class Ponds:
                 assign_to = me.get("id", 1)  # Default to 1 if can't get current user
             except:
                 assign_to = 1  # Fallback default
-        
+
         # Add assignTo as URL parameter
         url = f"ponds/{pond_id}?assignTo={assign_to}"
-        return self._client._delete(url) 
+        return self._client._delete(url)

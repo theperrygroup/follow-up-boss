@@ -2,12 +2,13 @@
 API bindings for Follow Up Boss Email Templates endpoints.
 """
 
+import logging
 from typing import Any, Dict, Optional, Union
 
 from .client import FollowUpBossApiClient
-import logging
 
 logger = logging.getLogger(__name__)
+
 
 class EmailTemplates:
     """
@@ -29,7 +30,7 @@ class EmailTemplates:
         offset: Optional[int] = None,
         sort: Optional[str] = None,
         # Add other relevant filters (e.g., shared, type)
-        **kwargs: Any
+        **kwargs: Any,
     ) -> Dict[str, Any]:
         """
         Retrieves a list of email templates.
@@ -51,7 +52,7 @@ class EmailTemplates:
         if sort is not None:
             params["sort"] = sort
         params.update(kwargs)
-        
+
         # Endpoint is /templates as per user-provided list
         return self.client._get("templates", params=params)
 
@@ -59,9 +60,9 @@ class EmailTemplates:
         self,
         name: str,
         subject: str,
-        body: str, # HTML body of the email template
+        body: str,  # HTML body of the email template
         # shared: Optional[bool] = False, # If API supports 'shared' flag
-        **kwargs: Any
+        **kwargs: Any,
     ) -> Union[Dict[str, Any], str]:
         """
         Creates a new email template.
@@ -76,16 +77,12 @@ class EmailTemplates:
         Returns:
             A dictionary containing the details of the newly created email template or an error string.
         """
-        payload: Dict[str, Any] = {
-            "name": name,
-            "subject": subject,
-            "body": body
-        }
+        payload: Dict[str, Any] = {"name": name, "subject": subject, "body": body}
         # if shared is not None:
         #     payload["shared"] = shared
-        
+
         payload.update(kwargs)
-        
+
         return self.client._post("templates", json_data=payload)
 
     def retrieve_email_template(self, template_id: int) -> Dict[str, Any]:
@@ -100,13 +97,15 @@ class EmailTemplates:
         """
         return self.client._get(f"templates/{template_id}")
 
-    def update_email_template(self, template_id: int, update_data: Dict[str, Any]) -> Union[Dict[str, Any], str]:
+    def update_email_template(
+        self, template_id: int, update_data: Dict[str, Any]
+    ) -> Union[Dict[str, Any], str]:
         """
         Updates an existing email template.
 
         Args:
             template_id: The ID of the email template to update.
-            update_data: A dictionary containing the fields to update 
+            update_data: A dictionary containing the fields to update
                          (e.g., {"name": "New Name", "subject": "New Subject", "body": "New Body"}).
 
         Returns:
@@ -115,12 +114,12 @@ class EmailTemplates:
         return self.client._put(f"templates/{template_id}", json_data=update_data)
 
     def merge_email_template(
-        self, 
-        body: str, 
-        merge_fields: Dict[str, Any], 
+        self,
+        body: str,
+        merge_fields: Dict[str, Any],
         template_id: Optional[int] = None,
-        subject: Optional[str] = None, # If merging subject too
-        **kwargs: Any
+        subject: Optional[str] = None,  # If merging subject too
+        **kwargs: Any,
     ) -> Union[Dict[str, Any], str]:
         """
         Merges field data into an email template (subject and/or body).
@@ -128,7 +127,7 @@ class EmailTemplates:
 
         Args:
             body: The HTML body of the email template to merge fields into.
-            merge_fields: A dictionary of merge fields and their values 
+            merge_fields: A dictionary of merge fields and their values
                           (e.g., {"firstName": "John", "lastName": "Doe"}).
             template_id: Optional. The ID of an existing template to use as the base for merging.
                          If provided, body and subject might be overridden or augmented by this template.
@@ -139,17 +138,14 @@ class EmailTemplates:
         Returns:
             A dictionary containing the merged subject and body, or an error string.
         """
-        payload: Dict[str, Any] = {
-            "body": body,
-            "mergeFields": merge_fields
-        }
+        payload: Dict[str, Any] = {"body": body, "mergeFields": merge_fields}
         if template_id is not None:
             payload["templateId"] = template_id
         if subject is not None:
             payload["subject"] = subject
-        
+
         payload.update(kwargs)
-        
+
         return self.client._post("templates/merge", json_data=payload)
 
     def delete_email_template(self, template_id: int) -> Union[Dict[str, Any], str]:
@@ -168,4 +164,4 @@ class EmailTemplates:
     # GET /templates/{id} (Retrieve email template)
     # PUT /templates/{id} (Update email template)
     # POST /templates/merge (Merge email template)
-    # DELETE /templates/{id} (Delete email template) 
+    # DELETE /templates/{id} (Delete email template)

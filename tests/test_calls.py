@@ -2,13 +2,16 @@
 Test the Calls API.
 """
 
-import pytest
-import uuid
 import datetime
-from follow_up_boss.client import FollowUpBossApiClient
-from follow_up_boss.calls import Calls
-from follow_up_boss.people import People
 import os
+import uuid
+
+import pytest
+
+from follow_up_boss.calls import Calls
+from follow_up_boss.client import FollowUpBossApiClient
+from follow_up_boss.people import People
+
 
 @pytest.fixture
 def client():
@@ -16,18 +19,21 @@ def client():
     return FollowUpBossApiClient(
         api_key=os.getenv("FOLLOW_UP_BOSS_API_KEY"),
         x_system=os.getenv("X_SYSTEM"),
-        x_system_key=os.getenv("X_SYSTEM_KEY")
+        x_system_key=os.getenv("X_SYSTEM_KEY"),
     )
+
 
 @pytest.fixture
 def calls_api(client):
     """Create a Calls instance for testing."""
     return Calls(client)
 
+
 @pytest.fixture
 def people_api(client):
     """Create a People instance for testing."""
     return People(client)
+
 
 def get_test_person_id(people_api):
     """Create a test person and return their ID."""
@@ -36,37 +42,28 @@ def get_test_person_id(people_api):
     email = f"calls_test_person_{unique_suffix}@example.com"
     first_name = "CallsTest"
     last_name = f"Person{unique_suffix}"
-    
+
     # Create the person with a phone number for call testing
     person_data = {
         "firstName": first_name,
         "lastName": last_name,
-        "emails": [
-            {
-                "value": email,
-                "type": "work"
-            }
-        ],
-        "phones": [
-            {
-                "value": "555-987-6543",
-                "type": "mobile"
-            }
-        ]
+        "emails": [{"value": email, "type": "work"}],
+        "phones": [{"value": "555-987-6543", "type": "mobile"}],
     }
-    
+
     response = people_api.create_person(person_data)
-    return response['id'], "555-987-6543"
+    return response["id"], "555-987-6543"
+
 
 def create_test_call(calls_api, people_api):
     """Helper function to create a test call and return its ID."""
     # Create a test person
     person_id, phone = get_test_person_id(people_api)
-    
+
     # Create call data
     duration = 120  # 2 minutes in seconds
     note = f"This is a test call created at {datetime.datetime.now().isoformat()}"
-    
+
     # Create the call
     response = calls_api.create_call(
         person_id=person_id,
@@ -74,105 +71,109 @@ def create_test_call(calls_api, people_api):
         duration=duration,
         outcome="Left Message",
         is_incoming=False,
-        note=note
+        note=note,
     )
-    
-    return response['id']
+
+    return response["id"]
+
 
 def test_list_calls(calls_api):
     """Test listing calls."""
     params = {"limit": 5}  # Limit to 5 to keep response size manageable
     response = calls_api.list_calls(**params)
-    
+
     # Debug print
     print("Response:", response)
-    
+
     # Check basic structure of the response
     assert isinstance(response, dict)
-    assert '_metadata' in response
-    assert 'calls' in response
-    
+    assert "_metadata" in response
+    assert "calls" in response
+
     # Check metadata
-    assert 'collection' in response['_metadata']
-    assert response['_metadata']['collection'] == 'calls'
-    
+    assert "collection" in response["_metadata"]
+    assert response["_metadata"]["collection"] == "calls"
+
     # Check calls data (might be empty in test account)
-    assert isinstance(response['calls'], list)
+    assert isinstance(response["calls"], list)
+
 
 def test_create_call(calls_api, people_api):
     """Test creating a call for a person."""
     # Create a test person to associate the call with
     person_id, phone = get_test_person_id(people_api)
-    
+
     # Create call data
     duration = 120  # 2 minutes in seconds
     note = f"This is a test call created at {datetime.datetime.now().isoformat()}"
-    
+
     # Valid outcomes from error message: "Interested", "Not Interested", "Left Message", "No Answer", "Busy", "Bad Number"
     response = calls_api.create_call(
         person_id=person_id,
         phone=phone,
         duration=duration,
         outcome="Left Message",  # Valid call outcome from the API
-        is_incoming=False,       # Outgoing call
-        note=note
+        is_incoming=False,  # Outgoing call
+        note=note,
     )
-    
+
     # Debug print
     print(f"Create Call Response:", response)
-    
+
     # Check basic structure of the response
     assert isinstance(response, dict)
-    assert 'id' in response
-    assert 'personId' in response
-    assert 'outcome' in response
-    assert response['personId'] == person_id
-    assert response['outcome'] == "Left Message"
+    assert "id" in response
+    assert "personId" in response
+    assert "outcome" in response
+    assert response["personId"] == person_id
+    assert response["outcome"] == "Left Message"
+
 
 def test_retrieve_call(calls_api, people_api):
     """Test retrieving a specific call."""
     # Create a test call to retrieve
     call_id = create_test_call(calls_api, people_api)
-    
+
     # Retrieve the call
     response = calls_api.retrieve_call(call_id)
-    
+
     # Debug print
     print(f"Retrieve Call {call_id} Response:", response)
-    
+
     # Check basic structure of the response
     assert isinstance(response, dict)
-    assert 'id' in response
-    assert response['id'] == call_id
-    assert 'personId' in response
-    assert 'outcome' in response
+    assert "id" in response
+    assert response["id"] == call_id
+    assert "personId" in response
+    assert "outcome" in response
+
 
 def test_update_call(calls_api, people_api):
     """Test updating a call."""
     # Create a test call to update
     call_id = create_test_call(calls_api, people_api)
-    
+
     # Get original call to see what we can update
     original_call = calls_api.retrieve_call(call_id)
     print(f"Original Call:", original_call)
-    
+
     # Update data - change outcome and duration
     update_data = {
         "outcome": "Interested",  # Change from "Left Message" to "Interested"
-        "duration": 180           # Change from 120 to 180 seconds
+        "duration": 180,  # Change from 120 to 180 seconds
     }
-    
+
     # Update the call
     response = calls_api.update_call(call_id, update_data)
-    
+
     # Debug print
     print(f"Update Call {call_id} Response:", response)
-    
+
     # Check basic structure of the response
     assert isinstance(response, dict)
-    assert 'id' in response
-    assert response['id'] == call_id
-    assert 'outcome' in response
-    assert 'duration' in response
-    assert response['outcome'] == "Interested"
-    assert response['duration'] == 180 
+    assert "id" in response
+    assert response["id"] == call_id
+    assert "outcome" in response
+    assert "duration" in response
+    assert response["outcome"] == "Interested"
+    assert response["duration"] == 180

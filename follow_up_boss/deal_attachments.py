@@ -2,15 +2,16 @@
 Handles the Deal Attachments endpoints for the Follow Up Boss API.
 """
 
-import os
 import logging
-from typing import Dict, Any, Optional, IO, Union
+import os
+from typing import IO, Any, Dict, Optional, Union
 
 # Corrected import based on the new api_client.py structure
 from .client import FollowUpBossApiClient, FollowUpBossApiException
 
 # load_dotenv is handled by ApiClient, no need to call it here directly if ApiClient manages API key loading.
 logger = logging.getLogger(__name__)
+
 
 class DealAttachments:
     """
@@ -33,7 +34,7 @@ class DealAttachments:
         file: Optional[IO] = None,
         file_name: Optional[str] = None,
         description: Optional[str] = None,
-        category_id: Optional[int] = None
+        category_id: Optional[int] = None,
     ) -> Union[Dict[str, Any], str]:
         """
         Adds an attachment to a specific deal.
@@ -42,7 +43,7 @@ class DealAttachments:
         1. Provide a URI to an externally hosted file
         2. Upload a file directly (not implemented due to API constraints)
 
-        According to the API docs: "The URI should be a link to a file location stored OUTSIDE of Follow Up Boss. 
+        According to the API docs: "The URI should be a link to a file location stored OUTSIDE of Follow Up Boss.
         If a URI is not provided, the API will treat the request as an attempt to upload a file to our servers and return a 403."
 
         Args:
@@ -63,23 +64,30 @@ class DealAttachments:
         """
         if file is not None:
             # TODO: Implementation requires specific API documentation on multipart upload format
-            logger.warning("Deal attachment direct upload is not implemented due to API constraints.")
-            logger.warning("API requires specific documentation on the exact format for file uploads.")
-            raise NotImplementedError("Deal attachment direct upload requires specific API documentation.")
-            
+            logger.warning(
+                "Deal attachment direct upload is not implemented due to API constraints."
+            )
+            logger.warning(
+                "API requires specific documentation on the exact format for file uploads."
+            )
+            raise NotImplementedError(
+                "Deal attachment direct upload requires specific API documentation."
+            )
+
         if not uri:
-            raise ValueError("Either 'uri' or 'file' must be provided. URI to external file is required.")
-            
-        payload: Dict[str, Any] = {
-            "dealId": deal_id,
-            "uri": uri
-        }
-        
+            raise ValueError(
+                "Either 'uri' or 'file' must be provided. URI to external file is required."
+            )
+
+        payload: Dict[str, Any] = {"dealId": deal_id, "uri": uri}
+
         if description:
             payload["description"] = description
         if category_id is not None:
-            payload["categoryId"] = str(category_id)  # Convert to string as the API might expect it
-        
+            payload["categoryId"] = str(
+                category_id
+            )  # Convert to string as the API might expect it
+
         return self._client._post("dealAttachments", json_data=payload)
 
     def get_deal_attachment(self, attachment_id: int) -> Dict[str, Any]:
@@ -98,7 +106,7 @@ class DealAttachments:
         self,
         attachment_id: int,
         description: Optional[str] = None,
-        category_id: Optional[int] = None
+        category_id: Optional[int] = None,
     ) -> Union[Dict[str, Any], str]:
         """
         Updates a specific deal attachment.
@@ -112,11 +120,13 @@ class DealAttachments:
             A dictionary containing the API response for the updated attachment.
         """
         payload = {}
-        if description is not None: # Allow empty string for description if intended
+        if description is not None:  # Allow empty string for description if intended
             payload["description"] = description
         if category_id is not None:
-            payload["categoryId"] = str(category_id)  # Convert to string as the API might expect it
-        
+            payload["categoryId"] = str(
+                category_id
+            )  # Convert to string as the API might expect it
+
         if not payload:
             # Return early if no changes to make
             return {"message": "No update parameters provided, no action taken."}
@@ -134,4 +144,3 @@ class DealAttachments:
             A dictionary containing the API response (usually empty on success for DELETE).
         """
         return self._client._delete(f"dealAttachments/{attachment_id}")
-

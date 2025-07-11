@@ -2,12 +2,13 @@
 API bindings for Follow Up Boss Calls endpoints.
 """
 
+import logging
 from typing import Any, Dict, Optional, Union
 
 from .client import FollowUpBossApiClient
-import logging
 
 logger = logging.getLogger(__name__)
+
 
 class Calls:
     """
@@ -30,7 +31,7 @@ class Calls:
         offset: Optional[int] = None,
         sort: Optional[str] = None,
         # Add other relevant filters (e.g., outcome, duration, date ranges)
-        **kwargs: Any
+        **kwargs: Any,
     ) -> Dict[str, Any]:
         """
         Retrieves a list of calls.
@@ -47,7 +48,7 @@ class Calls:
         """
         params: Dict[str, Any] = {}
         if person_id is not None:
-            params["personId"] = person_id 
+            params["personId"] = person_id
         if limit is not None:
             params["limit"] = limit
         if offset is not None:
@@ -55,20 +56,20 @@ class Calls:
         if sort is not None:
             params["sort"] = sort
         params.update(kwargs)
-        
+
         return self.client._get("calls", params=params)
 
     def create_call(
-        self, 
-        person_id: int, 
-        phone: str, # Added: The phone number called or associated with the call
-        duration: int, # in seconds
-        outcome: str, 
-        is_incoming: bool, # Added: True if incoming call, False if outgoing
+        self,
+        person_id: int,
+        phone: str,  # Added: The phone number called or associated with the call
+        duration: int,  # in seconds
+        outcome: str,
+        is_incoming: bool,  # Added: True if incoming call, False if outgoing
         note: Optional[str] = None,
         recording_url: Optional[str] = None,
-        called_at: Optional[str] = None, # ISO 8601 format e.g. "2023-01-15T14:30:00Z"
-        **kwargs: Any
+        called_at: Optional[str] = None,  # ISO 8601 format e.g. "2023-01-15T14:30:00Z"
+        **kwargs: Any,
     ) -> Union[Dict[str, Any], str]:
         """
         Creates a new call log entry for a specific person.
@@ -93,18 +94,20 @@ class Calls:
             "phone": phone,
             "duration": duration,
             "outcome": outcome,
-            "isIncoming": is_incoming
+            "isIncoming": is_incoming,
         }
         if note is not None:
-            payload["note"] = note # FUB docs refer to this as 'body' for some note-like objects
-                                  # but 'note' is common for call logs directly.
+            payload["note"] = (
+                note  # FUB docs refer to this as 'body' for some note-like objects
+            )
+            # but 'note' is common for call logs directly.
         if recording_url is not None:
             payload["recordingUrl"] = recording_url
         if called_at is not None:
             payload["calledAt"] = called_at
-        
+
         payload.update(kwargs)
-        
+
         return self.client._post("calls", json_data=payload)
 
     def retrieve_call(self, call_id: int) -> Dict[str, Any]:
@@ -119,7 +122,9 @@ class Calls:
         """
         return self.client._get(f"calls/{call_id}")
 
-    def update_call(self, call_id: int, update_data: Dict[str, Any]) -> Union[Dict[str, Any], str]:
+    def update_call(
+        self, call_id: int, update_data: Dict[str, Any]
+    ) -> Union[Dict[str, Any], str]:
         """
         Updates an existing call log.
 
@@ -135,4 +140,4 @@ class Calls:
         return self.client._put(f"calls/{call_id}", json_data=update_data)
 
     # GET /calls/{id} (Retrieve call)
-    # PUT /calls/{id} (Update call) 
+    # PUT /calls/{id} (Update call)

@@ -2,12 +2,13 @@
 API bindings for Follow Up Boss Threaded Replies endpoints.
 """
 
+import logging
 from typing import Any, Dict, Union
 
 from .client import FollowUpBossApiClient
-import logging
 
 logger = logging.getLogger(__name__)
+
 
 class ThreadedReplies:
     """
@@ -35,6 +36,6 @@ class ThreadedReplies:
             A dictionary containing the details of the threaded reply.
         """
         return self.client._get(f"threadedReplies/{reply_id}")
-    
+
     # Alias for backward compatibility
-    get_threaded_reply = retrieve_threaded_reply 
+    get_threaded_reply = retrieve_threaded_reply

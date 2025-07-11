@@ -2,12 +2,13 @@
 API bindings for Follow Up Boss Appointment Outcomes endpoints.
 """
 
+import logging
 from typing import Any, Dict, Optional, Union
 
 from .client import FollowUpBossApiClient
-import logging
 
 logger = logging.getLogger(__name__)
+
 
 class AppointmentOutcomes:
     """
@@ -29,8 +30,8 @@ class AppointmentOutcomes:
         offset: Optional[int] = None,
         sort: Optional[str] = None,
         # Add other relevant filters if specified by API docs
-        **kwargs: Any
-    ) -> Union[Dict[str, Any], str]: 
+        **kwargs: Any,
+    ) -> Union[Dict[str, Any], str]:
         """
         Retrieves a list of appointment outcomes defined in the account.
 
@@ -51,14 +52,16 @@ class AppointmentOutcomes:
         if sort is not None:
             params["sort"] = sort
         params.update(kwargs)
-        
+
         return self._client._get("appointmentOutcomes", params=params)
 
     def create_appointment_outcome(
         self,
         name: str,
-        is_successful: Optional[bool] = None, # Indicates if this outcome means the appointment was successful
-        **kwargs: Any
+        is_successful: Optional[
+            bool
+        ] = None,  # Indicates if this outcome means the appointment was successful
+        **kwargs: Any,
     ) -> Union[Dict[str, Any], str]:
         """
         Creates a new appointment outcome.
@@ -75,10 +78,12 @@ class AppointmentOutcomes:
         if is_successful is not None:
             payload["isSuccessful"] = is_successful
         payload.update(kwargs)
-        
+
         return self._client._post("appointmentOutcomes", json_data=payload)
 
-    def retrieve_appointment_outcome(self, outcome_id: int) -> Union[Dict[str, Any], str]:
+    def retrieve_appointment_outcome(
+        self, outcome_id: int
+    ) -> Union[Dict[str, Any], str]:
         """
         Retrieves a specific appointment outcome by its ID.
 
@@ -90,7 +95,9 @@ class AppointmentOutcomes:
         """
         return self._client._get(f"appointmentOutcomes/{outcome_id}")
 
-    def update_appointment_outcome(self, outcome_id: int, update_data: Dict[str, Any]) -> Union[Dict[str, Any], str]:
+    def update_appointment_outcome(
+        self, outcome_id: int, update_data: Dict[str, Any]
+    ) -> Union[Dict[str, Any], str]:
         """
         Updates an existing appointment outcome.
 
@@ -101,27 +108,33 @@ class AppointmentOutcomes:
         Returns:
             A dictionary containing the details of the updated appointment outcome.
         """
-        return self._client._put(f"appointmentOutcomes/{outcome_id}", json_data=update_data)
+        return self._client._put(
+            f"appointmentOutcomes/{outcome_id}", json_data=update_data
+        )
 
-    def delete_appointment_outcome(self, outcome_id: int, assign_outcome_id: int) -> Union[Dict[str, Any], str]:
+    def delete_appointment_outcome(
+        self, outcome_id: int, assign_outcome_id: int
+    ) -> Union[Dict[str, Any], str]:
         """
         Deletes a specific appointment outcome by its ID.
 
         Args:
             outcome_id: The ID of the appointment outcome to delete.
-            assign_outcome_id: The ID of the appointment outcome to which appointments 
+            assign_outcome_id: The ID of the appointment outcome to which appointments
                               with the deleted outcome should be reassigned.
 
         Returns:
             An empty dictionary if successful (API returns 204 No Content),
             or a dictionary with an error message if it fails.
-            
+
         Raises:
             ValueError: If assign_outcome_id is not provided, as it's required by the API.
         """
         payload = {"assignOutcomeId": assign_outcome_id}
-        return self._client._delete(f"appointmentOutcomes/{outcome_id}", json_data=payload)
+        return self._client._delete(
+            f"appointmentOutcomes/{outcome_id}", json_data=payload
+        )
 
     # GET /appointmentOutcomes/{id} (Retrieve appointment outcome)
     # PUT /appointmentOutcomes/{id} (Update appointment outcome)
-    # DELETE /appointmentOutcomes/{id} (Delete appointment outcome) 
+    # DELETE /appointmentOutcomes/{id} (Delete appointment outcome)

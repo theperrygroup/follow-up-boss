@@ -2,12 +2,13 @@
 API bindings for Follow Up Boss Teams endpoints.
 """
 
-from typing import Any, Dict, Optional, List, Union
+import logging
+from typing import Any, Dict, List, Optional, Union
 
 from .client import FollowUpBossApiClient
-import logging
 
 logger = logging.getLogger(__name__)
+
 
 class Teams:
     """
@@ -28,8 +29,8 @@ class Teams:
         limit: Optional[int] = None,
         offset: Optional[int] = None,
         sort: Optional[str] = None,
-        **kwargs: Any
-    ) -> Dict[str, Any]: 
+        **kwargs: Any,
+    ) -> Dict[str, Any]:
         """
         Retrieves a list of teams in the account.
 
@@ -50,15 +51,15 @@ class Teams:
         if sort is not None:
             params["sort"] = sort
         params.update(kwargs)
-        
+
         return self._client._get("teams", params=params)
 
     def create_team(
         self,
         name: str,
-        user_ids: Optional[List[int]] = None, # List of user IDs for team members
-        leader_id: Optional[int] = None, # User ID of the team leader
-        **kwargs: Any
+        user_ids: Optional[List[int]] = None,  # List of user IDs for team members
+        leader_id: Optional[int] = None,  # User ID of the team leader
+        **kwargs: Any,
     ) -> Union[Dict[str, Any], str]:
         """
         Creates a new team.
@@ -74,12 +75,12 @@ class Teams:
         """
         payload: Dict[str, Any] = {"name": name}
         if user_ids is not None:
-            payload["userIds"] = user_ids # Or 'users', 'members' - API specific
+            payload["userIds"] = user_ids  # Or 'users', 'members' - API specific
         if leader_id is not None:
-            payload["leaderId"] = leader_id # Or 'leader'
-        
+            payload["leaderId"] = leader_id  # Or 'leader'
+
         payload.update(kwargs)
-        
+
         return self._client._post("teams", json_data=payload)
 
     def retrieve_team(self, team_id: int) -> Dict[str, Any]:
@@ -94,7 +95,9 @@ class Teams:
         """
         return self._client._get(f"teams/{team_id}")
 
-    def update_team(self, team_id: int, update_data: Dict[str, Any]) -> Union[Dict[str, Any], str]:
+    def update_team(
+        self, team_id: int, update_data: Dict[str, Any]
+    ) -> Union[Dict[str, Any], str]:
         """
         Updates an existing team.
 
@@ -122,4 +125,4 @@ class Teams:
 
     # GET /teams/{id} (Retrieve team)
     # PUT /teams/{id} (Update team)
-    # DELETE /teams/{id} (Delete team) 
+    # DELETE /teams/{id} (Delete team)

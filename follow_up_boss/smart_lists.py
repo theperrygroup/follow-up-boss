@@ -2,12 +2,13 @@
 API bindings for Follow Up Boss Smart Lists endpoints.
 """
 
+import logging
 from typing import Any, Dict, Optional
 
 from .client import FollowUpBossApiClient
-import logging
 
 logger = logging.getLogger(__name__)
+
 
 class SmartLists:
     """
@@ -29,7 +30,7 @@ class SmartLists:
         offset: Optional[int] = None,
         sort: Optional[str] = None,
         # Add other relevant filters if specified by API docs
-        **kwargs: Any
+        **kwargs: Any,
     ) -> Dict[str, Any]:
         """
         Retrieves a list of Smart Lists.
@@ -51,7 +52,7 @@ class SmartLists:
         if sort is not None:
             params["sort"] = sort
         params.update(kwargs)
-        
+
         return self.client._get("smartLists", params=params)
 
     def retrieve_smart_list(self, smart_list_id: int) -> Dict[str, Any]:
@@ -66,4 +67,4 @@ class SmartLists:
         """
         return self.client._get(f"smartLists/{smart_list_id}")
 
-    # GET /smartLists/{id} (Retrieve Smart List) 
+    # GET /smartLists/{id} (Retrieve Smart List)

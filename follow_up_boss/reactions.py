@@ -12,7 +12,7 @@ from .client import FollowUpBossApiClient
 class Reactions:
     """
     A class for interacting with the Reactions endpoints of the Follow Up Boss API.
-    
+
     Reactions are emoji responses to items (notes, calls, tasks, etc.).
     """
 
@@ -25,7 +25,9 @@ class Reactions:
         """
         self._client = client
 
-    def create_reaction(self, ref_type: str, ref_id: Union[int, str], emoji: str) -> Union[Dict[str, Any], str]:
+    def create_reaction(
+        self, ref_type: str, ref_id: Union[int, str], emoji: str
+    ) -> Union[Dict[str, Any], str]:
         """
         Creates a reaction on a specific item.
 
@@ -49,7 +51,7 @@ class Reactions:
 
         Returns:
             A dictionary containing the details of the reaction.
-            
+
         Note:
             Reaction IDs can be discovered by retrieving a note with the
             includeReactions=true parameter:
@@ -57,7 +59,9 @@ class Reactions:
         """
         return self._client._get(f"reactions/{reaction_id}")
 
-    def delete_reaction(self, ref_type: str, ref_id: Union[int, str], emoji: str) -> Union[Dict[str, Any], str]:
+    def delete_reaction(
+        self, ref_type: str, ref_id: Union[int, str], emoji: str
+    ) -> Union[Dict[str, Any], str]:
         """
         Deletes a reaction from a specific item.
 
@@ -70,4 +74,4 @@ class Reactions:
             A dictionary with the response (typically an empty array) or error string.
         """
         payload = {"body": emoji}
-        return self._client._delete(f"reactions/{ref_type}/{ref_id}", json_data=payload) 
+        return self._client._delete(f"reactions/{ref_type}/{ref_id}", json_data=payload)

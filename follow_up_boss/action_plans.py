@@ -2,12 +2,13 @@
 API bindings for Follow Up Boss Action Plans endpoints.
 """
 
+import logging
 from typing import Any, Dict, Optional, Union
 
 from .client import FollowUpBossApiClient
-import logging
 
 logger = logging.getLogger(__name__)
+
 
 class ActionPlans:
     """
@@ -29,7 +30,7 @@ class ActionPlans:
         offset: Optional[int] = None,
         sort: Optional[str] = None,
         # Add other relevant filters if specified by API docs (e.g., status, type)
-        **kwargs: Any
+        **kwargs: Any,
     ) -> Dict[str, Any]:
         """
         Retrieves a list of Action Plans.
@@ -51,18 +52,18 @@ class ActionPlans:
         if sort is not None:
             params["sort"] = sort
         params.update(kwargs)
-        
+
         return self.client._get("actionPlans", params=params)
 
     def list_action_plan_assignments(
         self,
         action_plan_id: Optional[int] = None,
-        person_id: Optional[int] = None, # Filter by person
-        status: Optional[str] = None, # e.g., "Active", "Paused", "Finished"
+        person_id: Optional[int] = None,  # Filter by person
+        status: Optional[str] = None,  # e.g., "Active", "Paused", "Finished"
         limit: Optional[int] = None,
         offset: Optional[int] = None,
         sort: Optional[str] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> Dict[str, Any]:
         """
         Retrieves a list of people assigned to action plans (action plan assignments).
@@ -93,7 +94,7 @@ class ActionPlans:
         if sort is not None:
             params["sort"] = sort
         params.update(kwargs)
-        
+
         return self.client._get("actionPlansPeople", params=params)
 
     def assign_person_to_action_plan(
@@ -101,7 +102,7 @@ class ActionPlans:
         person_id: int,
         action_plan_id: int,
         # Optional: start_date, status, etc., if supported by API for assignment
-        **kwargs: Any 
+        **kwargs: Any,
     ) -> Union[Dict[str, Any], str]:
         """
         Assigns a person to a specific action plan.
@@ -114,18 +115,13 @@ class ActionPlans:
         Returns:
             A dictionary containing the details of the action plan assignment or an error string.
         """
-        payload = {
-            "personId": person_id,
-            "actionPlanId": action_plan_id
-        }
+        payload = {"personId": person_id, "actionPlanId": action_plan_id}
         payload.update(kwargs)
-        
+
         return self.client._post("actionPlansPeople", json_data=payload)
 
     def update_action_plan_assignment(
-        self, 
-        assignment_id: int, 
-        update_data: Dict[str, Any]
+        self, assignment_id: int, update_data: Dict[str, Any]
     ) -> Union[Dict[str, Any], str]:
         """
         Updates an existing action plan assignment for a person.
@@ -135,13 +131,15 @@ class ActionPlans:
         Args:
             assignment_id: The ID of the action plan assignment record to update.
                            (This is typically different from person_id or action_plan_id).
-            update_data: A dictionary containing the fields to update 
+            update_data: A dictionary containing the fields to update
                          (e.g., {"status": "Paused"}).
 
         Returns:
             A dictionary containing the details of the updated action plan assignment or an error string.
         """
-        return self.client._put(f"actionPlansPeople/{assignment_id}", json_data=update_data)
+        return self.client._put(
+            f"actionPlansPeople/{assignment_id}", json_data=update_data
+        )
 
     # GET /actionPlansPeople (List people in action plans)
     # POST /actionPlansPeople (Add person to action plan)

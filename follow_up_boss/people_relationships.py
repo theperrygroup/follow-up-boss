@@ -37,15 +37,15 @@ class PeopleRelationships:
         return self._client._get("peopleRelationships", params=params)
 
     def create_people_relationship(
-        self, 
-        person_id: int, 
+        self,
+        person_id: int,
         relationship_type: str,
         first_name: Optional[str] = None,
         last_name: Optional[str] = None,
         emails: Optional[List[Dict[str, Any]]] = None,
         phones: Optional[List[Dict[str, Any]]] = None,
         addresses: Optional[List[Dict[str, Any]]] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> Union[Dict[str, Any], str]:
         """
         Creates a new relationship for a person.
@@ -67,16 +67,13 @@ class PeopleRelationships:
 
         Returns:
             A dictionary containing the details of the created relationship or an error string.
-            
+
         Note:
             According to the API documentation, firstName, lastName, emails, phones, and addresses
             are all supported fields that can be set during relationship creation.
         """
-        payload = {
-            "personId": person_id,
-            "type": relationship_type
-        }
-        
+        payload = {"personId": person_id, "type": relationship_type}
+
         # Add optional fields if provided
         if first_name is not None:
             payload["firstName"] = first_name
@@ -88,10 +85,10 @@ class PeopleRelationships:
             payload["phones"] = phones
         if addresses is not None:
             payload["addresses"] = addresses
-            
+
         # Add any additional fields from kwargs
         payload.update(kwargs)
-            
+
         return self._client._post("peopleRelationships", json_data=payload)
 
     def retrieve_people_relationship(self, relationship_id: int) -> Dict[str, Any]:
@@ -107,15 +104,15 @@ class PeopleRelationships:
         return self._client._get(f"peopleRelationships/{relationship_id}")
 
     def update_people_relationship(
-        self, 
-        relationship_id: int, 
+        self,
+        relationship_id: int,
         relationship_type: Optional[str] = None,
         first_name: Optional[str] = None,
         last_name: Optional[str] = None,
         emails: Optional[List[Dict[str, Any]]] = None,
         phones: Optional[List[Dict[str, Any]]] = None,
         addresses: Optional[List[Dict[str, Any]]] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> Union[Dict[str, Any], str]:
         """
         Updates an existing people relationship.
@@ -137,21 +134,21 @@ class PeopleRelationships:
 
         Returns:
             A dictionary containing the details of the updated relationship or an error string.
-            
+
         Important Notes:
             - To update a relationship, you must have access to the parent person.
             - The `personId` of an existing relationship CANNOT be altered after creation.
             - Sending an array of emails, phones, or addresses will OVERWRITE existing values.
-            - To maintain existing contacts while adding new ones, you must include the current 
+            - To maintain existing contacts while adding new ones, you must include the current
               list plus any new items in the array.
             - If contact arrays are left blank/None, no changes are made to those fields.
-            
+
         Warning:
             Array fields (emails, phones, addresses) completely replace existing data when provided.
             Retrieve the current relationship first if you need to preserve existing contact info.
         """
         payload: Dict[str, Any] = {}
-        
+
         # Add fields that should be updated
         if relationship_type is not None:
             payload["type"] = relationship_type
@@ -165,17 +162,23 @@ class PeopleRelationships:
             payload["phones"] = phones
         if addresses is not None:
             payload["addresses"] = addresses
-            
+
         # Add any additional fields from kwargs
         payload.update(kwargs)
-        
+
         # Ensure we have something to update
         if not payload:
-            raise ValueError("At least one field must be provided to update the relationship.")
-            
-        return self._client._put(f"peopleRelationships/{relationship_id}", json_data=payload)
+            raise ValueError(
+                "At least one field must be provided to update the relationship."
+            )
 
-    def delete_people_relationship(self, relationship_id: int) -> Union[Dict[str, Any], str]:
+        return self._client._put(
+            f"peopleRelationships/{relationship_id}", json_data=payload
+        )
+
+    def delete_people_relationship(
+        self, relationship_id: int
+    ) -> Union[Dict[str, Any], str]:
         """
         Deletes a people relationship.
 
@@ -190,4 +193,4 @@ class PeopleRelationships:
     # POST /peopleRelationships (Create people relationship)
     # GET /peopleRelationships/{id} (Retrieve people relationship)
     # PUT /peopleRelationships/{id} (Update people relationship)
-    # DELETE /peopleRelationships/{id} (Delete people relationship) 
+    # DELETE /peopleRelationships/{id} (Delete people relationship)

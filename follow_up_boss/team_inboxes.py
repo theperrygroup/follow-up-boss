@@ -2,12 +2,13 @@
 API bindings for Follow Up Boss Team Inboxes endpoints.
 """
 
+import logging
 from typing import Any, Dict, Optional
 
 from .client import FollowUpBossApiClient
-import logging
 
 logger = logging.getLogger(__name__)
+
 
 class TeamInboxes:
     """
@@ -29,8 +30,8 @@ class TeamInboxes:
         offset: Optional[int] = None,
         sort: Optional[str] = None,
         # Add other relevant filters if specified by API docs
-        **kwargs: Any
-    ) -> Dict[str, Any]: 
+        **kwargs: Any,
+    ) -> Dict[str, Any]:
         """
         Retrieves a list of team inboxes.
 
@@ -51,5 +52,5 @@ class TeamInboxes:
         if sort is not None:
             params["sort"] = sort
         params.update(kwargs)
-        
-        return self.client._get("teamInboxes", params=params) 
+
+        return self.client._get("teamInboxes", params=params)
