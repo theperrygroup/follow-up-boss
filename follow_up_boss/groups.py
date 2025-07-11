@@ -2,12 +2,13 @@
 API bindings for Follow Up Boss Groups endpoints.
 """
 
-from typing import Any, Dict, Optional, List, Union
+import logging
+from typing import Any, Dict, List, Optional, Union
 
 from .client import FollowUpBossApiClient
-import logging
 
 logger = logging.getLogger(__name__)
+
 
 class Groups:
     """
@@ -30,8 +31,8 @@ class Groups:
         offset: Optional[int] = None,
         sort: Optional[str] = None,
         # Add other relevant filters (e.g., name, type)
-        **kwargs: Any
-    ) -> Union[Dict[str, Any], str]: 
+        **kwargs: Any,
+    ) -> Union[Dict[str, Any], str]:
         """
         Retrieves a list of groups.
 
@@ -52,7 +53,7 @@ class Groups:
         if sort is not None:
             params["sort"] = sort
         params.update(kwargs)
-        
+
         return self._client._get("groups", params=params)
 
     def get_group_round_robin_status(self, group_id: int) -> Union[Dict[str, Any], str]:
@@ -73,7 +74,7 @@ class Groups:
         # If it's a general status, the method signature and endpoint call would differ.
         # Given the task list formatting, it is ambiguous. Will assume /groups/{id}/roundRobin for now.
         # If error, will try /groups/roundRobin with groupId as param.
-        
+
         # Correction based on common API patterns for sub-resources/actions:
         # /v1/groups/{id}/roundRobin is a more standard pattern for an action on a specific group.
         # The task list says GET /v1/groups/roundRobin -> this typically would not take an ID in path.
@@ -86,8 +87,10 @@ class Groups:
     def create_group(
         self,
         name: str,
-        user_ids: Optional[List[int]] = None, # List of user IDs to be members of the group
-        **kwargs: Any
+        user_ids: Optional[
+            List[int]
+        ] = None,  # List of user IDs to be members of the group
+        **kwargs: Any,
     ) -> Union[Dict[str, Any], str]:
         """
         Creates a new group.
@@ -103,9 +106,9 @@ class Groups:
         payload: Dict[str, Any] = {"name": name}
         if user_ids is not None:
             payload["users"] = user_ids  # Try "users" instead of "userIds"
-        
+
         payload.update(kwargs)
-        
+
         return self._client._post("groups", json_data=payload)
 
     def retrieve_group(self, group_id: int) -> Union[Dict[str, Any], str]:
@@ -120,7 +123,9 @@ class Groups:
         """
         return self._client._get(f"groups/{group_id}")
 
-    def update_group(self, group_id: int, update_data: Dict[str, Any]) -> Union[Dict[str, Any], str]:
+    def update_group(
+        self, group_id: int, update_data: Dict[str, Any]
+    ) -> Union[Dict[str, Any], str]:
         """
         Updates an existing group.
 
@@ -150,4 +155,4 @@ class Groups:
     # POST /groups (Create group)
     # GET /groups/{id} (Retrieve group)
     # PUT /groups/{id} (Update group)
-    # DELETE /groups/{id} (Delete group) 
+    # DELETE /groups/{id} (Delete group)

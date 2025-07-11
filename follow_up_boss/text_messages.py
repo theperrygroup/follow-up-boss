@@ -2,12 +2,13 @@
 API bindings for Follow Up Boss Text Messages endpoints.
 """
 
+import logging
 from typing import Any, Dict, Optional, Union
 
 from .client import FollowUpBossApiClient
-import logging
 
 logger = logging.getLogger(__name__)
+
 
 class TextMessages:
     """
@@ -30,7 +31,7 @@ class TextMessages:
         offset: Optional[int] = None,
         sort: Optional[str] = None,
         # Add other relevant filters (e.g., direction, status, date ranges)
-        **kwargs: Any
+        **kwargs: Any,
     ) -> Dict[str, Any]:
         """
         Retrieves a list of text messages.
@@ -46,7 +47,7 @@ class TextMessages:
             A dictionary containing the list of text messages and pagination information.
         """
         params: Dict[str, Any] = {}
-        params["personId"] = person_id 
+        params["personId"] = person_id
         if limit is not None:
             params["limit"] = limit
         if offset is not None:
@@ -54,7 +55,7 @@ class TextMessages:
         if sort is not None:
             params["sort"] = sort
         params.update(kwargs)
-        
+
         return self.client._get("textMessages", params=params)
 
     def create_text_message(
@@ -64,11 +65,11 @@ class TextMessages:
         to_number: str,  # Added: Phone number the message is sent to
         # FUB User ID or FUB Number ID from which the message is sent or to which it is received
         from_number: Optional[str] = None,  # Added: Number message is sent from
-        contact_id: Optional[Union[int, str]] = None, 
+        contact_id: Optional[Union[int, str]] = None,
         is_incoming: Optional[bool] = False,
         # status: Optional[str] = None, # e.g., "Sent", "Delivered", "Failed"
         # sent_at: Optional[str] = None, # ISO 8601, defaults to now if not set
-        **kwargs: Any
+        **kwargs: Any,
     ) -> Dict[str, Any]:
         """
         Creates a new text message log.
@@ -81,7 +82,7 @@ class TextMessages:
             from_number: Optional. The phone number the message is sent from.
             contact_id: Optional. The ID of the FUB user or FUB phone number associated with sending/receiving.
                         This might be called `userId` or `fubNumberId` by the API.
-            is_incoming: Boolean indicating if message is incoming (True) or outgoing (False). 
+            is_incoming: Boolean indicating if message is incoming (True) or outgoing (False).
                         Defaults to False (outgoing).
             **kwargs: Additional fields for the text message payload.
 
@@ -92,16 +93,16 @@ class TextMessages:
             "personId": person_id,
             "message": message,
             "isIncoming": is_incoming,
-            "toNumber": to_number
+            "toNumber": to_number,
         }
         if from_number is not None:
             payload["fromNumber"] = from_number
         if contact_id is not None:
             # The actual field name might be specific, e.g., "userId", "fubContactId"
-            payload["contactId"] = contact_id 
-        
+            payload["contactId"] = contact_id
+
         payload.update(kwargs)
-        
+
         return self.client._post("textMessages", json_data=payload)
 
     def retrieve_text_message(self, text_message_id: int) -> Dict[str, Any]:
@@ -116,4 +117,4 @@ class TextMessages:
         """
         return self.client._get(f"textMessages/{text_message_id}")
 
-    # GET /textMessages/{id} (Retrieve text message) 
+    # GET /textMessages/{id} (Retrieve text message)

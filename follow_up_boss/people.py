@@ -24,10 +24,7 @@ class People:
         """
         self._client = client
 
-    def list_people(
-        self, 
-        params: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+    def list_people(self, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
         Retrieves a list of people.
 
@@ -52,7 +49,9 @@ class People:
         """
         return self._client._post("people", json_data=person_data)
 
-    def retrieve_person(self, person_id: int, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def retrieve_person(
+        self, person_id: int, params: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """
         Retrieves a specific person by their ID.
 
@@ -65,7 +64,9 @@ class People:
         """
         return self._client._get(f"people/{person_id}", params=params)
 
-    def update_person(self, person_id: int, update_data: Dict[str, Any]) -> Union[Dict[str, Any], str]:
+    def update_person(
+        self, person_id: int, update_data: Dict[str, Any]
+    ) -> Union[Dict[str, Any], str]:
         """
         Updates an existing person.
 
@@ -90,10 +91,7 @@ class People:
         """
         return self._client._delete(f"people/{person_id}")
 
-    def check_duplicate(
-        self, 
-        params: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def check_duplicate(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """
         Checks for duplicate people based on provided criteria (e.g., email, phone).
         At least one identifier (email, phone) must be in params.
@@ -103,17 +101,18 @@ class People:
 
         Returns:
             A dictionary containing the API response.
-        
+
         Raises:
             ValueError: If params is empty or missing key identifiers.
         """
         if not params or not any(key in params for key in ["email", "phone"]):
-            raise ValueError("Params must include at least 'email' or 'phone' to check for duplicates.")
+            raise ValueError(
+                "Params must include at least 'email' or 'phone' to check for duplicates."
+            )
         return self._client._get("people/checkDuplicate", params=params)
 
     def list_unclaimed_people(
-        self, 
-        params: Optional[Dict[str, Any]] = None
+        self, params: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """
         Retrieves a list of unclaimed people.
@@ -131,7 +130,7 @@ class People:
         Claims an unclaimed person, assigning them to a user.
 
         Args:
-            payload: Dictionary for the request body, typically including `personId` 
+            payload: Dictionary for the request body, typically including `personId`
                      and optionally `userId`.
 
         Returns:
@@ -139,7 +138,9 @@ class People:
         """
         return self._client._post("people/claim", json_data=payload)
 
-    def ignore_unclaimed_person(self, payload: Dict[str, Any]) -> Union[Dict[str, Any], str]:
+    def ignore_unclaimed_person(
+        self, payload: Dict[str, Any]
+    ) -> Union[Dict[str, Any], str]:
         """
         Marks an unclaimed person as ignored.
 

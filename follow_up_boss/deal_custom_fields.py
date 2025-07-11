@@ -2,12 +2,13 @@
 Handles the Deal Custom Fields endpoints for the Follow Up Boss API.
 """
 
+import logging
 from typing import Any, Dict, List, Optional, Union
 
 from .client import FollowUpBossApiClient
-import logging
 
 logger = logging.getLogger(__name__)
+
 
 class DealCustomFields:
     """
@@ -38,11 +39,7 @@ class DealCustomFields:
         return self._client._get("dealCustomFields", params=params)
 
     def create_deal_custom_field(
-        self,
-        name: str,
-        field_type: str,
-        show_in_form: bool = True,
-        **kwargs: Any
+        self, name: str, field_type: str, show_in_form: bool = True, **kwargs: Any
     ) -> Union[Dict[str, Any], str]:
         """
         Creates a new deal custom field.
@@ -55,14 +52,14 @@ class DealCustomFields:
 
         Returns:
             A dictionary containing the details of the newly created custom field.
-            
+
         Note:
             This operation may require admin permissions.
         """
         payload: Dict[str, Any] = {
             "name": name,
             "type": field_type,
-            "showInForm": show_in_form
+            "showInForm": show_in_form,
         }
 
         payload.update(kwargs)
@@ -87,7 +84,7 @@ class DealCustomFields:
         name: Optional[str] = None,
         field_type: Optional[str] = None,
         show_in_form: Optional[bool] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> Union[Dict[str, Any], str]:
         """
         Updates an existing deal custom field.
@@ -101,7 +98,7 @@ class DealCustomFields:
 
         Returns:
             A dictionary containing the details of the updated custom field.
-            
+
         Note:
             This operation may require admin permissions.
         """
@@ -127,7 +124,7 @@ class DealCustomFields:
 
         Returns:
             An empty dictionary if successful.
-            
+
         Note:
             This operation may require admin permissions.
         """
@@ -135,4 +132,4 @@ class DealCustomFields:
 
     # GET /dealCustomFields/{id} (Retrieve deal custom field)
     # PUT /dealCustomFields/{id} (Update deal custom field)
-    # DELETE /dealCustomFields/{id} (Delete deal custom field) 
+    # DELETE /dealCustomFields/{id} (Delete deal custom field)

@@ -72,7 +72,7 @@ The client provides access to all Follow Up Boss API resources:
 
 ### Core Resources
 - **People**: Manage contacts and leads
-- **Deals**: Track real estate transactions
+- **Deals**: Track real estate transactions ([Commission Field Guide](DEALS_COMMISSION_GUIDE.md))
 - **Events**: Handle activities and interactions
 - **Tasks**: Manage todo items and follow-ups
 - **Notes**: Add and retrieve notes
@@ -102,6 +102,51 @@ The client provides access to all Follow Up Boss API resources:
 ### Attachments & Files
 - **Person Attachments**: File attachments for contacts
 - **Deal Attachments**: File attachments for deals
+
+## Deals API - Commission Fields
+
+The Deals API includes special handling for commission fields. **Important**: Commission fields must be passed as top-level parameters, not in `custom_fields`.
+
+```python
+from follow_up_boss import Deals, DealsValidationError
+
+deals_api = Deals(client)
+
+# ✅ Correct - Commission fields as top-level parameters
+deal = deals_api.create_deal(
+    name="123 Main Street",
+    stage_id=26,
+    price=450000,
+    commissionValue=13500.0,
+    agentCommission=9450.0,
+    teamCommission=4050.0
+)
+
+# ❌ Incorrect - This will raise DealsValidationError
+try:
+    deal = deals_api.create_deal(
+        name="Deal Name",
+        stage_id=26,
+        custom_fields={'commissionValue': 13500}  # This fails
+    )
+except DealsValidationError as e:
+    print(f"Validation error: {e}")
+```
+
+### Commission Helper Methods
+
+```python
+# Set commission using helper method
+commission_data = {
+    'total': 15000.0,
+    'agent': 10500.0,
+    'team': 4500.0
+}
+
+updated_deal = deals_api.set_deal_commission(deal_id, commission_data)
+```
+
+For complete commission field documentation, see the [Commission Field Guide](DEALS_COMMISSION_GUIDE.md).
 
 ## Advanced Usage
 
@@ -204,6 +249,16 @@ For questions, issues, or feature requests, please:
 3. Create a [new issue](https://github.com/theperrygroup/follow-up-boss/issues/new) if needed
 
 ## Changelog
+
+### Version 0.2.0
+- **Major Commission Field Improvements**: Added comprehensive commission field handling with validation
+- **Enhanced Error Messages**: Context-specific error guidance for common mistakes
+- **New Validation System**: `DealsValidationError` for deals-specific validation
+- **Commission Helper Methods**: `set_deal_commission()` for easier commission management
+- **Field Name Normalization**: Consistent field naming between requests and responses
+- **Comprehensive Documentation**: New commission field guide with examples and troubleshooting
+- **Enhanced Testing**: Complete test coverage for all commission field scenarios
+- **Improved Developer Experience**: Better error messages, helper properties, and validation
 
 ### Version 0.1.2
 - Removed appointment test log file logging

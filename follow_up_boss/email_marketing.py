@@ -2,12 +2,13 @@
 Handles the Email Marketing endpoints for the Follow Up Boss API.
 """
 
+import logging
 from typing import Any, Dict, List, Optional, Union
 
 from .client import FollowUpBossApiClient
-import logging
 
 logger = logging.getLogger(__name__)
+
 
 class EmailMarketing:
     """
@@ -44,7 +45,7 @@ class EmailMarketing:
         campaign_id: Optional[int] = None,
         email_id: Optional[int] = None,
         email_address: Optional[str] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> Union[Dict[str, Any], str]:
         """
         Creates a new email marketing event.
@@ -63,7 +64,7 @@ class EmailMarketing:
         event_data: Dict[str, Any] = {
             "type": event_type,
             "personId": person_id,
-            "recipient": email_address or f"person{person_id}@example.com"
+            "recipient": email_address or f"person{person_id}@example.com",
         }
 
         if campaign_id is not None:
@@ -74,9 +75,7 @@ class EmailMarketing:
         event_data.update(kwargs)
 
         # Wrap in emEvents as expected by API
-        payload = {
-            "emEvents": [event_data]
-        }
+        payload = {"emEvents": [event_data]}
 
         return self._client._post("emEvents", json_data=payload)
 
@@ -95,11 +94,7 @@ class EmailMarketing:
         return self._client._get("emCampaigns", params=params)
 
     def create_email_marketing_campaign(
-        self,
-        name: str,
-        subject: str,
-        body: str,
-        **kwargs: Any
+        self, name: str, subject: str, body: str, **kwargs: Any
     ) -> Union[Dict[str, Any], str]:
         """
         Creates a new email marketing campaign.
@@ -117,7 +112,7 @@ class EmailMarketing:
             "name": name,
             "subject": subject,
             "origin": "API",  # Required field
-            "originId": 1  # Required field - using a default value
+            "originId": 1,  # Required field - using a default value
         }
 
         payload.update(kwargs)
@@ -130,7 +125,7 @@ class EmailMarketing:
         name: Optional[str] = None,
         subject: Optional[str] = None,
         body: Optional[str] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> Union[Dict[str, Any], str]:
         """
         Updates an existing email marketing campaign.
@@ -161,4 +156,4 @@ class EmailMarketing:
     # POST /emEvents (Create email marketing event)
     # GET /emCampaigns (List email marketing campaigns)
     # POST /emCampaigns (Create email marketing campaign)
-    # PUT /emCampaigns/{id} (Update email marketing campaign) 
+    # PUT /emCampaigns/{id} (Update email marketing campaign)

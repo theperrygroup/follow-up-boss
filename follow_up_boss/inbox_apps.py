@@ -2,12 +2,13 @@
 Handles the Inbox Apps endpoints for the Follow Up Boss API.
 """
 
+import logging
 from typing import Any, Dict, Optional, Union
 
 from .client import FollowUpBossApiClient
-import logging
 
 logger = logging.getLogger(__name__)
+
 
 class InboxApps:
     """
@@ -24,11 +25,7 @@ class InboxApps:
         self._client = client
 
     def install_inbox_app(
-        self,
-        app_name: str,
-        app_id: str,
-        username: str,
-        **kwargs: Any
+        self, app_name: str, app_id: str, username: str, **kwargs: Any
     ) -> Union[Dict[str, Any], str]:
         """
         Installs an inbox app.
@@ -45,11 +42,11 @@ class InboxApps:
         payload: Dict[str, Any] = {
             "appName": app_name,
             "appId": app_id,
-            "username": username
+            "username": username,
         }
-        
+
         payload.update(kwargs)
-        
+
         return self._client._post("inboxApps/install", json_data=payload)
 
     def add_message(
@@ -58,7 +55,7 @@ class InboxApps:
         body: str,
         sender: str,
         timestamp: Optional[str] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> Union[Dict[str, Any], str]:
         """
         Adds a message to an inbox app conversation.
@@ -76,20 +73,18 @@ class InboxApps:
         payload: Dict[str, Any] = {
             "conversationId": conversation_id,
             "body": body,
-            "sender": sender
+            "sender": sender,
         }
-        
+
         if timestamp is not None:
             payload["timestamp"] = timestamp
-        
+
         payload.update(kwargs)
-        
+
         return self._client._post("inboxApps/addMessage", json_data=payload)
 
     def update_message(
-        self,
-        message_id: str,
-        **kwargs: Any
+        self, message_id: str, **kwargs: Any
     ) -> Union[Dict[str, Any], str]:
         """
         Updates a message in an inbox app conversation.
@@ -101,12 +96,10 @@ class InboxApps:
         Returns:
             A dictionary containing the updated message details.
         """
-        payload: Dict[str, Any] = {
-            "messageId": message_id
-        }
-        
+        payload: Dict[str, Any] = {"messageId": message_id}
+
         payload.update(kwargs)
-        
+
         return self._client._put("inboxApps/updateMessage", json_data=payload)
 
     def add_note(
@@ -115,7 +108,7 @@ class InboxApps:
         body: str,
         created_by: str,
         timestamp: Optional[str] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> Union[Dict[str, Any], str]:
         """
         Adds a note to an inbox app conversation.
@@ -133,20 +126,18 @@ class InboxApps:
         payload: Dict[str, Any] = {
             "conversationId": conversation_id,
             "body": body,
-            "createdBy": created_by
+            "createdBy": created_by,
         }
-        
+
         if timestamp is not None:
             payload["timestamp"] = timestamp
-        
+
         payload.update(kwargs)
-        
+
         return self._client._post("inboxApps/addNote", json_data=payload)
 
     def update_conversation(
-        self,
-        conversation_id: str,
-        **kwargs: Any
+        self, conversation_id: str, **kwargs: Any
     ) -> Union[Dict[str, Any], str]:
         """
         Updates an inbox app conversation.
@@ -158,18 +149,13 @@ class InboxApps:
         Returns:
             A dictionary containing the updated conversation details.
         """
-        payload: Dict[str, Any] = {
-            "conversationId": conversation_id
-        }
-        
+        payload: Dict[str, Any] = {"conversationId": conversation_id}
+
         payload.update(kwargs)
-        
+
         return self._client._put("inboxApps/updateConversation", json_data=payload)
 
-    def get_participants(
-        self,
-        conversation_id: str
-    ) -> Union[Dict[str, Any], str]:
+    def get_participants(self, conversation_id: str) -> Union[Dict[str, Any], str]:
         """
         Gets the participants of an inbox app conversation.
 
@@ -179,10 +165,8 @@ class InboxApps:
         Returns:
             A dictionary containing the participants.
         """
-        params: Dict[str, Any] = {
-            "conversationId": conversation_id
-        }
-        
+        params: Dict[str, Any] = {"conversationId": conversation_id}
+
         return self._client._get("inboxApps/getParticipants", params=params)
 
     def add_participant(
@@ -190,7 +174,7 @@ class InboxApps:
         conversation_id: str,
         participant_id: str,
         participant_type: str,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> Union[Dict[str, Any], str]:
         """
         Adds a participant to an inbox app conversation.
@@ -207,18 +191,15 @@ class InboxApps:
         payload: Dict[str, Any] = {
             "conversationId": conversation_id,
             "participantId": participant_id,
-            "participantType": participant_type
+            "participantType": participant_type,
         }
-        
+
         payload.update(kwargs)
-        
+
         return self._client._post("inboxApps/addParticipant", json_data=payload)
 
     def remove_participant(
-        self,
-        conversation_id: str,
-        participant_id: str,
-        participant_type: str
+        self, conversation_id: str, participant_id: str, participant_type: str
     ) -> Union[Dict[str, Any], str]:
         """
         Removes a participant from an inbox app conversation.
@@ -234,15 +215,12 @@ class InboxApps:
         params: Dict[str, Any] = {
             "conversationId": conversation_id,
             "participantId": participant_id,
-            "participantType": participant_type
+            "participantType": participant_type,
         }
-        
+
         return self._client._delete("inboxApps/removeParticipant", data=params)
 
-    def deactivate(
-        self,
-        app_id: str
-    ) -> Union[Dict[str, Any], str]:
+    def deactivate(self, app_id: str) -> Union[Dict[str, Any], str]:
         """
         Deactivates an inbox app.
 
@@ -252,8 +230,6 @@ class InboxApps:
         Returns:
             A dictionary containing the result of the operation.
         """
-        params: Dict[str, Any] = {
-            "appId": app_id
-        }
-        
+        params: Dict[str, Any] = {"appId": app_id}
+
         return self._client._delete("inboxApps/deactivate", data=params)

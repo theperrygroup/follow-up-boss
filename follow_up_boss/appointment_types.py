@@ -2,12 +2,13 @@
 API bindings for Follow Up Boss Appointment Types endpoints.
 """
 
+import logging
 from typing import Any, Dict, Optional, Union
 
 from .client import FollowUpBossApiClient
-import logging
 
 logger = logging.getLogger(__name__)
+
 
 class AppointmentTypes:
     """
@@ -24,9 +25,8 @@ class AppointmentTypes:
         self._client = client
 
     def list_appointment_types(
-        self,
-        params: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]: 
+        self, params: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """
         Retrieves a list of appointment types defined in the account.
 
@@ -39,9 +39,7 @@ class AppointmentTypes:
         return self._client._get("appointmentTypes", params=params)
 
     def create_appointment_type(
-        self,
-        name: str,
-        params: Optional[Dict[str, Any]] = None
+        self, name: str, params: Optional[Dict[str, Any]] = None
     ) -> Union[Dict[str, Any], str]:
         """
         Creates a new appointment type.
@@ -56,7 +54,7 @@ class AppointmentTypes:
         payload: Dict[str, Any] = {"name": name}
         if params:
             payload.update(params)
-        
+
         return self._client._post("appointmentTypes", json_data=payload)
 
     def retrieve_appointment_type(self, appt_type_id: int) -> Dict[str, Any]:
@@ -71,7 +69,9 @@ class AppointmentTypes:
         """
         return self._client._get(f"appointmentTypes/{appt_type_id}")
 
-    def update_appointment_type(self, appt_type_id: int, update_data: Dict[str, Any]) -> Union[Dict[str, Any], str]:
+    def update_appointment_type(
+        self, appt_type_id: int, update_data: Dict[str, Any]
+    ) -> Union[Dict[str, Any], str]:
         """
         Updates an existing appointment type.
 
@@ -82,7 +82,9 @@ class AppointmentTypes:
         Returns:
             A dictionary containing the details of the updated appointment type or an error string.
         """
-        return self._client._put(f"appointmentTypes/{appt_type_id}", json_data=update_data)
+        return self._client._put(
+            f"appointmentTypes/{appt_type_id}", json_data=update_data
+        )
 
     def delete_appointment_type(self, appt_type_id: int) -> Union[Dict[str, Any], str]:
         """
@@ -98,4 +100,4 @@ class AppointmentTypes:
 
     # GET /appointmentTypes/{id} (Retrieve appointment type)
     # PUT /appointmentTypes/{id} (Update appointment type)
-    # DELETE /appointmentTypes/{id} (Delete appointment type) 
+    # DELETE /appointmentTypes/{id} (Delete appointment type)

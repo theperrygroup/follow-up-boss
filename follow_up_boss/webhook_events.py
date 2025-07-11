@@ -2,12 +2,13 @@
 Handles the Webhook Events endpoints for the Follow Up Boss API.
 """
 
+import logging
 from typing import Any, Dict, Optional, Union
 
 from .client import FollowUpBossApiClient
-import logging
 
 logger = logging.getLogger(__name__)
+
 
 class WebhookEvents:
     """
@@ -34,6 +35,6 @@ class WebhookEvents:
             A dictionary containing the details of the webhook event.
         """
         return self._client._get(f"webhookEvents/{event_id}")
-    
+
     # Alias for backward compatibility
-    get_webhook_event = retrieve_webhook_event 
+    get_webhook_event = retrieve_webhook_event

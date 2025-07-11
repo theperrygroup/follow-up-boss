@@ -1,24 +1,19 @@
 """
 Follow Up Boss API Client
 
-A comprehensive Python client library for the Follow Up Boss API.
+This module provides a comprehensive Python SDK for the Follow Up Boss API.
 """
 
-__version__ = "0.1.2"
-
-# Core client
-from .client import FollowUpBossApiClient
-
-# Individual API resource classes
 from .action_plans import ActionPlans
 from .appointment_outcomes import AppointmentOutcomes
 from .appointment_types import AppointmentTypes
 from .appointments import Appointments
 from .calls import Calls
+from .client import FollowUpBossApiClient, FollowUpBossApiException
 from .custom_fields import CustomFields
 from .deal_attachments import DealAttachments
 from .deal_custom_fields import DealCustomFields
-from .deals import Deals
+from .deals import Deals, DealsValidationError
 from .email_marketing import EmailMarketing
 from .email_templates import EmailTemplates
 from .events import Events
@@ -45,40 +40,43 @@ from .users import Users
 from .webhook_events import WebhookEvents
 from .webhooks import Webhooks
 
+__version__ = "0.2.0"
 __all__ = [
     "FollowUpBossApiClient",
-    "ActionPlans",
-    "AppointmentOutcomes",
-    "AppointmentTypes",
-    "Appointments",
-    "Calls",
-    "CustomFields",
-    "DealAttachments",
-    "DealCustomFields",
-    "Deals",
-    "EmailMarketing",
-    "EmailTemplates",
-    "Events",
-    "Groups",
-    "Identity",
-    "InboxApps",
-    "Notes",
+    "FollowUpBossApiException",
+    "DealsValidationError",
     "People",
-    "PeopleRelationships",
-    "PersonAttachments",
-    "Pipelines",
-    "Ponds",
-    "Reactions",
+    "Deals",
+    "Notes",
+    "Calls",
+    "TextMessages",
+    "Users",
+    "Events",
     "SmartLists",
+    "ActionPlans",
+    "EmailTemplates",
+    "TextMessageTemplates",
+    "EmailMarketing",
+    "CustomFields",
     "Stages",
     "Tasks",
-    "TeamInboxes",
+    "Appointments",
+    "AppointmentTypes",
+    "AppointmentOutcomes",
+    "Webhooks",
+    "WebhookEvents",
+    "Pipelines",
+    "DealAttachments",
+    "DealCustomFields",
+    "Groups",
     "Teams",
-    "TextMessageTemplates",
-    "TextMessages",
+    "TeamInboxes",
+    "Ponds",
+    "InboxApps",
+    "Reactions",
     "ThreadedReplies",
     "Timeframes",
-    "Users",
-    "WebhookEvents",
-    "Webhooks",
+    "PeopleRelationships",
+    "PersonAttachments",
+    "Identity",
 ]

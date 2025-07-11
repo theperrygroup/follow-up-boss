@@ -2,12 +2,13 @@
 API bindings for Follow Up Boss Tasks endpoints.
 """
 
+import logging
 from typing import Any, Dict, Optional, Union
 
 from .client import FollowUpBossApiClient
-import logging
 
 logger = logging.getLogger(__name__)
+
 
 class Tasks:
     """
@@ -26,15 +27,15 @@ class Tasks:
     def list_tasks(
         self,
         person_id: Optional[int] = None,
-        assigned_to: Optional[int] = None, # User ID
-        status: Optional[str] = None, # e.g., "incomplete", "complete"
-        due_date_from: Optional[str] = None, # ISO 8601 YYYY-MM-DD
-        due_date_to: Optional[str] = None,   # ISO 8601 YYYY-MM-DD
+        assigned_to: Optional[int] = None,  # User ID
+        status: Optional[str] = None,  # e.g., "incomplete", "complete"
+        due_date_from: Optional[str] = None,  # ISO 8601 YYYY-MM-DD
+        due_date_to: Optional[str] = None,  # ISO 8601 YYYY-MM-DD
         limit: Optional[int] = None,
         offset: Optional[int] = None,
         sort: Optional[str] = None,
-        **kwargs: Any
-    ) -> Union[Dict[str, Any], str]: 
+        **kwargs: Any,
+    ) -> Union[Dict[str, Any], str]:
         """
         Retrieves a list of tasks.
 
@@ -70,17 +71,17 @@ class Tasks:
         if sort is not None:
             params["sort"] = sort
         params.update(kwargs)
-        
+
         return self.client._get("tasks", params=params)
 
     def create_task(
         self,
-        name: str, 
+        name: str,
         person_id: Optional[int] = None,
-        assigned_to: Optional[int] = None, # This will be mapped to assigneeId
-        due_date: Optional[str] = None, 
-        details: Optional[str] = None, 
-        **kwargs: Any
+        assigned_to: Optional[int] = None,  # This will be mapped to assigneeId
+        due_date: Optional[str] = None,
+        details: Optional[str] = None,
+        **kwargs: Any,
     ) -> Union[Dict[str, Any], str]:
         """
         Creates a new task.
@@ -97,19 +98,21 @@ class Tasks:
             A dictionary containing the details of the newly created task.
         """
         payload: Dict[str, Any] = {"name": name}
-        if person_id is not None: 
+        if person_id is not None:
             payload["personId"] = person_id
-        if assigned_to is not None: 
-            payload["assigneeId"] = assigned_to 
-        if due_date is not None: 
+        if assigned_to is not None:
+            payload["assigneeId"] = assigned_to
+        if due_date is not None:
             payload["dueDate"] = due_date
-        if details is not None: 
-            payload["notes"] = details  # Changed from description to notes based on API error
-        
+        if details is not None:
+            payload["notes"] = (
+                details  # Changed from description to notes based on API error
+            )
+
         # Remove any unexpected fields that might cause issues
         if "description" in kwargs:
             kwargs.pop("description")
-        
+
         payload.update(kwargs)
         logger.debug(f"TASKS.CREATE_TASK: Final payload for POST /tasks: {payload}")
         return self.client._post("tasks", json_data=payload)
@@ -126,13 +129,15 @@ class Tasks:
         """
         return self.client._get(f"tasks/{task_id}")
 
-    def update_task(self, task_id: int, update_data: Dict[str, Any]) -> Union[Dict[str, Any], str]:
+    def update_task(
+        self, task_id: int, update_data: Dict[str, Any]
+    ) -> Union[Dict[str, Any], str]:
         """
         Updates an existing task.
 
         Args:
             task_id: The ID of the task to update.
-            update_data: A dictionary containing the fields to update 
+            update_data: A dictionary containing the fields to update
                          (e.g., {"name": "New Task Name", "status": "complete", "dueDate": "YYYY-MM-DD"}).
 
         Returns:
@@ -153,4 +158,4 @@ class Tasks:
         """
         return self.client._delete(f"tasks/{task_id}")
 
-    # DELETE /tasks/{id} (Delete task) 
+    # DELETE /tasks/{id} (Delete task)

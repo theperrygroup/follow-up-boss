@@ -35,7 +35,9 @@ class Appointments:
         """
         return self._client._get("appointments", params=params)
 
-    def create_appointment(self, data: Dict[str, Any], params: Optional[Dict[str, Any]] = None) -> Union[Dict[str, Any], str]:
+    def create_appointment(
+        self, data: Dict[str, Any], params: Optional[Dict[str, Any]] = None
+    ) -> Union[Dict[str, Any], str]:
         """
         Creates a new appointment.
 
@@ -45,16 +47,16 @@ class Appointments:
 
         Returns:
             A dictionary containing the details of the created appointment or an error string.
-            
+
         Note:
             According to API documentation and testing, the appointment creation
             endpoint rejects standard parameter names (date, startTime, etc.) in the request body.
             This endpoint may require specific formatting or admin permissions.
         """
         return self._client._post("appointments", json_data=data, params=params)
-    
+
     def book_appointment(
-        self, 
+        self,
         title: str,
         start_time: str,
         end_time: str,
@@ -62,11 +64,11 @@ class Appointments:
         contacts: Optional[List[Dict[str, Any]]] = None,
         location: Optional[str] = None,
         description: Optional[str] = None,
-        host_user_id: Optional[int] = None
+        host_user_id: Optional[int] = None,
     ) -> Union[Dict[str, Any], str]:
         """
         Books a new appointment using the Follow Up Boss calendar system.
-        
+
         This is an alternative method to create_appointment that uses parameters
         that should match the API expectations.
 
@@ -80,19 +82,16 @@ class Appointments:
             location: Optional. The location of the appointment.
             description: Optional. A description for the appointment.
             host_user_id: Optional. The ID of the user who will host the appointment.
-        
+
         Returns:
             A dictionary containing the details of the booked appointment or an error string.
         """
         payload = {
             "title": title,
-            "when": {
-                "start": start_time,
-                "end": end_time
-            },
-            "appointmentTypeId": appointment_type_id
+            "when": {"start": start_time, "end": end_time},
+            "appointmentTypeId": appointment_type_id,
         }
-        
+
         # Add optional fields
         if contacts:
             payload["contacts"] = contacts
@@ -102,7 +101,7 @@ class Appointments:
             payload["description"] = description
         if host_user_id:
             payload["hostId"] = host_user_id
-            
+
         return self._client._post("appointments", json_data=payload)
 
     def retrieve_appointment(self, appointment_id: int) -> Dict[str, Any]:
@@ -146,4 +145,4 @@ class Appointments:
 
     # GET /appointments/{id} (Retrieve appointment)
     # PUT /appointments/{id} (Update appointment)
-    # DELETE /appointments/{id} (Delete appointment) 
+    # DELETE /appointments/{id} (Delete appointment)

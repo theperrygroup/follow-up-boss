@@ -7,17 +7,18 @@ can perform other operations. Existing custom fields can still be retrieved,
 updated, and deleted with appropriate permissions.
 """
 
-from typing import Any, Dict, Optional, Union, List
+import logging
+from typing import Any, Dict, List, Optional, Union
 
 from .client import FollowUpBossApiClient
-import logging
 
 logger = logging.getLogger(__name__)
+
 
 class CustomFields:
     """
     Provides access to the Custom Fields endpoints of the Follow Up Boss API.
-    
+
     Note: The creation of custom fields might be restricted based on your API key's permissions.
     Updating and listing existing custom fields should work with appropriate API access.
     """
@@ -34,8 +35,8 @@ class CustomFields:
     def list_custom_fields(
         self,
         # Add relevant filters if specified by API docs (e.g., entityType, group)
-        **kwargs: Any
-    ) -> Dict[str, Any]: # Response is likely a list of custom field definitions
+        **kwargs: Any,
+    ) -> Dict[str, Any]:  # Response is likely a list of custom field definitions
         """
         Retrieves a list of custom fields defined in the account.
 
@@ -43,26 +44,26 @@ class CustomFields:
             **kwargs: Additional query parameters to filter the results.
 
         Returns:
-            A dictionary containing the list of custom fields. 
+            A dictionary containing the list of custom fields.
             The FUB API returns {"customfields": [...]} (lowercase)
         """
         params: Dict[str, Any] = {}
         params.update(kwargs)
-        
+
         return self.client._get("customFields", params=params)
 
     def create_custom_field(
         self,
         name: str,
-        type: str, # E.g., "text", "date", "dropdown" - must be lowercase
-        entity_type: Optional[str] = None, # E.g., "Person", "Deal"
-        options: Optional[List[str]] = None, # Required if type is "dropdown"
+        type: str,  # E.g., "text", "date", "dropdown" - must be lowercase
+        entity_type: Optional[str] = None,  # E.g., "Person", "Deal"
+        options: Optional[List[str]] = None,  # Required if type is "dropdown"
         label: Optional[str] = None,  # Display label for the field
-        **kwargs: Any
+        **kwargs: Any,
     ) -> Union[Dict[str, Any], str]:
         """
         Creates a new custom field.
-        
+
         Note: This operation may be restricted based on API permissions.
         Custom field creation often requires admin rights in Follow Up Boss.
 
@@ -76,12 +77,14 @@ class CustomFields:
 
         Returns:
             A dictionary containing the details of the newly created custom field or an error string.
-        
+
         Raises:
             ValueError: If type is "dropdown" and options are not provided.
         """
         if type.lower() == "dropdown" and not options:
-            raise ValueError("Argument 'options' is required when custom field type is 'dropdown'.")
+            raise ValueError(
+                "Argument 'options' is required when custom field type is 'dropdown'."
+            )
 
         # Ensure name starts with "custom" as seen in existing fields
         if not name.startswith("custom"):
@@ -89,18 +92,18 @@ class CustomFields:
 
         payload: Dict[str, Any] = {
             "name": name,
-            "type": type.lower()  # Ensure type is lowercase
+            "type": type.lower(),  # Ensure type is lowercase
         }
-        
+
         if entity_type is not None:
             payload["entityType"] = entity_type
         if options:
             payload["options"] = options
         if label is not None:
             payload["label"] = label
-        
+
         payload.update(kwargs)
-        
+
         return self.client._post("customFields", json_data=payload)
 
     def retrieve_custom_field(self, field_id: int) -> Dict[str, Any]:
@@ -115,7 +118,9 @@ class CustomFields:
         """
         return self.client._get(f"customFields/{field_id}")
 
-    def update_custom_field(self, field_id: int, update_data: Dict[str, Any]) -> Union[Dict[str, Any], str]:
+    def update_custom_field(
+        self, field_id: int, update_data: Dict[str, Any]
+    ) -> Union[Dict[str, Any], str]:
         """
         Updates an existing custom field.
         Typically, only fields like 'label' or 'options' (for dropdowns) are updatable.
@@ -145,4 +150,4 @@ class CustomFields:
 
     # GET /customFields/{id} (Retrieve custom field)
     # PUT /customFields/{id} (Update custom field)
-    # DELETE /customFields/{id} (Delete custom field) 
+    # DELETE /customFields/{id} (Delete custom field)

@@ -2,12 +2,13 @@
 API bindings for Follow Up Boss Identity endpoint.
 """
 
+import logging
 from typing import Any, Dict
 
 from .client import FollowUpBossApiClient
-import logging
 
 logger = logging.getLogger(__name__)
+
 
 class Identity:
     """
@@ -24,11 +25,11 @@ class Identity:
         """
         self.client = client
 
-    def get_identity(self) -> Dict[str, Any]: 
+    def get_identity(self) -> Dict[str, Any]:
         """
         Retrieves identity information associated with the API key.
 
         Returns:
             A dictionary containing identity information.
         """
-        return self.client._get("identity") 
+        return self.client._get("identity")

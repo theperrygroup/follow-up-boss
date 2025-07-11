@@ -35,7 +35,12 @@ class Notes:
         return self._client._get("notes", params=params)
 
     def create_note(
-        self, person_id: int, subject: str, body: str, is_html: Optional[bool] = None, type_id: Optional[int] = None
+        self,
+        person_id: int,
+        subject: str,
+        body: str,
+        is_html: Optional[bool] = None,
+        type_id: Optional[int] = None,
     ) -> Union[Dict[str, Any], str]:
         """
         Creates a new note for a specific person.
@@ -60,11 +65,13 @@ class Notes:
         if type_id is not None:
             payload["typeId"] = type_id
         return self._client._post("notes", json_data=payload)
-    
-    def create_note_from_dict(self, note_data: Dict[str, Any]) -> Union[Dict[str, Any], str]:
+
+    def create_note_from_dict(
+        self, note_data: Dict[str, Any]
+    ) -> Union[Dict[str, Any], str]:
         """
         Creates a new note using a dictionary of note data.
-        
+
         This is a more flexible alternative to create_note when you have a dictionary
         of note data already prepared.
 
@@ -73,21 +80,23 @@ class Notes:
                       - personId: The ID of the person to associate the note with
                       - subject: The subject/title of the note
                       - body: The content of the note
-                      
+
         Returns:
             A dictionary containing the details of the created note or an error string.
-            
+
         Raises:
             ValueError: If required fields are missing from note_data.
         """
-        required_fields = ['personId', 'subject', 'body']
+        required_fields = ["personId", "subject", "body"]
         for field in required_fields:
             if field not in note_data:
                 raise ValueError(f"Missing required field '{field}' in note_data")
-                
+
         return self._client._post("notes", json_data=note_data)
 
-    def retrieve_note(self, note_id: int, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def retrieve_note(
+        self, note_id: int, params: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """
         Retrieves a specific note by its ID.
 
@@ -101,7 +110,11 @@ class Notes:
         return self._client._get(f"notes/{note_id}", params=params)
 
     def update_note(
-        self, note_id: int, subject: Optional[str] = None, body: Optional[str] = None, is_html: Optional[bool] = None
+        self,
+        note_id: int,
+        subject: Optional[str] = None,
+        body: Optional[str] = None,
+        is_html: Optional[bool] = None,
     ) -> Union[Dict[str, Any], str]:
         """
         Updates an existing note.
@@ -122,12 +135,14 @@ class Notes:
             payload["body"] = body
         if is_html is not None:
             payload["isHtml"] = is_html
-        
-        if not payload: # Nothing to update
+
+        if not payload:  # Nothing to update
             # Or raise an error, or return the existing note data
             # For now, let's assume the API handles empty PUTs gracefully or we prevent them.
             # Consider returning self.retrieve_note(note_id) or raising ValueError
-            return self.retrieve_note(note_id) # Or some other appropriate response for no-op
+            return self.retrieve_note(
+                note_id
+            )  # Or some other appropriate response for no-op
 
         return self._client._put(f"notes/{note_id}", json_data=payload)
 
@@ -145,4 +160,4 @@ class Notes:
 
     # GET /notes/{id}
     # PUT /notes/{id}
-    # DELETE /notes/{id} 
+    # DELETE /notes/{id}
