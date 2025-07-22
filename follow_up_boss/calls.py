@@ -97,9 +97,9 @@ class Calls:
             "isIncoming": is_incoming,
         }
         if note is not None:
-            payload["note"] = (
-                note  # FUB docs refer to this as 'body' for some note-like objects
-            )
+            payload[
+                "note"
+            ] = note  # FUB docs refer to this as 'body' for some note-like objects
             # but 'note' is common for call logs directly.
         if recording_url is not None:
             payload["recordingUrl"] = recording_url

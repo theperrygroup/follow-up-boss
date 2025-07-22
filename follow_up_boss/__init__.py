@@ -16,11 +16,26 @@ from .deal_custom_fields import DealCustomFields
 from .deals import Deals, DealsValidationError
 from .email_marketing import EmailMarketing
 from .email_templates import EmailTemplates
+
+# Enhanced functionality for large-scale data operations
+from .enhanced_client import (
+    AuthenticationError,
+    ConnectionManager,
+    MaxRetriesExceeded,
+    RobustApiClient,
+)
+from .enhanced_people import (
+    EnhancedPeople,
+    extract_all_people,
+    extract_pond_people,
+    verify_pond_extraction_quick,
+)
 from .events import Events
 from .groups import Groups
 from .identity import Identity
 from .inbox_apps import InboxApps
 from .notes import Notes
+from .pagination import PondFilterPaginator, SmartPaginator
 from .people import People
 from .people_relationships import PeopleRelationships
 from .person_attachments import PersonAttachments
@@ -42,9 +57,11 @@ from .webhooks import Webhooks
 
 __version__ = "0.2.0"
 __all__ = [
+    # Core API
     "FollowUpBossApiClient",
     "FollowUpBossApiException",
     "DealsValidationError",
+    # Standard API Resources
     "People",
     "Deals",
     "Notes",
@@ -79,4 +96,16 @@ __all__ = [
     "PeopleRelationships",
     "PersonAttachments",
     "Identity",
+    # Enhanced functionality for large-scale operations
+    "RobustApiClient",
+    "ConnectionManager",
+    "AuthenticationError",
+    "MaxRetriesExceeded",
+    "EnhancedPeople",
+    "SmartPaginator",
+    "PondFilterPaginator",
+    # Convenience functions
+    "extract_all_people",
+    "extract_pond_people",
+    "verify_pond_extraction_quick",
 ]
