@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "follow-up-boss"
-version = "0.2.2"
+version = "0.2.3"
 description = "A Python client library for the Follow Up Boss API"
 readme = "README.md"
 license = {text = "MIT"}
