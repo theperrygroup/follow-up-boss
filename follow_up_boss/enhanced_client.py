@@ -6,15 +6,27 @@ implements retry logic, and manages connection pools for long-running operations
 """
 
 import logging
+import os
 import time
 from functools import wraps
 from typing import Any, Dict, Optional, Union
 
 import requests
+from dotenv import load_dotenv
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-from .client import FollowUpBossApiClient, FollowUpBossApiException
+from .client import (
+    API_KEY,
+    BASE_URL,
+    X_SYSTEM,
+    X_SYSTEM_KEY,
+    FollowUpBossApiClient,
+    FollowUpBossApiException,
+)
+
+# Ensure environment variables are loaded
+load_dotenv()
 
 logger = logging.getLogger(__name__)
 
@@ -120,12 +132,13 @@ class RobustApiClient(FollowUpBossApiClient):
             pool_connections: Number of connection pools.
             pool_maxsize: Maximum size of connection pool.
         """
+        # Use default values from client.py if None provided
         # Initialize parent class
         super().__init__(
-            api_key=api_key,
-            base_url=base_url,
-            x_system=x_system,
-            x_system_key=x_system_key,
+            api_key=api_key or API_KEY,
+            base_url=base_url or BASE_URL,
+            x_system=x_system or X_SYSTEM,
+            x_system_key=x_system_key or X_SYSTEM_KEY,
         )
 
         # Retry configuration
