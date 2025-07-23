@@ -177,18 +177,63 @@ class NextLinkStrategy(PaginationStrategy):
             Dictionary containing API response data.
         """
         params = self.params.copy()
+        # Start with a small limit to encourage nextLink usage
+        if "limit" not in params:
+            params["limit"] = 100
 
         while True:
-            response = self.client._get(self.endpoint, params=params)
-            yield response
+            try:
+                response = self.client._get(self.endpoint, params=params)
+                yield response
 
-            # Check for nextLink in response
-            next_link = self._extract_next_link(response)
-            if not next_link:
-                break
+                # Check for nextLink in response
+                next_link = self._extract_next_link(response)
+                if not next_link:
+                    # If no nextLink, check if we have all data
+                    items_key = self._get_items_key(response)
+                    if items_key:
+                        items_count = len(response.get(items_key, []))
+                        if items_count < params.get("limit", 100):
+                            # Fewer items than requested, we're at the end
+                            break
+                    break
 
-            # Parse nextLink URL to extract new parameters
-            params = self._parse_next_link(next_link)
+                # Use the full nextLink URL instead of parsing parameters
+                # This is more reliable for bypassing deep pagination
+                logger.info(f"Following nextLink: {next_link}")
+
+                # Extract just the path and query parameters from nextLink
+                from urllib.parse import parse_qs, urlparse
+
+                parsed = urlparse(next_link)
+                params = parse_qs(parsed.query)
+
+                # Convert single-item lists to strings and handle multi-value parameters
+                params = {k: v[0] if len(v) == 1 else v for k, v in params.items()}
+
+            except Exception as e:
+                if "Deep pagination disabled" in str(e):
+                    logger.warning(
+                        "Deep pagination limit reached, nextLink strategy failed"
+                    )
+                    break
+                raise
+
+    def _get_items_key(self, response: Dict[str, Any]) -> Optional[str]:
+        """
+        Determine the key containing the list of items in the response.
+
+        Args:
+            response: API response dictionary.
+
+        Returns:
+            Key name containing the list of items, or None if not found.
+        """
+        # Common patterns in FUB API responses
+        for key in ["people", "deals", "events", "notes", "calls", "tasks"]:
+            if key in response and isinstance(response[key], list):
+                return key
+        return None
 
     def _extract_next_link(self, response: Dict[str, Any]) -> Optional[str]:
         """
@@ -248,9 +293,10 @@ class SmartPaginator:
         self.endpoint = endpoint
         self.params = params or {}
         self.offset_limit = 2000  # FUB API deep pagination limit
+        # Prioritize NextLink strategy for deep pagination bypass
         self.strategies = [
-            OffsetPaginationStrategy,
             NextLinkStrategy,
+            OffsetPaginationStrategy,
             DateRangeStrategy,
         ]
 
@@ -426,22 +472,39 @@ class PondFilterPaginator(SmartPaginator):
         Returns:
             List of all people in the pond.
         """
+        logger.info(f"Starting pond {self.pond_id} extraction with API filtering")
+
         # First try with pond parameter
         try:
             results = super().paginate_all()
 
+            logger.info(f"API filtering returned {len(results)} people")
+
             # Verify that pond filtering actually worked
-            if self._verify_pond_filtering(results):
+            if results and self._verify_pond_filtering(results):
+                logger.info(
+                    f"Pond API filtering successful: {len(results)} people verified"
+                )
                 return results
+            elif not results:
+                logger.warning(
+                    f"Pond API filtering returned 0 results - this may be incorrect"
+                )
             else:
                 logger.warning(
-                    "Pond parameter filtering failed, falling back to post-fetch filtering"
+                    f"Pond API filtering returned {len(results)} people but verification failed"
                 )
+
         except Exception as e:
             logger.warning(f"Pond parameter strategy failed: {e}")
 
+        logger.info("Falling back to local filtering of all people")
         # Fall back to fetching all people and filtering locally
-        return self._fetch_and_filter_all()
+        local_results = self._fetch_and_filter_all()
+        logger.info(
+            f"Local filtering returned {len(local_results)} people from pond {self.pond_id}"
+        )
+        return local_results
 
     def _verify_pond_filtering(self, results: List[Dict[str, Any]]) -> bool:
         """
@@ -454,43 +517,80 @@ class PondFilterPaginator(SmartPaginator):
             True if pond filtering worked, False otherwise.
         """
         if not results:
-            return True  # Empty results could be valid
+            # Empty results might be valid, but also might indicate broken filtering
+            # Check if the pond actually exists and has people by testing a small sample
+            logger.warning(
+                f"Verifying if pond {self.pond_id} is truly empty or if filtering failed"
+            )
+            return False  # Changed: assume empty results indicate failed filtering
 
-        # Check if all returned people are in the specified pond
-        for person in results[:10]:  # Check first 10 people
+        verified_count = 0
+        total_checked = 0
+        check_limit = min(len(results), 20)  # Check more people for better verification
+
+        # Check if returned people are actually in the specified pond
+        for person in results[:check_limit]:
+            total_checked += 1
             ponds = person.get("ponds", [])
+
             if isinstance(ponds, list):
                 pond_ids = [p.get("id") if isinstance(p, dict) else p for p in ponds]
-                if self.pond_id not in pond_ids:
-                    return False
-            elif isinstance(ponds, dict) and ponds.get("id") != self.pond_id:
-                return False
+                if self.pond_id in pond_ids:
+                    verified_count += 1
+            elif isinstance(ponds, dict) and ponds.get("id") == self.pond_id:
+                verified_count += 1
+            elif isinstance(ponds, int) and ponds == self.pond_id:
+                verified_count += 1
 
-        return True
+        verification_ratio = verified_count / total_checked if total_checked > 0 else 0
+
+        logger.info(
+            f"Pond verification: {verified_count}/{total_checked} people verified ({verification_ratio:.1%})"
+        )
+
+        # Require at least 80% of checked people to be in the correct pond
+        return verification_ratio >= 0.8
 
     def _fetch_and_filter_all(self) -> List[Dict[str, Any]]:
         """
         Fetch all people and filter by pond locally.
+        Uses enhanced pagination strategies to bypass deep pagination limits.
 
         Returns:
             List of people filtered by pond.
         """
-        # Remove pond parameter and fetch all people
+        logger.info(f"Starting local filtering fallback for pond {self.pond_id}")
+
+        # Remove pond parameter and fetch all people using enhanced strategies
         params_without_pond = {k: v for k, v in self.params.items() if k != "pond"}
+
+        # Use smaller chunks to avoid hitting limits
+        if "limit" not in params_without_pond:
+            params_without_pond["limit"] = 100
+
         all_people_paginator = SmartPaginator(
             self.client, "people", params_without_pond
         )
 
-        all_people = all_people_paginator.paginate_all()
+        try:
+            all_people = all_people_paginator.paginate_all()
+            logger.info(f"Retrieved {len(all_people)} total people for local filtering")
+        except Exception as e:
+            logger.error(f"Failed to fetch all people for local filtering: {e}")
+            raise
 
         # Filter by pond locally
         filtered_people = []
+        pond_match_count = 0
+
         for person in all_people:
             if self._person_in_pond(person, self.pond_id):
                 filtered_people.append(person)
+                pond_match_count += 1
 
         logger.info(
-            f"Filtered {len(filtered_people)} people from {len(all_people)} total people for pond {self.pond_id}"
+            f"Local filtering complete: {len(filtered_people)} people found in pond {self.pond_id} "
+            f"from {len(all_people)} total people ({pond_match_count/len(all_people)*100:.1f}%)"
         )
         return filtered_people
 
