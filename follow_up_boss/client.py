@@ -56,6 +56,7 @@ class FollowUpBossApiClient:
         base_url: The base URL for the API.
         x_system: The X-System header value.
         x_system_key: The X-System-Key header value.
+        custom_headers: Custom headers to include in all requests.
     """
 
     def __init__(
@@ -64,6 +65,7 @@ class FollowUpBossApiClient:
         base_url: str = BASE_URL,
         x_system: Optional[str] = X_SYSTEM,
         x_system_key: Optional[str] = X_SYSTEM_KEY,
+        custom_headers: Optional[Dict[str, str]] = None,
     ) -> None:
         """
         Initializes the FollowUpBossApiClient.
@@ -71,8 +73,11 @@ class FollowUpBossApiClient:
         Args:
             api_key: The API key for authentication.
             base_url: The base URL for the API.
-            x_system: The X-System header value.
-            x_system_key: The X-System-Key header value.
+            x_system: The X-System header value for system registration.
+            x_system_key: The X-System-Key header value for system registration.
+            custom_headers: Additional custom headers to include in all requests.
+                           These headers will be merged with default headers.
+                           Custom headers take precedence over defaults (except for critical auth headers).
 
         Raises:
             ValueError: If the API key is not provided.
@@ -85,6 +90,7 @@ class FollowUpBossApiClient:
         self.base_url = base_url
         self.x_system = x_system
         self.x_system_key = x_system_key
+        self.custom_headers = custom_headers or {}
 
     def _get_headers(self) -> Dict[str, str]:
         """
@@ -92,18 +98,28 @@ class FollowUpBossApiClient:
         Does not include Authorization, as that's handled by `auth` in _request.
 
         Returns:
-            A dictionary of headers.
+            A dictionary of headers with default headers merged with custom headers.
+            Custom headers take precedence over defaults, except for critical headers.
         """
+        # Start with default headers
         headers = {
             "Content-Type": "application/json",
             "Accept": "application/json",
         }
 
-        # Add system headers only if they exist
+        # Add legacy system headers only if they exist (for backward compatibility)
         if self.x_system is not None:
             headers["X-System"] = self.x_system
         if self.x_system_key is not None:
             headers["X-System-Key"] = self.x_system_key
+
+        # Merge custom headers (these take precedence over defaults)
+        # Validate and filter out any potentially dangerous headers
+        protected_headers = {"authorization", "content-length"}
+
+        for key, value in self.custom_headers.items():
+            if key.lower() not in protected_headers:
+                headers[key] = value
 
         return headers
 
