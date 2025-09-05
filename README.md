@@ -45,6 +45,14 @@ updated_person = client.people.update(person_id, {
     "name": "John Smith"
 })
 
+# Add tags to a person (merge with existing, de-duplicated)
+from follow_up_boss.people import People
+people_api = People(client)
+people_api.add_tags(person_id, ["Zillow: Note Logged"])  # merge=True by default
+
+# Replace tags entirely
+people_api.add_tags(person_id, ["Only These"], merge=False)
+
 # Delete a person
 client.people.delete(person_id)
 ```
@@ -259,6 +267,13 @@ For questions, issues, or feature requests, please:
 - **Comprehensive Documentation**: New commission field guide with examples and troubleshooting
 - **Enhanced Testing**: Complete test coverage for all commission field scenarios
 - **Improved Developer Experience**: Better error messages, helper properties, and validation
+
+### Version 0.2.6
+- **People.add_tags helper**: Official method to append/replace tags using PUT /people/{id}
+  - Merge behavior with de-duplication and optional case-insensitive matching
+  - Avoids unsupported POST /people/{id}/tags endpoint (404)
+- **Docs**: README examples updated for tag operations
+- **Tooling**: Formatting and type checks updated
 
 ### Version 0.1.2
 - Removed appointment test log file logging

@@ -105,9 +105,9 @@ class Tasks:
         if due_date is not None:
             payload["dueDate"] = due_date
         if details is not None:
-            payload[
-                "notes"
-            ] = details  # Changed from description to notes based on API error
+            payload["notes"] = (
+                details  # Changed from description to notes based on API error
+            )
 
         # Remove any unexpected fields that might cause issues
         if "description" in kwargs:

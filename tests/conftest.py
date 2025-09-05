@@ -162,9 +162,9 @@ def large_dataset_response() -> Any:
                     "firstName": f"First{i + 1}",
                     "lastName": f"Last{i + 1}",
                     "emails": [{"value": f"person{i + 1}@example.com", "type": "work"}],
-                    "ponds": [{"id": 134}]
-                    if i % 3 == 0
-                    else [{"id": 135}],  # Mix of ponds
+                    "ponds": (
+                        [{"id": 134}] if i % 3 == 0 else [{"id": 135}]
+                    ),  # Mix of ponds
                     "created": f"2023-01-{(i % 30) + 1:02d}T00:00:00Z",
                 }
             )

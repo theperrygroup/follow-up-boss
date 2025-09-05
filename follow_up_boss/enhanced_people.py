@@ -610,9 +610,9 @@ class EnhancedPeople(People):
                 "count": len(sample),
                 "extraction_time": sample_time,
                 "works": len(sample) > 0,
-                "accuracy": 100.0
-                if sample
-                else 0.0,  # Emergency method ensures 100% accuracy
+                "accuracy": (
+                    100.0 if sample else 0.0
+                ),  # Emergency method ensures 100% accuracy
             }
 
             # Test 2: Comprehensive extraction
@@ -682,9 +682,9 @@ class EnhancedPeople(People):
                         f"API issues detected: {', '.join(verification_results['api_issues_detected'])}"
                     )
                 else:
-                    verification_results[
-                        "recommendation"
-                    ] = "Extraction working correctly"
+                    verification_results["recommendation"] = (
+                        "Extraction working correctly"
+                    )
             else:
                 verification_results["recommendation"] = (
                     "Critical failure - unable to extract any pond data. "
@@ -697,9 +697,9 @@ class EnhancedPeople(People):
         except Exception as e:
             logger.error(f"❌ Emergency verification failed: {e}")
             verification_results["error"] = str(e)
-            verification_results[
-                "recommendation"
-            ] = "Emergency verification failed - check system connectivity"
+            verification_results["recommendation"] = (
+                "Emergency verification failed - check system connectivity"
+            )
             return verification_results
 
     def get_extraction_stats(self) -> Dict[str, Any]:

@@ -151,3 +151,99 @@ class People:
             A dictionary containing the API response or an error string.
         """
         return self._client._post("people/ignoreUnclaimed", json_data=payload)
+
+    def add_tags(
+        self,
+        person_id: int,
+        tags: List[str],
+        *,
+        merge: bool = True,
+        case_sensitive: bool = True,
+    ) -> Union[Dict[str, Any], str]:
+        """
+        Add or update tags on a person using the supported people update endpoint.
+
+        This helper avoids unsupported endpoints like POST /people/{id}/tags which
+        return 404 and instead performs a PUT to /people/{id} with the correct
+        tags payload. When ``merge`` is True (default), existing tags are fetched,
+        combined with the provided ones, and de-duplicated before updating. When
+        ``merge`` is False, the provided ``tags`` replace any existing tags.
+
+        Args:
+            person_id: The ID of the person whose tags will be updated.
+            tags: The list of tags to add (or set when ``merge`` is False).
+            merge: If True, append to existing tags with de-duplication. If False,
+                replace existing tags with the provided list. Defaults to True.
+            case_sensitive: Controls de-duplication behavior. When True, 'Tag' and
+                'tag' are treated as distinct. When False, comparisons are case-insensitive.
+                Defaults to True.
+
+        Returns:
+            The updated person object on success, or an error string from the client.
+
+        Raises:
+            ValueError: If ``tags`` is empty.
+        """
+        if not tags:
+            raise ValueError("'tags' must contain at least one tag")
+
+        # Normalize provided tags: ensure all are strings and strip whitespace
+        provided_tags: List[str] = [str(t).strip() for t in tags if str(t).strip()]
+        if not provided_tags:
+            raise ValueError("'tags' must contain at least one non-empty tag")
+
+        updated_tags: List[str]
+
+        if merge:
+            # Fetch current tags from the person
+            current_person = self.retrieve_person(person_id)
+            existing_tags_raw = current_person.get("tags", [])
+            existing_tags: List[str] = [
+                str(t).strip() for t in existing_tags_raw if str(t).strip()
+            ]
+
+            if case_sensitive:
+                # Preserve order: existing first, then new tags not already present
+                seen = set(existing_tags)
+                updated_tags = list(existing_tags)
+                for t in provided_tags:
+                    if t not in seen:
+                        updated_tags.append(t)
+                        seen.add(t)
+            else:
+                # Case-insensitive de-duplication while preserving original casing
+                seen_lower = {t.lower(): t for t in existing_tags}
+                # Add any new tags whose lowercase key isn't present
+                for t in provided_tags:
+                    key = t.lower()
+                    if key not in seen_lower:
+                        seen_lower[key] = t
+                # Preserve original order preference: existing first, then new ones in input order
+                existing_order = [seen_lower[t.lower()] for t in existing_tags]
+                # Build remaining new tags in provided order
+                new_order = []
+                existing_keys = {t.lower() for t in existing_tags}
+                for t in provided_tags:
+                    if t.lower() not in existing_keys and t not in new_order:
+                        new_order.append(t)
+                updated_tags = existing_order + new_order
+        else:
+            # Replace mode: de-duplicate within provided tags based on case sensitivity
+            if case_sensitive:
+                seen_replace = set()
+                updated_tags = []
+                for t in provided_tags:
+                    if t not in seen_replace:
+                        updated_tags.append(t)
+                        seen_replace.add(t)
+            else:
+                seen_lower_replace = set()
+                updated_tags = []
+                for t in provided_tags:
+                    key = t.lower()
+                    if key not in seen_lower_replace:
+                        updated_tags.append(t)
+                        seen_lower_replace.add(key)
+
+        # Perform the update via the supported endpoint
+        return self.update_person(person_id, {"tags": updated_tags})
