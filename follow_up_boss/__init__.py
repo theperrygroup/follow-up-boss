@@ -55,7 +55,7 @@ from .users import Users
 from .webhook_events import WebhookEvents
 from .webhooks import Webhooks
 
-__version__ = "0.2.6"
+__version__ = "0.2.8"
 __all__ = [
     # Core API
     "FollowUpBossApiClient",

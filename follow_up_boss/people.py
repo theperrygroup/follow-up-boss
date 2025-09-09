@@ -3,11 +3,52 @@ API bindings for Follow Up Boss People endpoints.
 """
 
 import logging
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, Iterator, List, Optional, TypedDict, Union, cast
 
 from .client import FollowUpBossApiClient
 
 logger = logging.getLogger(__name__)
+
+
+class ListPeopleParams(TypedDict, total=False):
+    """Query parameters for listing people.
+
+    Attributes:
+        limit: Page size.
+        offset: Offset for offset-based pagination.
+        sort: Sort expression supported by API.
+        fields: Comma-separated field list to include in responses.
+        stage: Stage filter.
+        tag: Tag filter.
+        listId: Saved List ID filter (enables cursor pagination via `_metadata.next`).
+        next: Cursor token for subsequent page requests.
+    """
+
+    limit: int
+    offset: int
+    sort: str
+    fields: str
+    stage: Union[str, int]
+    tag: str
+    listId: int
+    next: str
+
+
+class Person(TypedDict, total=False):
+    """A minimal person representation.
+
+    Only ``id`` is guaranteed; other keys are provided by the API and may vary.
+    """
+
+    id: int
+
+
+class PeopleListResponse(TypedDict, total=False):
+    """Standardized shape for people list responses."""
+
+    people: List[Person]
+    count: int
+    _metadata: Dict[str, Any]
 
 
 class People:
@@ -24,18 +65,37 @@ class People:
         """
         self._client = client
 
-    def list_people(self, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def list_people(
+        self, params: Optional[ListPeopleParams] = None
+    ) -> PeopleListResponse:
         """
         Retrieves a list of people.
 
+        This method accepts and forwards saved list filters via ``listId``.
+        When ``listId`` is used, the API may return a cursor token in
+        ``_metadata.next`` for pagination.
+
         Args:
-            params: Optional query parameters to filter the results.
-                      (e.g., limit, offset, sort, fields, stage, tag)
+            params: Optional query parameters to filter the results
+                (e.g., ``limit``, ``offset``, ``sort``, ``fields``, ``stage``, ``tag``, ``listId``).
 
         Returns:
-            A dictionary containing the list of people and pagination information.
+            A standardized dictionary containing at least ``people`` (list) and
+            ``count`` (int) along with any other fields provided by the API, such as
+            ``_metadata``.
         """
-        return self._client._get("people", params=params)
+        response: Dict[str, Any] = self._client._get(
+            "people", params=cast(Optional[Dict[str, Any]], params)
+        )
+        # Ensure consistent shape
+        people_list: List[Person] = []
+        if isinstance(response, dict):
+            raw_people = response.get("people", [])
+            if isinstance(raw_people, list):
+                people_list = cast(List[Person], raw_people)
+            response.setdefault("people", people_list)
+            response.setdefault("count", len(people_list))
+        return cast(PeopleListResponse, response)
 
     def create_person(self, person_data: Dict[str, Any]) -> Union[Dict[str, Any], str]:
         """
@@ -247,3 +307,149 @@ class People:
 
         # Perform the update via the supported endpoint
         return self.update_person(person_id, {"tags": updated_tags})
+
+    def list_people_by_list_id(
+        self,
+        list_id: int,
+        *,
+        limit: int = 100,
+        next_token: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """
+        Fetch a single page of people filtered by a Follow Up Boss Smart List ID.
+
+        Args:
+            list_id: Follow Up Boss List ID (must be a positive integer).
+            limit: Page size for the request. Defaults to 100.
+            next_token: Optional cursor token from a previous response's
+                ``_metadata.next`` field to continue pagination.
+
+        Returns:
+            A dictionary response from the API that typically contains keys like
+            ``"people"`` (a list of person dictionaries) and ``"_metadata"`` with
+            pagination info such as ``"next"`` and ``"nextLink"``.
+
+        Raises:
+            ValueError: If ``list_id`` is not a positive integer.
+            FollowUpBossApiException: If the API request fails.
+        """
+        if not isinstance(list_id, int) or list_id <= 0:
+            raise ValueError("list_id must be a positive integer")
+
+        params: Dict[str, Union[int, str]] = {"listId": list_id, "limit": limit}
+        if next_token:
+            params["next"] = next_token
+
+        return self._client._get("people", params=params)
+
+    def fetch_all_people_by_list_id(
+        self,
+        list_id: int,
+        *,
+        limit: int = 100,
+        max_pages: Optional[int] = None,
+    ) -> List[Dict[str, Any]]:
+        """
+        Fetch all people for a given Smart List ID following cursor pagination.
+
+        This helper repeatedly calls :py:meth:`list_people_by_list_id` and follows the
+        ``_metadata.next`` token until there are no more pages or ``max_pages`` is
+        reached.
+
+        Args:
+            list_id: Follow Up Boss List ID (must be a positive integer).
+            limit: Page size per API request. Defaults to 100.
+            max_pages: Optional safety cap for the maximum number of pages to fetch.
+                When ``None`` (default), all pages are fetched until no ``next`` token
+                is returned.
+
+        Returns:
+            A list of people dictionaries aggregated across all fetched pages.
+
+        Raises:
+            ValueError: If ``list_id`` is not a positive integer.
+            FollowUpBossApiException: If any API call fails.
+        """
+        if not isinstance(list_id, int) or list_id <= 0:
+            raise ValueError("list_id must be a positive integer")
+
+        aggregated_people: List[Dict[str, Any]] = []
+        next_token: Optional[str] = None
+        pages_fetched: int = 0
+
+        while True:
+            page: Dict[str, Any] = self.list_people_by_list_id(
+                list_id=list_id, limit=limit, next_token=next_token
+            )
+            people: List[Dict[str, Any]] = (
+                page.get("people", []) if isinstance(page, dict) else []
+            )
+            aggregated_people.extend(people)
+
+            meta: Dict[str, Any] = (
+                page.get("_metadata", {}) if isinstance(page, dict) else {}
+            )
+            next_token = meta.get("next")
+            pages_fetched += 1
+
+            if not next_token:
+                break
+            if max_pages is not None and pages_fetched >= max_pages:
+                break
+
+        return aggregated_people
+
+    def iter_people(
+        self, params: Optional[ListPeopleParams] = None
+    ) -> Iterator[Person]:
+        """
+        Iterate over people across all pages.
+
+        Supports both offset-based and cursor-based pagination. When a response
+        contains ``_metadata.next``, subsequent requests will include the
+        corresponding ``next`` cursor token. Otherwise, the iterator falls back
+        to offset-based pagination by incrementing the ``offset`` parameter.
+
+        Args:
+            params: Optional query parameters to filter and page results. Supports
+                ``limit``, ``offset``, and optionally ``listId`` and ``next``.
+
+        Yields:
+            Person dictionaries one-by-one.
+        """
+        query: Dict[str, Any] = dict(params or {})
+        limit: int = int(query.get("limit", 100) or 100)
+        offset: int = int(query.get("offset", 0) or 0)
+        next_token = cast(Optional[str], query.get("next"))
+
+        while True:
+            # Build params for this iteration
+            page_params: Dict[str, Any] = dict(query)
+            page_params["limit"] = limit
+            if next_token:
+                page_params.pop("offset", None)
+                page_params["next"] = next_token
+            else:
+                page_params["offset"] = offset
+
+            page = self.list_people(cast(ListPeopleParams, page_params))
+            people: List[Person] = (
+                page.get("people", []) if isinstance(page, dict) else []
+            )
+            for person in people:
+                yield person
+
+            # Determine next step
+            meta: Dict[str, Any] = (
+                page.get("_metadata", {}) if isinstance(page, dict) else {}
+            )
+            next_token = meta.get("next")
+            if next_token:
+                continue
+
+            # Fallback to offset-based pagination
+            if not people:
+                break
+            offset += len(people)
+            if len(people) < limit:
+                break

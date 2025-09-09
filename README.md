@@ -191,6 +191,57 @@ while True:
     page += 1
 ```
 
+### Get people in a Follow Up Boss list
+
+```python
+from follow_up_boss import FollowUpBossApiClient
+from follow_up_boss.people import People
+
+client = FollowUpBossApiClient(
+    api_key="your_api_key",
+    x_system="Your-System-Name",
+    x_system_key="your_system_key",
+)
+
+people_api = People(client)
+
+# Single page filtered by Smart List ID
+page = people_api.list_people_by_list_id(154, limit=50)
+
+# Fetch all pages (follows _metadata.next)
+all_people = people_api.fetch_all_people_by_list_id(154, limit=100)
+```
+
+Note: Cursor pagination uses the `_metadata.next` token returned by the API.
+
+### Iterate all people with automatic pagination
+
+The `People.iter_people()` helper yields people across all pages. It prefers cursor-based pagination via `_metadata.next` when available (e.g., when using `listId`) and automatically falls back to offset-based pagination.
+
+```python
+from follow_up_boss.people import People
+
+people_api = People(client)
+
+# Iterate with a saved list filter (cursor-based)
+for person in people_api.iter_people({"listId": 154, "limit": 200}):
+    print(person.get("id"))
+
+# Iterate with offset-based pagination (no cursor)
+for person in people_api.iter_people({"limit": 100, "offset": 0, "stage": "New"}):
+    process(person)
+```
+
+### Consistent list_people shape
+
+`People.list_people(params)` always returns a dictionary that includes at least:
+
+```python
+{"people": [...], "count": int}
+```
+
+This provides a stable structure for downstream clients even when the API omits certain fields.
+
 ### Custom Headers
 
 ```python
@@ -274,6 +325,14 @@ For questions, issues, or feature requests, please:
   - Avoids unsupported POST /people/{id}/tags endpoint (404)
 - **Docs**: README examples updated for tag operations
 - **Tooling**: Formatting and type checks updated
+
+### Version 0.2.7
+- **People**: Added `list_people_by_list_id` and `fetch_all_people_by_list_id` supporting cursor pagination via `_metadata.next`.
+
+### Version 0.2.8
+- **People**: Added `iter_people(params)` iterator (cursor-first, offset fallback).
+- **People**: `list_people(params)` now guarantees a consistent shape: `{"people": [...], "count": int}`.
+- **Typing**: Introduced `ListPeopleParams`, `Person`, and `PeopleListResponse` TypedDicts.
 
 ### Version 0.1.2
 - Removed appointment test log file logging

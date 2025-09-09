@@ -1,5 +1,5 @@
 """
-Tests for enhanced client functionality including RobustApiClient, 
+Tests for enhanced client functionality including RobustApiClient,
 authentication handling, retry logic, and session management.
 """
 

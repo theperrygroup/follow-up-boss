@@ -17,7 +17,7 @@ Key Features:
 Usage:
     Basic usage:
         client = FollowUpBossApiClient(api_key="your_api_key")
-    
+
     With system registration for higher rate limits:
         client = FollowUpBossApiClient(
             api_key="your_api_key",
