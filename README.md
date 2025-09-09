@@ -232,6 +232,22 @@ for person in people_api.iter_people({"limit": 100, "offset": 0, "stage": "New"}
     process(person)
 ```
 
+### Using nextLink for deep pagination
+
+The client supports absolute-URL traversal via `_metadata.nextLink` to avoid deep pagination errors:
+
+```python
+first = people_api.list_people({"listId": 154, "limit": 200})
+meta = first.get("_metadata", {})
+next_link = meta.get("nextLink")
+
+while next_link:
+    page = people_api.list_people_next(next_link)
+    for person in page.get("people", []):
+        process(person)
+    next_link = page.get("_metadata", {}).get("nextLink")
+```
+
 ### Consistent list_people shape
 
 `People.list_people(params)` always returns a dictionary that includes at least:
@@ -376,6 +392,12 @@ For questions, issues, or feature requests, please:
 ### Version 0.2.9
 - **Client**: Added explicit exception subclasses for auth, rate limit, validation, not-found, and server errors.
 - **Client**: Expose `_rateLimit` metadata on responses and `get_last_rate_limit()`.
+
+### Version 0.2.10
+- **Client**: Parse RFC5988 Link headers and surface `_metadata.nextLink`/`_metadata.prevLink`.
+- **Client**: Support absolute URL GET via `get_absolute(url)` and auto-detect absolute endpoints.
+- **People**: `iter_people` prefers `nextLink`, falls back to `next` token or offset.
+- **People**: `list_people_next(next_link)` helper to fetch subsequent pages.
 
 ### Version 0.1.2
 - Removed appointment test log file logging

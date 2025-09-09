@@ -150,17 +150,9 @@ class FollowUpBossApiClient:
         self.x_system_key = x_system_key
         self.custom_headers = custom_headers or {}
         # Track latest rate limit metadata parsed from response headers
-        self._last_rate_limit: Optional["RateLimitInfo"] = None
+        self._last_rate_limit: Optional[Dict[str, int]] = None
 
-    class _RateLimitInfo(TypedDict, total=False):
-        limit: int
-        remaining: int
-        reset: int
-
-    # Public alias for typing exposure
-    RateLimitInfo = _RateLimitInfo
-
-    def get_last_rate_limit(self) -> Optional["RateLimitInfo"]:
+    def get_last_rate_limit(self) -> Optional[Dict[str, int]]:
         """
         Return the most recent rate limit information captured from response headers.
 
@@ -293,7 +285,11 @@ class FollowUpBossApiClient:
         Raises:
             FollowUpBossApiException: If the API returns an error or the request fails.
         """
-        url = f"{self.base_url}/{endpoint}"
+        # Support absolute URLs (e.g., nextLink) in addition to endpoint paths
+        if endpoint.startswith("http://") or endpoint.startswith("https://"):
+            url = endpoint
+        else:
+            url = f"{self.base_url}/{endpoint}"
         headers = self._get_headers()
         auth = (self.api_key, "")  # API Key as username, empty password
 
@@ -402,7 +398,7 @@ class FollowUpBossApiClient:
 
     def _extract_rate_limit_info(
         self, response: requests.Response
-    ) -> Optional["RateLimitInfo"]:
+    ) -> Optional[Dict[str, int]]:
         """
         Extract rate limit metadata from response headers.
 
@@ -419,11 +415,11 @@ class FollowUpBossApiClient:
 
         def _to_int(value: Optional[str]) -> Optional[int]:
             try:
-                return int(cast(str, value)) if value is not None else None
+                return int(value) if value is not None else None
             except (TypeError, ValueError):
                 return None
 
-        info: FollowUpBossApiClient.RateLimitInfo = {}
+        info: Dict[str, int] = {}
         lim = _to_int(limit)
         rem = _to_int(remaining)
         res = _to_int(reset)
@@ -454,26 +450,77 @@ class FollowUpBossApiClient:
         """
         status_code: Optional[int] = None
         try:
-            status_code = http_err.response.status_code  # type: ignore[assignment]
+            status_code = http_err.response.status_code
         except Exception:
             pass
 
-        exc_kwargs = {
-            "message": message,
-            "status_code": status_code,
-            "response_data": response_data,
-        }
         if status_code in (401, 403):
-            return FollowUpBossAuthError(**exc_kwargs)
+            return FollowUpBossAuthError(
+                message=message, status_code=status_code, response_data=response_data
+            )
         if status_code == 404:
-            return FollowUpBossNotFoundError(**exc_kwargs)
+            return FollowUpBossNotFoundError(
+                message=message, status_code=status_code, response_data=response_data
+            )
         if status_code == 429:
-            return FollowUpBossRateLimitError(**exc_kwargs)
+            return FollowUpBossRateLimitError(
+                message=message, status_code=status_code, response_data=response_data
+            )
         if status_code in (400, 422):
-            return FollowUpBossValidationError(**exc_kwargs)
+            return FollowUpBossValidationError(
+                message=message, status_code=status_code, response_data=response_data
+            )
         if status_code is not None and 500 <= status_code <= 599:
-            return FollowUpBossServerError(**exc_kwargs)
-        return FollowUpBossApiException(**exc_kwargs)
+            return FollowUpBossServerError(
+                message=message, status_code=status_code, response_data=response_data
+            )
+        return FollowUpBossApiException(
+            message=message, status_code=status_code, response_data=response_data
+        )
+
+    def _extract_pagination_links(
+        self, response: requests.Response
+    ) -> Optional[Dict[str, str]]:
+        """
+        Extract pagination links from RFC5988 Link header if present.
+
+        Args:
+            response: The HTTP response object.
+
+        Returns:
+            A dict possibly containing 'nextLink' and 'prevLink'.
+        """
+        link_header = response.headers.get("Link") or response.headers.get("link")
+        if not link_header:
+            return None
+        links: Dict[str, str] = {}
+        # Example: <https://api.followupboss.com/v1/people?next=...>; rel="next", <...>; rel="prev"
+        for part in link_header.split(","):
+            section = part.strip()
+            if not section.startswith("<") or ">" not in section:
+                continue
+            url = section[1 : section.find(">")]
+            rel_match = re.search(r'rel="(.*?)"', section)
+            if not rel_match:
+                continue
+            rel = rel_match.group(1)
+            if rel == "next":
+                links["nextLink"] = url
+            elif rel == "prev":
+                links["prevLink"] = url
+        return links or None
+
+    def get_absolute(self, url: str) -> Dict[str, Any]:
+        """
+        GET a fully-qualified Follow Up Boss API URL.
+
+        Args:
+            url: Absolute URL returned by the API (e.g., nextLink).
+
+        Returns:
+            Parsed JSON dict from the API, enriched with _rateLimit and link metadata.
+        """
+        return self._get(url)
 
     def _get(
         self, endpoint: str, params: Optional[Dict[str, Any]] = None
@@ -510,6 +557,15 @@ class FollowUpBossApiClient:
         # Attach rate limit info when available for programmatic access
         if self._last_rate_limit is not None:
             payload.setdefault("_rateLimit", self._last_rate_limit)
+        # Attach pagination links parsed from response headers if missing from body
+        links = self._extract_pagination_links(response)
+        if links:
+            meta = cast(Dict[str, Any], payload.get("_metadata", {}))
+            payload.setdefault("_metadata", meta)
+            if "nextLink" not in meta and links.get("nextLink"):
+                meta["nextLink"] = links["nextLink"]
+            if "prevLink" not in meta and links.get("prevLink"):
+                meta["prevLink"] = links["prevLink"]
         return payload
 
     def _post(
@@ -565,6 +621,15 @@ class FollowUpBossApiClient:
             )
             if self._last_rate_limit is not None:
                 payload.setdefault("_rateLimit", self._last_rate_limit)
+            # Attach pagination links when present
+            links = self._extract_pagination_links(response)
+            if links:
+                meta = cast(Dict[str, Any], payload.get("_metadata", {}))
+                payload.setdefault("_metadata", meta)
+                if "nextLink" not in meta and links.get("nextLink"):
+                    meta["nextLink"] = links["nextLink"]
+                if "prevLink" not in meta and links.get("prevLink"):
+                    meta["prevLink"] = links["prevLink"]
             return payload
         except requests.exceptions.JSONDecodeError:
             # Handle cases where response might not be JSON (e.g., 204 No Content)
@@ -620,6 +685,14 @@ class FollowUpBossApiClient:
             )
             if self._last_rate_limit is not None:
                 payload.setdefault("_rateLimit", self._last_rate_limit)
+            links = self._extract_pagination_links(response)
+            if links:
+                meta = cast(Dict[str, Any], payload.get("_metadata", {}))
+                payload.setdefault("_metadata", meta)
+                if "nextLink" not in meta and links.get("nextLink"):
+                    meta["nextLink"] = links["nextLink"]
+                if "prevLink" not in meta and links.get("prevLink"):
+                    meta["prevLink"] = links["prevLink"]
             return payload
         except requests.exceptions.JSONDecodeError:
             return response.text
@@ -675,6 +748,14 @@ class FollowUpBossApiClient:
             )
             if self._last_rate_limit is not None:
                 payload.setdefault("_rateLimit", self._last_rate_limit)
+            links = self._extract_pagination_links(response)
+            if links:
+                meta = cast(Dict[str, Any], payload.get("_metadata", {}))
+                payload.setdefault("_metadata", meta)
+                if "nextLink" not in meta and links.get("nextLink"):
+                    meta["nextLink"] = links["nextLink"]
+                if "prevLink" not in meta and links.get("prevLink"):
+                    meta["prevLink"] = links["prevLink"]
             return payload
         except requests.exceptions.JSONDecodeError:
             return response.text

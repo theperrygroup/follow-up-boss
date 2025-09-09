@@ -82,7 +82,8 @@ class People:
         Returns:
             A standardized dictionary containing at least ``people`` (list) and
             ``count`` (int) along with any other fields provided by the API, such as
-            ``_metadata``.
+            ``_metadata``. If available, ``_metadata.nextLink`` and ``_metadata.total``
+            are included.
         """
         response: Dict[str, Any] = self._client._get(
             "people", params=cast(Optional[Dict[str, Any]], params)
@@ -95,6 +96,13 @@ class People:
                 people_list = cast(List[Person], raw_people)
             response.setdefault("people", people_list)
             response.setdefault("count", len(people_list))
+            # Ensure concise metadata
+            meta: Dict[str, Any] = cast(Dict[str, Any], response.get("_metadata", {}))
+            response.setdefault("_metadata", meta)
+            if "limit" not in meta and params and "limit" in params:
+                meta["limit"] = params["limit"]
+            if "listId" not in meta and params and "listId" in params:
+                meta["listId"] = params["listId"]
         return cast(PeopleListResponse, response)
 
     def create_person(self, person_data: Dict[str, Any]) -> Union[Dict[str, Any], str]:
@@ -443,13 +451,43 @@ class People:
             meta: Dict[str, Any] = (
                 page.get("_metadata", {}) if isinstance(page, dict) else {}
             )
+            next_link: Optional[str] = meta.get("nextLink")
+            if next_link:
+                # Traverse absolute nextLink until exhausted
+                while next_link:
+                    page = cast(
+                        PeopleListResponse, self._client.get_absolute(next_link)
+                    )
+                    people = page.get("people", []) if isinstance(page, dict) else []
+                    for person in people:
+                        yield person
+                    meta = page.get("_metadata", {}) if isinstance(page, dict) else {}
+                    next_link = meta.get("nextLink")
+                break
+            # Cursor token path (legacy)
             next_token = meta.get("next")
             if next_token:
                 continue
-
             # Fallback to offset-based pagination
             if not people:
                 break
             offset += len(people)
             if len(people) < limit:
                 break
+
+    def list_people_next(self, next_link: str) -> PeopleListResponse:
+        """
+        Fetch the next page using the API-provided absolute nextLink.
+
+        Args:
+            next_link: Absolute URL from ``_metadata['nextLink']``.
+
+        Returns:
+            Same response shape as :py:meth:`list_people`.
+        """
+        response = self._client.get_absolute(next_link)
+        if isinstance(response, dict):
+            response.setdefault("people", [])
+            meta: Dict[str, Any] = cast(Dict[str, Any], response.get("_metadata", {}))
+            response.setdefault("_metadata", meta)
+        return cast(PeopleListResponse, response)
