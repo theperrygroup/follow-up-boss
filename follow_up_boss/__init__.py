@@ -9,7 +9,15 @@ from .appointment_outcomes import AppointmentOutcomes
 from .appointment_types import AppointmentTypes
 from .appointments import Appointments
 from .calls import Calls
-from .client import FollowUpBossApiClient, FollowUpBossApiException
+from .client import (
+    FollowUpBossApiClient,
+    FollowUpBossApiException,
+    FollowUpBossAuthError,
+    FollowUpBossNotFoundError,
+    FollowUpBossRateLimitError,
+    FollowUpBossServerError,
+    FollowUpBossValidationError,
+)
 from .custom_fields import CustomFields
 from .deal_attachments import DealAttachments
 from .deal_custom_fields import DealCustomFields
@@ -55,11 +63,16 @@ from .users import Users
 from .webhook_events import WebhookEvents
 from .webhooks import Webhooks
 
-__version__ = "0.2.8"
+__version__ = "0.2.9"
 __all__ = [
     # Core API
     "FollowUpBossApiClient",
     "FollowUpBossApiException",
+    "FollowUpBossAuthError",
+    "FollowUpBossRateLimitError",
+    "FollowUpBossValidationError",
+    "FollowUpBossNotFoundError",
+    "FollowUpBossServerError",
     "DealsValidationError",
     # Standard API Resources
     "People",

@@ -32,7 +32,7 @@ For more information, see: https://docs.followupboss.com/reference#identificatio
 
 import os
 import re
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional, TypedDict, Union, cast
 
 import requests
 from dotenv import load_dotenv
@@ -85,6 +85,26 @@ class FollowUpBossApiException(Exception):
             return f"FollowUpBossApiException: {self.message}"
 
 
+class FollowUpBossAuthError(FollowUpBossApiException):
+    """Authentication/authorization error (e.g., 401/403)."""
+
+
+class FollowUpBossRateLimitError(FollowUpBossApiException):
+    """Rate limit exceeded (e.g., 429)."""
+
+
+class FollowUpBossValidationError(FollowUpBossApiException):
+    """Validation or bad request error (e.g., 400/422)."""
+
+
+class FollowUpBossNotFoundError(FollowUpBossApiException):
+    """Resource not found (404)."""
+
+
+class FollowUpBossServerError(FollowUpBossApiException):
+    """Server-side error (5xx)."""
+
+
 class FollowUpBossApiClient:
     """
     A client for interacting with the Follow Up Boss API.
@@ -129,6 +149,26 @@ class FollowUpBossApiClient:
         self.x_system = x_system
         self.x_system_key = x_system_key
         self.custom_headers = custom_headers or {}
+        # Track latest rate limit metadata parsed from response headers
+        self._last_rate_limit: Optional["RateLimitInfo"] = None
+
+    class _RateLimitInfo(TypedDict, total=False):
+        limit: int
+        remaining: int
+        reset: int
+
+    # Public alias for typing exposure
+    RateLimitInfo = _RateLimitInfo
+
+    def get_last_rate_limit(self) -> Optional["RateLimitInfo"]:
+        """
+        Return the most recent rate limit information captured from response headers.
+
+        Returns:
+            A dictionary containing keys like ``limit``, ``remaining``, and ``reset``
+            when available, or ``None`` if not yet populated.
+        """
+        return self._last_rate_limit
 
     def _get_headers(self) -> Dict[str, str]:
         """
@@ -298,6 +338,9 @@ class FollowUpBossApiClient:
                 # Fall back to raw text for non-JSON responses or parsing errors
                 print(f"Response Text: {response.text}")
 
+            # Capture rate limit metadata for programmatic access
+            self._last_rate_limit = self._extract_rate_limit_info(response)
+
             response.raise_for_status()  # Raise HTTPError for bad responses (4xx or 5xx)
             return response
         except requests.exceptions.HTTPError as http_err:
@@ -328,20 +371,13 @@ class FollowUpBossApiClient:
                         error_detail, endpoint, json
                     )
 
-                    raise FollowUpBossApiException(
-                        message=enhanced_error,
-                        status_code=http_err.response.status_code,
-                        response_data=error_data,
-                    ) from http_err
+                    raise self._map_exception(http_err, enhanced_error, error_data)
                 except ValueError:
                     # If not JSON, just use the content as error message
                     enhanced_error = self._enhance_error_message(
                         error_content, endpoint, json
                     )
-                    raise FollowUpBossApiException(
-                        message=enhanced_error,
-                        status_code=http_err.response.status_code,
-                    ) from http_err
+                    raise self._map_exception(http_err, enhanced_error)
             except Exception:
                 # Fallback when we can't parse the response content or JSON
                 # This handles cases where the response is malformed or unexpected
@@ -359,12 +395,85 @@ class FollowUpBossApiClient:
                         pass
 
                 # Raise with whatever information we could extract
-                raise FollowUpBossApiException(
-                    message=str(http_err), status_code=status_code
-                ) from http_err
+                raise self._map_exception(http_err, str(http_err))
         except requests.exceptions.RequestException as req_err:
             print(f"Request exception occurred: {req_err}")
             raise FollowUpBossApiException(message=str(req_err)) from req_err
+
+    def _extract_rate_limit_info(
+        self, response: requests.Response
+    ) -> Optional["RateLimitInfo"]:
+        """
+        Extract rate limit metadata from response headers.
+
+        Args:
+            response: The HTTP response object.
+
+        Returns:
+            A RateLimitInfo dict when headers are present, otherwise None.
+        """
+        headers = {k.lower(): v for k, v in response.headers.items()}
+        limit = headers.get("x-ratelimit-limit")
+        remaining = headers.get("x-ratelimit-remaining")
+        reset = headers.get("x-ratelimit-reset")
+
+        def _to_int(value: Optional[str]) -> Optional[int]:
+            try:
+                return int(cast(str, value)) if value is not None else None
+            except (TypeError, ValueError):
+                return None
+
+        info: FollowUpBossApiClient.RateLimitInfo = {}
+        lim = _to_int(limit)
+        rem = _to_int(remaining)
+        res = _to_int(reset)
+        if lim is not None:
+            info["limit"] = lim
+        if rem is not None:
+            info["remaining"] = rem
+        if res is not None:
+            info["reset"] = res
+        return info or None
+
+    def _map_exception(
+        self,
+        http_err: requests.exceptions.HTTPError,
+        message: str,
+        response_data: Optional[Dict[str, Any]] = None,
+    ) -> FollowUpBossApiException:
+        """
+        Map HTTP status codes to explicit exceptions.
+
+        Args:
+            http_err: The underlying HTTPError.
+            message: Error message to include.
+            response_data: Optional parsed JSON payload for context.
+
+        Returns:
+            An instance of a specific FollowUpBossApiException subclass.
+        """
+        status_code: Optional[int] = None
+        try:
+            status_code = http_err.response.status_code  # type: ignore[assignment]
+        except Exception:
+            pass
+
+        exc_kwargs = {
+            "message": message,
+            "status_code": status_code,
+            "response_data": response_data,
+        }
+        if status_code in (401, 403):
+            return FollowUpBossAuthError(**exc_kwargs)
+        if status_code == 404:
+            return FollowUpBossNotFoundError(**exc_kwargs)
+        if status_code == 429:
+            return FollowUpBossRateLimitError(**exc_kwargs)
+        if status_code in (400, 422):
+            return FollowUpBossValidationError(**exc_kwargs)
+        if status_code is not None and 500 <= status_code <= 599:
+            return FollowUpBossServerError(**exc_kwargs)
+        return FollowUpBossApiException(**exc_kwargs)
 
     def _get(
         self, endpoint: str, params: Optional[Dict[str, Any]] = None
@@ -395,7 +504,13 @@ class FollowUpBossApiClient:
         """
         response = self._request("GET", endpoint, params=params)
         json_response = response.json()
-        return json_response if isinstance(json_response, dict) else {}
+        payload: Dict[str, Any] = (
+            json_response if isinstance(json_response, dict) else {}
+        )
+        # Attach rate limit info when available for programmatic access
+        if self._last_rate_limit is not None:
+            payload.setdefault("_rateLimit", self._last_rate_limit)
+        return payload
 
     def _post(
         self,
@@ -445,7 +560,12 @@ class FollowUpBossApiClient:
         )
         try:
             json_response = response.json()
-            return json_response if isinstance(json_response, dict) else {}
+            payload: Dict[str, Any] = (
+                json_response if isinstance(json_response, dict) else {}
+            )
+            if self._last_rate_limit is not None:
+                payload.setdefault("_rateLimit", self._last_rate_limit)
+            return payload
         except requests.exceptions.JSONDecodeError:
             # Handle cases where response might not be JSON (e.g., 204 No Content)
             return response.text
@@ -495,7 +615,12 @@ class FollowUpBossApiClient:
         )
         try:
             json_response = response.json()
-            return json_response if isinstance(json_response, dict) else {}
+            payload: Dict[str, Any] = (
+                json_response if isinstance(json_response, dict) else {}
+            )
+            if self._last_rate_limit is not None:
+                payload.setdefault("_rateLimit", self._last_rate_limit)
+            return payload
         except requests.exceptions.JSONDecodeError:
             return response.text
 
@@ -545,6 +670,11 @@ class FollowUpBossApiClient:
             return ""
         try:
             json_response = response.json()
-            return json_response if isinstance(json_response, dict) else {}
+            payload: Dict[str, Any] = (
+                json_response if isinstance(json_response, dict) else {}
+            )
+            if self._last_rate_limit is not None:
+                payload.setdefault("_rateLimit", self._last_rate_limit)
+            return payload
         except requests.exceptions.JSONDecodeError:
             return response.text

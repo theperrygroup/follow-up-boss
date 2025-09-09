@@ -242,6 +242,45 @@ for person in people_api.iter_people({"limit": 100, "offset": 0, "stage": "New"}
 
 This provides a stable structure for downstream clients even when the API omits certain fields.
 
+### Rate limit metadata and explicit exceptions
+
+The client exposes rate limit headers parsed from responses:
+
+```python
+from follow_up_boss import FollowUpBossApiClient
+
+client = FollowUpBossApiClient(api_key="...", x_system="...", x_system_key="...")
+resp = client._get("people", params={"limit": 1})
+print(resp.get("_rateLimit"))  # {'limit': 120, 'remaining': 119, 'reset': 1710000000}
+
+# Or access the last seen info directly
+print(client.get_last_rate_limit())
+```
+
+Explicit exceptions simplify handling and retries:
+
+```python
+from follow_up_boss import (
+    FollowUpBossApiClient,
+    FollowUpBossAuthError,
+    FollowUpBossRateLimitError,
+    FollowUpBossValidationError,
+)
+
+client = FollowUpBossApiClient(api_key="...")
+try:
+    client._get("people", {"limit": 1})
+except FollowUpBossRateLimitError as e:
+    # backoff/retry using e.status_code and rate limit info
+    pass
+except FollowUpBossAuthError as e:
+    # refresh credentials
+    pass
+except FollowUpBossValidationError as e:
+    # fix request
+    pass
+```
+
 ### Custom Headers
 
 ```python
@@ -333,6 +372,10 @@ For questions, issues, or feature requests, please:
 - **People**: Added `iter_people(params)` iterator (cursor-first, offset fallback).
 - **People**: `list_people(params)` now guarantees a consistent shape: `{"people": [...], "count": int}`.
 - **Typing**: Introduced `ListPeopleParams`, `Person`, and `PeopleListResponse` TypedDicts.
+
+### Version 0.2.9
+- **Client**: Added explicit exception subclasses for auth, rate limit, validation, not-found, and server errors.
+- **Client**: Expose `_rateLimit` metadata on responses and `get_last_rate_limit()`.
 
 ### Version 0.1.2
 - Removed appointment test log file logging
