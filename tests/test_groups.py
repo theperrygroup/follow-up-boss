@@ -1,4 +1,5 @@
 """
+
 Test the Groups API.
 """
 
@@ -10,6 +11,8 @@ import pytest
 from follow_up_boss.client import FollowUpBossApiClient, FollowUpBossApiException
 from follow_up_boss.groups import Groups
 from follow_up_boss.users import Users
+
+pytestmark = pytest.mark.integration  # Mark all tests in this module as integration
 
 
 @pytest.fixture

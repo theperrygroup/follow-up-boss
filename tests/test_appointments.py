@@ -1,4 +1,5 @@
 """
+
 Test the Appointments API.
 """
 
@@ -11,6 +12,8 @@ import pytest
 
 from follow_up_boss.appointments import Appointments
 from follow_up_boss.client import FollowUpBossApiClient, FollowUpBossApiException
+
+pytestmark = pytest.mark.integration  # Mark all tests in this module as integration
 
 
 @pytest.fixture
@@ -80,12 +83,15 @@ def test_appointment_operations_with_invalid_id(appointments_api):
     print(f"Expected error when deleting nonexistent appointment: {excinfo.value}")
 
 
+@pytest.mark.slow
 def test_create_appointment_date_formats():
     """
     Test creating an appointment with various date formats.
 
     This test tries different date formats and payload structures to identify
     what the API expects for appointment creation.
+
+    WARNING: This test can make up to 80 API calls and is marked as 'slow'.
     """
     client = FollowUpBossApiClient(
         api_key=os.getenv("FOLLOW_UP_BOSS_API_KEY"),
@@ -313,11 +319,14 @@ def test_create_appointment_date_formats():
     pytest.skip("Could not find a working appointment creation payload format")
 
 
+@pytest.mark.slow
 def test_book_appointment_with_documentation_format():
     """
     Test creating an appointment with the format from the API documentation.
 
     Based on: https://docs.followupboss.com/reference/appointments-post
+
+    WARNING: This exploratory test is marked as 'slow'.
     """
     client = FollowUpBossApiClient(
         api_key=os.getenv("FOLLOW_UP_BOSS_API_KEY"),

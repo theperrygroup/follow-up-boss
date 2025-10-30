@@ -1,4 +1,5 @@
 """
+
 Test the Person Attachments API.
 """
 
@@ -11,6 +12,8 @@ import pytest
 from follow_up_boss.client import FollowUpBossApiClient, FollowUpBossApiException
 from follow_up_boss.people import People
 from follow_up_boss.person_attachments import PersonAttachments
+
+pytestmark = pytest.mark.integration  # Mark all tests in this module as integration
 
 
 @pytest.fixture

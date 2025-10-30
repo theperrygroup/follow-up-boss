@@ -31,7 +31,10 @@ def test_list_people_by_list_id_cursor(mock_client: Any) -> None:
         "people": [{"id": 1}, {"id": 2}],
         "_metadata": {"collection": "people", "next": "TKN"},
     }
-    page2: Dict[str, Any] = {"people": [{"id": 3}], "_metadata": {"collection": "people"}}
+    page2: Dict[str, Any] = {
+        "people": [{"id": 3}],
+        "_metadata": {"collection": "people"},
+    }
 
     def _fake_get(endpoint: str, params: Any = None) -> Dict[str, Any]:
         # Simulate cursor pagination by presence of "next"
@@ -43,4 +46,3 @@ def test_list_people_by_list_id_cursor(mock_client: Any) -> None:
 
     out = people_api.fetch_all_people_by_list_id(154, limit=2)
     assert [p["id"] for p in out] == [1, 2, 3]
-

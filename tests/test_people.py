@@ -11,6 +11,8 @@ import requests
 from follow_up_boss.client import FollowUpBossApiClient, FollowUpBossApiException
 from follow_up_boss.people import People
 
+pytestmark = pytest.mark.integration  # Mark all tests in this module as integration
+
 
 @pytest.fixture
 def client():
@@ -81,7 +83,7 @@ def test_retrieve_person(people_api):
     assert "name" in response
 
 
-def create_test_person(people_api):
+def create_test_person(people_api, resource_tracker=None):
     """Helper function to create a test person for deletion."""
     # Generate unique data to avoid conflicts
     unique_suffix = uuid.uuid4().hex[:8]
@@ -97,10 +99,16 @@ def create_test_person(people_api):
     }
 
     response = people_api.create_person(person_data)
-    return response["id"]
+    person_id = response["id"]
+
+    # Track for cleanup if tracker is provided
+    if resource_tracker is not None:
+        resource_tracker["people"].append(person_id)
+
+    return person_id
 
 
-def test_create_person(people_api):
+def test_create_person(people_api, resource_tracker):
     """Test creating a new person."""
     # Generate unique data to avoid conflicts
     unique_suffix = uuid.uuid4().hex[:8]
@@ -116,6 +124,9 @@ def test_create_person(people_api):
     }
 
     response = people_api.create_person(person_data)
+
+    # Track for cleanup
+    resource_tracker["people"].append(response["id"])
 
     # Debug print
     print(f"Create Person Response:", response)
@@ -139,10 +150,10 @@ def test_create_person(people_api):
     print(f"Person created successfully with ID: {response['id']}")
 
 
-def test_update_person(people_api):
+def test_update_person(people_api, resource_tracker):
     """Test updating a person."""
     # First, create a person to update using the helper function
-    person_id = create_test_person(people_api)
+    person_id = create_test_person(people_api, resource_tracker)
 
     # Generate a new unique name for the update
     new_last_name = f"UpdatedPerson{uuid.uuid4().hex[:6]}"
@@ -164,10 +175,10 @@ def test_update_person(people_api):
     assert response["lastName"] == new_last_name
 
 
-def test_delete_person(people_api):
+def test_delete_person(people_api, resource_tracker):
     """Test deleting a person."""
-    # Create a test person to delete
-    person_id = create_test_person(people_api)
+    # Create a test person to delete (don't track since we're testing deletion)
+    person_id = create_test_person(people_api, resource_tracker=None)
 
     # Delete the person
     response = people_api.delete_person(person_id)
@@ -187,7 +198,7 @@ def test_delete_person(people_api):
     print(f"Attempting to retrieve deleted person exception:", excinfo.value)
 
 
-def test_check_duplicate(people_api):
+def test_check_duplicate(people_api, resource_tracker):
     """Test checking for duplicate people."""
     # Create a person to check for duplicates
     unique_suffix = uuid.uuid4().hex[:8]
@@ -206,33 +217,31 @@ def test_check_duplicate(people_api):
     created_person = people_api.create_person(person_data)
     person_id = created_person["id"]
 
-    try:
-        # Check for duplicates by email
-        response_email = people_api.check_duplicate({"email": email})
-        print(f"Check Duplicate by Email Response:", response_email)
+    # Track for cleanup
+    resource_tracker["people"].append(person_id)
 
-        # Check basic structure of the response
-        assert isinstance(response_email, dict)
-        # Check that a duplicate was found
-        assert "found" in response_email
-        assert response_email["found"] is True
-        # Check that it was matched by email
-        assert "matchedBy" in response_email
-        assert response_email["matchedBy"] == "email"
+    # Check for duplicates by email
+    response_email = people_api.check_duplicate({"email": email})
+    print(f"Check Duplicate by Email Response:", response_email)
 
-        # Check for duplicates by phone
-        response_phone = people_api.check_duplicate({"phone": phone})
-        print(f"Check Duplicate by Phone Response:", response_phone)
+    # Check basic structure of the response
+    assert isinstance(response_email, dict)
+    # Check that a duplicate was found
+    assert "found" in response_email
+    assert response_email["found"] is True
+    # Check that it was matched by email
+    assert "matchedBy" in response_email
+    assert response_email["matchedBy"] == "email"
 
-        # Check basic structure of the response
-        assert isinstance(response_phone, dict)
-        # Check that a duplicate was found
-        assert "found" in response_phone
-        assert response_phone["found"] is True
-        # Check that it was matched by phone
-        assert "matchedBy" in response_phone
-        assert response_phone["matchedBy"] == "phone"
+    # Check for duplicates by phone
+    response_phone = people_api.check_duplicate({"phone": phone})
+    print(f"Check Duplicate by Phone Response:", response_phone)
 
-    finally:
-        # Clean up - delete the created person
-        people_api.delete_person(person_id)
+    # Check basic structure of the response
+    assert isinstance(response_phone, dict)
+    # Check that a duplicate was found
+    assert "found" in response_phone
+    assert response_phone["found"] is True
+    # Check that it was matched by phone
+    assert "matchedBy" in response_phone
+    assert response_phone["matchedBy"] == "phone"

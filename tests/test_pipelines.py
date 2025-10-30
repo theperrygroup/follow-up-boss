@@ -1,4 +1,5 @@
 """
+
 Test the Pipelines API.
 """
 
@@ -9,6 +10,8 @@ import pytest
 
 from follow_up_boss.client import FollowUpBossApiClient
 from follow_up_boss.pipelines import Pipelines
+
+pytestmark = pytest.mark.integration  # Mark all tests in this module as integration
 
 
 @pytest.fixture

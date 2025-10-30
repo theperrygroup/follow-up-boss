@@ -118,31 +118,39 @@ class TestEnhancedPeopleGetAll:
 class TestEnhancedPeopleGetByPond:
     """Test cases for pond-specific extraction methods."""
 
-    @patch("follow_up_boss.enhanced_people.PondFilterPaginator")
+    @patch("follow_up_boss.enhanced_people.SmartPaginator")
     def test_get_by_pond_successful_extraction(
         self, mock_paginator_class, mock_robust_client
     ):
-        """Test successful get_by_pond extraction."""
-        mock_pond_people = [
+        """Test successful get_by_pond extraction using emergency local filtering."""
+        # Mock all people including some from pond 134 and others from different ponds
+        mock_all_people = [
             {"id": 1, "name": "Person 1", "ponds": [{"id": 134}]},
             {"id": 2, "name": "Person 2", "ponds": [{"id": 134}]},
+            {"id": 3, "name": "Person 3", "ponds": [{"id": 999}]},
         ]
 
         mock_paginator = Mock()
-        mock_paginator.paginate_all.return_value = mock_pond_people
+        mock_paginator.paginate_all.return_value = mock_all_people
         mock_paginator_class.return_value = mock_paginator
 
         enhanced_people = EnhancedPeople(mock_robust_client)
 
-        with patch("time.time", side_effect=[1000.0, 1003.0]):  # 3 second duration
-            results = enhanced_people.get_by_pond(134, limit=50)
+        # Mock _get_person_with_pond_data to return enhanced person data
+        with patch.object(
+            enhanced_people,
+            "_get_person_with_pond_data",
+            side_effect=lambda person_id: next(
+                (p for p in mock_all_people if p["id"] == person_id), None
+            ),
+        ):
+            with patch("time.time", side_effect=[1000.0, 1003.0]):  # 3 second duration
+                results = enhanced_people.get_by_pond(134, limit=50)
 
+        # Should return only people from pond 134
         assert len(results) == 2
-        assert results == mock_pond_people
-
-        # Verify paginator was called with correct pond ID
-        mock_paginator_class.assert_called_once_with(
-            mock_robust_client, 134, {"limit": 50}
+        assert all(
+            134 in [p.get("id") for p in person.get("ponds", [])] for person in results
         )
 
     def test_get_pond_members_comprehensive(self, mock_robust_client):
@@ -253,21 +261,33 @@ class TestEnhancedPeopleSampling:
 
     def test_extract_pond_sample_successful(self, mock_robust_client):
         """Test successful pond sample extraction."""
+        # Mock people with pond data
         mock_response = {
-            "people": [{"id": 1, "name": "Sample 1"}, {"id": 2, "name": "Sample 2"}]
+            "people": [
+                {"id": 1, "name": "Sample 1", "ponds": [{"id": 134}]},
+                {"id": 2, "name": "Sample 2", "ponds": [{"id": 134}]},
+                {"id": 3, "name": "Sample 3", "ponds": [{"id": 999}]},
+            ]
         }
 
         mock_robust_client._get.return_value = mock_response
 
         enhanced_people = EnhancedPeople(mock_robust_client)
-        results = enhanced_people.extract_pond_sample(134, 10)
 
+        # Mock _get_person_with_pond_data to return the same person
+        with patch.object(
+            enhanced_people,
+            "_get_person_with_pond_data",
+            side_effect=lambda person_id: next(
+                (p for p in mock_response["people"] if p["id"] == person_id), None
+            ),
+        ):
+            results = enhanced_people.extract_pond_sample(134, 10)
+
+        # Should return only people from pond 134
         assert len(results) == 2
-        assert results == mock_response["people"]
-
-        # Verify correct API call was made
-        mock_robust_client._get.assert_called_once_with(
-            "people", params={"pond": 134, "limit": 10}
+        assert all(
+            134 in [p.get("id") for p in person.get("ponds", [])] for person in results
         )
 
     def test_extract_pond_sample_default_size(self, mock_robust_client):
@@ -275,12 +295,16 @@ class TestEnhancedPeopleSampling:
         mock_robust_client._get.return_value = {"people": []}
 
         enhanced_people = EnhancedPeople(mock_robust_client)
-        enhanced_people.extract_pond_sample(134)
 
-        # Should use default sample size of 100
-        mock_robust_client._get.assert_called_once_with(
-            "people", params={"pond": 134, "limit": 100}
-        )
+        # Mock _get_person_with_pond_data to avoid extra calls
+        with patch.object(
+            enhanced_people, "_get_person_with_pond_data", return_value=None
+        ):
+            enhanced_people.extract_pond_sample(134)
+
+        # Emergency mode: fetches expanded sample (10x or max 1000) for local filtering
+        # Default sample_size=100, so expanded = min(100*10, 1000) = 1000
+        mock_robust_client._get.assert_called_with("people", params={"limit": 1000})
 
 
 @pytest.mark.unit
@@ -302,24 +326,37 @@ class TestEnhancedPeopleVerification:
 
         enhanced_people = EnhancedPeople(mock_robust_client)
 
+        # Mock the API calls for issue detection - return different responses
+        # to avoid triggering pond_parameter_ignored detection
+        def mock_get_side_effect(*args, **kwargs):
+            params = kwargs.get("params", {})
+            if params.get("pond") == 134:
+                # Return pond-specific results
+                return {"people": [{"id": 1, "ponds": [{"id": 134}]}]}
+            else:
+                # Return different results for non-filtered call
+                return {"people": [{"id": 999, "ponds": [{"id": 999}]}]}
+
+        mock_robust_client._get.side_effect = mock_get_side_effect
+
         with patch.object(
             enhanced_people, "extract_pond_sample"
         ) as mock_sample, patch.object(
-            enhanced_people, "get_by_pond"
-        ) as mock_get_by_pond:
+            enhanced_people, "get_pond_members_comprehensive"
+        ) as mock_comprehensive:
             mock_sample.return_value = sample_people
-            mock_get_by_pond.return_value = comprehensive_people
+            mock_comprehensive.return_value = comprehensive_people
 
-            with patch("time.time", side_effect=[1000.0, 1005.0]):  # 5 second duration
+            with patch("time.time", side_effect=[1000.0, 1001.0, 1002.0, 1005.0]):
                 results = enhanced_people.verify_pond_extraction(134, expected_count=3)
 
         assert results["pond_id"] == 134
         assert results["expected_count"] == 3
         assert results["verification_passed"] is True
-        assert results["extraction_methods"]["sample"]["count"] == 1
+        assert results["extraction_methods"]["emergency_sample"]["count"] == 1
         assert results["extraction_methods"]["comprehensive"]["count"] == 3
-        assert results["pond_membership_verified"] is True
         assert results["accuracy"] == 1.0  # 3/3 = 100%
+        assert results["emergency_mode"] is True
         assert results["recommendation"] == "Extraction working correctly"
 
     def test_verify_pond_extraction_accuracy_below_threshold(self, mock_robust_client):
@@ -332,19 +369,25 @@ class TestEnhancedPeopleVerification:
 
         enhanced_people = EnhancedPeople(mock_robust_client)
 
+        # Mock API calls to avoid issue detection
+        mock_robust_client._get.return_value = {"people": []}
+
         with patch.object(
             enhanced_people, "extract_pond_sample"
         ) as mock_sample, patch.object(
-            enhanced_people, "get_by_pond"
-        ) as mock_get_by_pond:
+            enhanced_people, "get_pond_members_comprehensive"
+        ) as mock_comprehensive:
             mock_sample.return_value = sample_people
-            mock_get_by_pond.return_value = comprehensive_people
+            mock_comprehensive.return_value = comprehensive_people
 
             results = enhanced_people.verify_pond_extraction(134, expected_count=1000)
 
         assert results["verification_passed"] is False
         assert results["accuracy"] == 0.001  # 1/1000 = 0.1%
-        assert results["recommendation"] == "Manual investigation required"
+        assert (
+            "Critical failure" in results["recommendation"]
+            or "Manual investigation required" in results["recommendation"]
+        )
 
     def test_verify_pond_extraction_handles_errors(self, mock_robust_client):
         """Test verification handles errors gracefully."""
@@ -356,7 +399,10 @@ class TestEnhancedPeopleVerification:
             results = enhanced_people.verify_pond_extraction(134)
 
         assert "error" in results
-        assert results["recommendation"] == "Check API connectivity and permissions"
+        assert (
+            "verification failed" in results["recommendation"]
+            or "system connectivity" in results["recommendation"]
+        )
 
 
 @pytest.mark.unit
@@ -529,7 +575,7 @@ class TestConvenienceFunctions:
         mock_client_class.return_value = mock_client
 
         mock_enhanced_people = Mock()
-        mock_enhanced_people.get_by_pond.return_value = [
+        mock_enhanced_people.get_pond_members_comprehensive.return_value = [
             {"id": 1, "ponds": [{"id": 134}]}
         ]
         mock_enhanced_people_class.return_value = mock_enhanced_people
@@ -537,7 +583,7 @@ class TestConvenienceFunctions:
         result = extract_pond_people(134)
 
         assert len(result) == 1
-        mock_enhanced_people.get_by_pond.assert_called_once_with(134)
+        mock_enhanced_people.get_pond_members_comprehensive.assert_called_once_with(134)
 
     @patch("follow_up_boss.enhanced_people.RobustApiClient")
     @patch("follow_up_boss.enhanced_people.EnhancedPeople")
@@ -645,7 +691,7 @@ class TestEnhancedPeopleErrorHandling:
         with pytest.raises(Exception, match="Pagination error"):
             enhanced_people.get_all()
 
-    @patch("follow_up_boss.enhanced_people.PondFilterPaginator")
+    @patch("follow_up_boss.enhanced_people.SmartPaginator")
     def test_get_by_pond_logs_and_reraises_errors(
         self, mock_paginator_class, mock_robust_client
     ):

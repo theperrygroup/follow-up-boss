@@ -70,7 +70,7 @@ class TextMessages:
         # status: Optional[str] = None, # e.g., "Sent", "Delivered", "Failed"
         # sent_at: Optional[str] = None, # ISO 8601, defaults to now if not set
         **kwargs: Any,
-    ) -> Dict[str, Any]:
+    ) -> Union[Dict[str, Any], str]:
         """
         Creates a new text message log.
         Note: This logs a text message, it may not actually send one depending on FUB capabilities.

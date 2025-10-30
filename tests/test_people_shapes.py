@@ -27,7 +27,9 @@ def test_iter_people_offset_fallback(mock_client: Any) -> None:
     page2 = {"people": [{"id": 3}], "_metadata": {}}
 
     # _get is called by list_people; return different pages based on provided offset
-    def _fake_get(endpoint: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def _fake_get(
+        endpoint: str, params: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         offset = (params or {}).get("offset", 0)
         if offset == 0:
             return page1
@@ -37,4 +39,3 @@ def test_iter_people_offset_fallback(mock_client: Any) -> None:
 
     out_ids = [p["id"] for p in people_api.iter_people({"limit": 2, "offset": 0})]
     assert out_ids == [1, 2, 3]
-

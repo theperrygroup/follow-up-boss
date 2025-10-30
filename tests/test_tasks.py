@@ -1,4 +1,5 @@
 """
+
 Test the Tasks API.
 """
 
@@ -12,6 +13,8 @@ import requests
 
 from follow_up_boss.client import FollowUpBossApiClient, FollowUpBossApiException
 from follow_up_boss.tasks import Tasks
+
+pytestmark = pytest.mark.integration  # Mark all tests in this module as integration
 
 
 @pytest.fixture
@@ -71,13 +74,14 @@ def test_list_tasks(tasks_api):
         raise
 
 
-def create_test_task(tasks_api, task_data):
+def create_test_task(tasks_api, task_data, resource_tracker=None):
     """
     Helper function to create a test task.
 
     Args:
         tasks_api: The Tasks API instance.
         task_data: Dictionary with task data.
+        resource_tracker: Optional resource tracker for cleanup.
 
     Returns:
         The ID of the created task and the response data.
@@ -90,7 +94,13 @@ def create_test_task(tasks_api, task_data):
         print(json.dumps(response, indent=2))
 
         if isinstance(response, dict) and "id" in response:
-            return response["id"], response
+            task_id = response["id"]
+
+            # Track for cleanup if tracker provided
+            if resource_tracker is not None:
+                resource_tracker["tasks"].append(task_id)
+
+            return task_id, response
         else:
             pytest.skip(f"Could not create test task, unexpected response: {response}")
             return None, None
@@ -105,11 +115,13 @@ def create_test_task(tasks_api, task_data):
         raise
 
 
-def test_create_and_retrieve_task(tasks_api, test_task_data):
+def test_create_and_retrieve_task(tasks_api, test_task_data, resource_tracker):
     """Test creating and then retrieving a task."""
     try:
         # Create a task
-        task_id, create_response = create_test_task(tasks_api, test_task_data)
+        task_id, create_response = create_test_task(
+            tasks_api, test_task_data, resource_tracker
+        )
 
         if not task_id:
             pytest.skip("Could not create test task")
@@ -128,12 +140,6 @@ def test_create_and_retrieve_task(tasks_api, test_task_data):
         assert "name" in retrieve_response
         assert retrieve_response["name"] == test_task_data["name"]
 
-        # Clean up - delete the task
-        try:
-            tasks_api.delete_task(task_id)
-        except:
-            print(f"Warning: Could not clean up test task {task_id}")
-
     except requests.exceptions.HTTPError as e:
         if e.response.status_code == 403:
             pytest.skip(
@@ -142,11 +148,11 @@ def test_create_and_retrieve_task(tasks_api, test_task_data):
         raise
 
 
-def test_update_task(tasks_api, test_task_data):
+def test_update_task(tasks_api, test_task_data, resource_tracker):
     """Test updating a task."""
     try:
         # Create a task
-        task_id, _ = create_test_task(tasks_api, test_task_data)
+        task_id, _ = create_test_task(tasks_api, test_task_data, resource_tracker)
 
         if not task_id:
             pytest.skip("Could not create test task")
@@ -175,12 +181,6 @@ def test_update_task(tasks_api, test_task_data):
         assert "isCompleted" in update_response
         assert update_response["isCompleted"] == 1
 
-        # Clean up - delete the task
-        try:
-            tasks_api.delete_task(task_id)
-        except:
-            print(f"Warning: Could not clean up test task {task_id}")
-
     except requests.exceptions.HTTPError as e:
         if e.response.status_code == 403:
             pytest.skip(
@@ -189,11 +189,11 @@ def test_update_task(tasks_api, test_task_data):
         raise
 
 
-def test_delete_task(tasks_api, test_task_data):
+def test_delete_task(tasks_api, test_task_data, resource_tracker):
     """Test deleting a task."""
     try:
-        # Create a task
-        task_id, _ = create_test_task(tasks_api, test_task_data)
+        # Create a task (don't track since we're testing deletion)
+        task_id, _ = create_test_task(tasks_api, test_task_data, resource_tracker=None)
 
         if not task_id:
             pytest.skip("Could not create test task")

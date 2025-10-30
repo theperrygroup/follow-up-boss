@@ -31,11 +31,11 @@ X_SYSTEM_KEY = os.getenv("X_SYSTEM_KEY")
 BASE_URL = "https://api.followupboss.com/v1"
 
 
-def test_deals_api_directly():
+def test_deals_api_directly() -> None:
     """Test the deals endpoint directly with different field naming conventions."""
 
     # API key authentication (API Key as username, empty password)
-    auth = (API_KEY, "")
+    auth = (API_KEY or "", "")
 
     # Basic headers
     headers = {

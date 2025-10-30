@@ -8,6 +8,7 @@ import os
 import sys
 import time
 from datetime import datetime, timedelta
+from typing import Any, Dict, Union
 
 # Add the project root to the Python path
 sys.path.insert(0, os.path.abspath("."))
@@ -15,7 +16,7 @@ sys.path.insert(0, os.path.abspath("."))
 from follow_up_boss.client import FollowUpBossApiClient, FollowUpBossApiException
 
 
-def main():
+def main() -> bool:
     """Main validation function."""
     print("🚀 Starting Follow Up Boss API Data Creation Validation (Targeted)")
     print("=" * 70)
@@ -74,8 +75,10 @@ def main():
             "source": "API Test",
         }
 
-        result = people_api.create_person(person_data)
-        person_id = result.get("id") if isinstance(result, dict) else None
+        person_result: Union[Dict[str, Any], str] = people_api.create_person(
+            person_data
+        )
+        person_id = person_result.get("id") if isinstance(person_result, dict) else None
 
         print("✅ People API: Successfully created person")
         print(f"   Created person ID: {person_id}")
@@ -109,14 +112,14 @@ def main():
             )
             test_person_id = result.get("id")
 
-        result = notes_api.create_note(
+        note_result: Union[Dict[str, Any], str] = notes_api.create_note(
             person_id=test_person_id,
             subject="Test Note",
             body=f"Test note created at {datetime.now()}",
             is_html=False,
         )
 
-        note_id = result.get("id") if isinstance(result, dict) else None
+        note_id = note_result.get("id") if isinstance(note_result, dict) else None
         print("✅ Notes API: Successfully created note")
         print(f"   Created note ID: {note_id}")
         results["notes"] = True
@@ -141,14 +144,15 @@ def main():
         print(f"   Tasks.create_task signature: {sig}")
 
         # Test the actual method
-        result = tasks_api.create_task(
+        task_result: Union[Dict[str, Any], str] = tasks_api.create_task(
+            name="Test Task",
             person_id=test_person_id,
             type="Call",
             due_date=(datetime.now() + timedelta(days=1)).isoformat(),
             note=f"Test task created at {datetime.now()}",
         )
 
-        task_id = result.get("id") if isinstance(result, dict) else None
+        task_id = task_result.get("id") if isinstance(task_result, dict) else None
         print("✅ Tasks API: Successfully created task")
         print(f"   Created task ID: {task_id}")
         results["tasks"] = True
@@ -172,14 +176,21 @@ def main():
         sig = inspect.signature(appointments_api.create_appointment)
         print(f"   Appointments.create_appointment signature: {sig}")
 
-        result = appointments_api.create_appointment(
-            person_id=test_person_id,
-            start_date=(datetime.now() + timedelta(days=1)).isoformat(),
-            end_date=(datetime.now() + timedelta(days=1, hours=1)).isoformat(),
-            title=f"Test Appointment {datetime.now().strftime('%Y%m%d_%H%M%S')}",
+        appointment_data = {
+            "person_id": test_person_id,
+            "start_date": (datetime.now() + timedelta(days=1)).isoformat(),
+            "end_date": (datetime.now() + timedelta(days=1, hours=1)).isoformat(),
+            "title": f"Test Appointment {datetime.now().strftime('%Y%m%d_%H%M%S')}",
+        }
+        appointment_result: Union[Dict[str, Any], str] = (
+            appointments_api.create_appointment(appointment_data)
         )
 
-        appointment_id = result.get("id") if isinstance(result, dict) else None
+        appointment_id = (
+            appointment_result.get("id")
+            if isinstance(appointment_result, dict)
+            else None
+        )
         print("✅ Appointments API: Successfully created appointment")
         print(f"   Created appointment ID: {appointment_id}")
         results["appointments"] = True

@@ -1,4 +1,5 @@
 """
+
 Test the Webhooks API.
 """
 
@@ -9,6 +10,8 @@ import pytest
 
 from follow_up_boss.client import FollowUpBossApiClient, FollowUpBossApiException
 from follow_up_boss.webhooks import Webhooks
+
+pytestmark = pytest.mark.integration  # Mark all tests in this module as integration
 
 
 @pytest.fixture

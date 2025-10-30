@@ -374,7 +374,8 @@ class SmartPaginator:
 
         for strategy_class in self.strategies:
             try:
-                logger.info(f"Trying pagination strategy: {strategy_class.__name__}")
+                strategy_name = getattr(strategy_class, "__name__", str(strategy_class))
+                logger.info(f"Trying pagination strategy: {strategy_name}")
                 strategy = strategy_class(self.client, self.endpoint, self.params)
 
                 for response in strategy.paginate():
@@ -396,12 +397,13 @@ class SmartPaginator:
                 # If we got data with this strategy, return it
                 if all_items:
                     logger.info(
-                        f"Successfully extracted {len(all_items)} items using {strategy_class.__name__}"
+                        f"Successfully extracted {len(all_items)} items using {strategy_name}"
                     )
                     return all_items
 
             except Exception as e:
-                logger.warning(f"Strategy {strategy_class.__name__} failed: {e}")
+                strategy_name = getattr(strategy_class, "__name__", str(strategy_class))
+                logger.warning(f"Strategy {strategy_name} failed: {e}")
                 continue
 
         if not all_items:
@@ -777,13 +779,19 @@ class PondFilterPaginator(SmartPaginator):
                     if pond.get("id") == pond_id:
                         return True
                 elif isinstance(pond, (int, str)):
-                    if int(pond) == pond_id:
-                        return True
+                    try:
+                        if int(pond) == pond_id:
+                            return True
+                    except (ValueError, TypeError):
+                        continue
         elif isinstance(ponds, dict):
             if ponds.get("id") == pond_id:
                 return True
         elif isinstance(ponds, (int, str)):
-            if int(ponds) == pond_id:
-                return True
+            try:
+                if int(ponds) == pond_id:
+                    return True
+            except (ValueError, TypeError):
+                pass
 
         return False

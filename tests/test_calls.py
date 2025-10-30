@@ -1,4 +1,5 @@
 """
+
 Test the Calls API.
 """
 
@@ -11,6 +12,8 @@ import pytest
 from follow_up_boss.calls import Calls
 from follow_up_boss.client import FollowUpBossApiClient
 from follow_up_boss.people import People
+
+pytestmark = pytest.mark.integration  # Mark all tests in this module as integration
 
 
 @pytest.fixture
@@ -35,7 +38,7 @@ def people_api(client):
     return People(client)
 
 
-def get_test_person_id(people_api):
+def get_test_person_id(people_api, resource_tracker=None):
     """Create a test person and return their ID."""
     # Generate unique data to avoid conflicts
     unique_suffix = uuid.uuid4().hex[:8]
@@ -52,13 +55,19 @@ def get_test_person_id(people_api):
     }
 
     response = people_api.create_person(person_data)
-    return response["id"], "555-987-6543"
+    person_id = response["id"]
+
+    # Track for cleanup if tracker provided
+    if resource_tracker is not None:
+        resource_tracker["people"].append(person_id)
+
+    return person_id, "555-987-6543"
 
 
-def create_test_call(calls_api, people_api):
+def create_test_call(calls_api, people_api, resource_tracker=None):
     """Helper function to create a test call and return its ID."""
     # Create a test person
-    person_id, phone = get_test_person_id(people_api)
+    person_id, phone = get_test_person_id(people_api, resource_tracker)
 
     # Create call data
     duration = 120  # 2 minutes in seconds
@@ -74,7 +83,13 @@ def create_test_call(calls_api, people_api):
         note=note,
     )
 
-    return response["id"]
+    call_id = response["id"]
+
+    # Track for cleanup if tracker provided
+    if resource_tracker is not None:
+        resource_tracker["calls"].append(call_id)
+
+    return call_id
 
 
 def test_list_calls(calls_api):
@@ -98,10 +113,10 @@ def test_list_calls(calls_api):
     assert isinstance(response["calls"], list)
 
 
-def test_create_call(calls_api, people_api):
+def test_create_call(calls_api, people_api, resource_tracker):
     """Test creating a call for a person."""
     # Create a test person to associate the call with
-    person_id, phone = get_test_person_id(people_api)
+    person_id, phone = get_test_person_id(people_api, resource_tracker)
 
     # Create call data
     duration = 120  # 2 minutes in seconds
@@ -117,6 +132,9 @@ def test_create_call(calls_api, people_api):
         note=note,
     )
 
+    # Track for cleanup
+    resource_tracker["calls"].append(response["id"])
+
     # Debug print
     print(f"Create Call Response:", response)
 
@@ -129,10 +147,10 @@ def test_create_call(calls_api, people_api):
     assert response["outcome"] == "Left Message"
 
 
-def test_retrieve_call(calls_api, people_api):
+def test_retrieve_call(calls_api, people_api, resource_tracker):
     """Test retrieving a specific call."""
     # Create a test call to retrieve
-    call_id = create_test_call(calls_api, people_api)
+    call_id = create_test_call(calls_api, people_api, resource_tracker)
 
     # Retrieve the call
     response = calls_api.retrieve_call(call_id)
@@ -148,10 +166,10 @@ def test_retrieve_call(calls_api, people_api):
     assert "outcome" in response
 
 
-def test_update_call(calls_api, people_api):
+def test_update_call(calls_api, people_api, resource_tracker):
     """Test updating a call."""
     # Create a test call to update
-    call_id = create_test_call(calls_api, people_api)
+    call_id = create_test_call(calls_api, people_api, resource_tracker)
 
     # Get original call to see what we can update
     original_call = calls_api.retrieve_call(call_id)

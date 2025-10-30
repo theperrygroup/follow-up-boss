@@ -1,4 +1,5 @@
 """
+
 Test the Text Message Templates API.
 """
 
@@ -10,6 +11,8 @@ import requests
 
 from follow_up_boss.client import FollowUpBossApiClient, FollowUpBossApiException
 from follow_up_boss.text_message_templates import TextMessageTemplates
+
+pytestmark = pytest.mark.integration  # Mark all tests in this module as integration
 
 
 @pytest.fixture

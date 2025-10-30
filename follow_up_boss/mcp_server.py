@@ -72,7 +72,7 @@ def get_client() -> FollowUpBossApiClient:
 
 
 # People Tools
-@mcp.tool()
+@mcp.tool()  # type: ignore[misc]
 def list_people(
     limit: Optional[int] = Field(50, description="Number of results per page"),
     offset: Optional[int] = Field(0, description="Number of results to skip"),
@@ -110,10 +110,10 @@ def list_people(
     if includeTrash is not None:
         params["includeTrash"] = includeTrash
 
-    return api.list_people(params if params else None)
+    return api.list_people(params if params else None)  # type: ignore[return-value,arg-type]
 
 
-@mcp.tool()
+@mcp.tool()  # type: ignore[misc]
 def create_person(
     name: str = Field(..., description="Person's full name"),
     emails: Optional[str] = Field(
@@ -185,7 +185,7 @@ def create_person(
     return api.create_person(person_data)
 
 
-@mcp.tool()
+@mcp.tool()  # type: ignore[misc]
 def get_person(person_id: int = Field(..., description="Person ID")) -> Dict[str, Any]:
     """
     Get a specific person by ID.
@@ -201,7 +201,7 @@ def get_person(person_id: int = Field(..., description="Person ID")) -> Dict[str
     return api.retrieve_person(person_id)
 
 
-@mcp.tool()
+@mcp.tool()  # type: ignore[misc]
 def update_person(
     person_id: int = Field(..., description="Person ID"),
     name: Optional[str] = Field(None, description="Person's full name"),
@@ -270,7 +270,7 @@ def update_person(
 
 
 # Notes Tools
-@mcp.tool()
+@mcp.tool()  # type: ignore[misc]
 def create_note(
     personId: int = Field(..., description="Person ID to attach note to"),
     subject: str = Field(..., description="Note subject/title"),
@@ -301,7 +301,7 @@ def create_note(
     )
 
 
-@mcp.tool()
+@mcp.tool()  # type: ignore[misc]
 def list_notes(
     personId: Optional[int] = Field(None, description="Filter by person ID"),
     limit: Optional[int] = Field(50, description="Number of results per page"),
@@ -333,7 +333,7 @@ def list_notes(
 
 
 # Tasks Tools
-@mcp.tool()
+@mcp.tool()  # type: ignore[misc]
 def create_task(
     personId: int = Field(..., description="Person ID to attach task to"),
     description: str = Field(..., description="Task description"),
@@ -355,18 +355,15 @@ def create_task(
     client = get_client()
     api = Tasks(client)
 
-    task_data: Dict[str, Any] = {
-        "personId": personId,
-        "description": description,
-        "dueDate": dueDate,
-    }
-    if assignedTo is not None:
-        task_data["assignedTo"] = assignedTo
-
-    return api.create_task(task_data)
+    return api.create_task(
+        name=description,
+        person_id=personId,
+        assigned_to=assignedTo,
+        due_date=dueDate,
+    )
 
 
-@mcp.tool()
+@mcp.tool()  # type: ignore[misc]
 def list_tasks(
     personId: Optional[int] = Field(None, description="Filter by person ID"),
     assignedTo: Optional[int] = Field(None, description="Filter by assigned user ID"),
@@ -375,7 +372,7 @@ def list_tasks(
     ),
     limit: Optional[int] = Field(50, description="Number of results per page"),
     offset: Optional[int] = Field(0, description="Number of results to skip"),
-) -> Dict[str, Any]:
+) -> Union[Dict[str, Any], str]:
     """
     List tasks.
 
@@ -392,23 +389,17 @@ def list_tasks(
     client = get_client()
     api = Tasks(client)
 
-    params: Dict[str, Any] = {}
-    if personId is not None:
-        params["personId"] = personId
-    if assignedTo is not None:
-        params["assignedTo"] = assignedTo
-    if includeCompleted is not None:
-        params["includeCompleted"] = includeCompleted
-    if limit is not None:
-        params["limit"] = limit
-    if offset is not None:
-        params["offset"] = offset
-
-    return api.list_tasks(params if params else None)
+    return api.list_tasks(
+        person_id=personId,
+        assigned_to=assignedTo,
+        status="incomplete" if not includeCompleted else None,
+        limit=limit,
+        offset=offset,
+    )
 
 
 # Deals Tools
-@mcp.tool()
+@mcp.tool()  # type: ignore[misc]
 def create_deal(
     personId: int = Field(..., description="Person ID"),
     pipelineId: int = Field(..., description="Pipeline ID"),
@@ -436,26 +427,25 @@ def create_deal(
     client = get_client()
     api = Deals(client)
 
-    deal_data: Dict[str, Any] = {
-        "personId": personId,
-        "pipelineId": pipelineId,
-        "stageId": stageId,
-        "name": name,
-    }
-    if value is not None:
-        deal_data["value"] = value
-
     if customFields:
         try:
             custom_fields_data = json.loads(customFields)
-            deal_data.update(custom_fields_data)
         except json.JSONDecodeError:
             return {"error": "Invalid JSON for customFields parameter"}
+    else:
+        custom_fields_data = {}
 
-    return api.create_deal(deal_data)
+    return api.create_deal(
+        name=name,
+        stage_id=stageId,
+        pipeline_id=pipelineId,
+        person_id=personId,
+        price=value,
+        **custom_fields_data,
+    )
 
 
-@mcp.tool()
+@mcp.tool()  # type: ignore[misc]
 def list_deals(
     personId: Optional[int] = Field(None, description="Filter by person ID"),
     pipelineId: Optional[int] = Field(None, description="Filter by pipeline ID"),
@@ -479,23 +469,17 @@ def list_deals(
     client = get_client()
     api = Deals(client)
 
-    params: Dict[str, Any] = {}
-    if personId is not None:
-        params["personId"] = personId
-    if pipelineId is not None:
-        params["pipelineId"] = pipelineId
-    if stageId is not None:
-        params["stageId"] = stageId
-    if limit is not None:
-        params["limit"] = limit
-    if offset is not None:
-        params["offset"] = offset
-
-    return api.list_deals(params if params else None)
+    return api.list_deals(
+        person_id=personId,
+        pipeline_id=pipelineId,
+        stage_id=stageId,
+        limit=limit,
+        offset=offset,
+    )
 
 
 # User and Team Tools
-@mcp.tool()
+@mcp.tool()  # type: ignore[misc]
 def get_current_user() -> Union[Dict[str, Any], str]:
     """
     Get information about the current authenticated user.
@@ -505,10 +489,10 @@ def get_current_user() -> Union[Dict[str, Any], str]:
     """
     client = get_client()
     api = Users(client)
-    return api.get_me()
+    return api.get_current_user()
 
 
-@mcp.tool()
+@mcp.tool()  # type: ignore[misc]
 def list_users(
     limit: Optional[int] = Field(50, description="Number of results per page"),
     offset: Optional[int] = Field(0, description="Number of results to skip"),
@@ -535,7 +519,7 @@ def list_users(
     return api.list_users(params if params else None)
 
 
-@mcp.tool()
+@mcp.tool()  # type: ignore[misc]
 def list_teams(
     limit: Optional[int] = Field(50, description="Number of results per page"),
     offset: Optional[int] = Field(0, description="Number of results to skip"),
@@ -553,17 +537,14 @@ def list_teams(
     client = get_client()
     api = Teams(client)
 
-    params: Dict[str, Any] = {}
-    if limit is not None:
-        params["limit"] = limit
-    if offset is not None:
-        params["offset"] = offset
-
-    return api.list_teams(params if params else None)
+    return api.list_teams(
+        limit=limit,
+        offset=offset,
+    )
 
 
 # Pipeline Tools
-@mcp.tool()
+@mcp.tool()  # type: ignore[misc]
 def list_pipelines(
     limit: Optional[int] = Field(50, description="Number of results per page"),
     offset: Optional[int] = Field(0, description="Number of results to skip"),
@@ -581,16 +562,13 @@ def list_pipelines(
     client = get_client()
     api = Pipelines(client)
 
-    params: Dict[str, Any] = {}
-    if limit is not None:
-        params["limit"] = limit
-    if offset is not None:
-        params["offset"] = offset
-
-    return api.list_pipelines(params if params else None)
+    return api.list_pipelines(
+        limit=limit,
+        offset=offset,
+    )
 
 
-@mcp.tool()
+@mcp.tool()  # type: ignore[misc]
 def list_stages(
     pipelineId: Optional[int] = Field(None, description="Filter by pipeline ID"),
     limit: Optional[int] = Field(50, description="Number of results per page"),
@@ -610,19 +588,15 @@ def list_stages(
     client = get_client()
     api = Stages(client)
 
-    params: Dict[str, Any] = {}
-    if pipelineId is not None:
-        params["pipelineId"] = pipelineId
-    if limit is not None:
-        params["limit"] = limit
-    if offset is not None:
-        params["offset"] = offset
-
-    return api.list_stages(params if params else None)
+    return api.list_stages(
+        pipelineId=pipelineId,
+        limit=limit,
+        offset=offset,
+    )
 
 
 # Custom Fields Tools
-@mcp.tool()
+@mcp.tool()  # type: ignore[misc]
 def list_custom_fields(
     limit: Optional[int] = Field(50, description="Number of results per page"),
     offset: Optional[int] = Field(0, description="Number of results to skip"),
@@ -640,17 +614,14 @@ def list_custom_fields(
     client = get_client()
     api = CustomFields(client)
 
-    params: Dict[str, Any] = {}
-    if limit is not None:
-        params["limit"] = limit
-    if offset is not None:
-        params["offset"] = offset
-
-    return api.list_custom_fields(params if params else None)
+    return api.list_custom_fields(
+        limit=limit,
+        offset=offset,
+    )
 
 
 # Events Tools
-@mcp.tool()
+@mcp.tool()  # type: ignore[misc]
 def create_event(
     personId: int = Field(..., description="Person ID"),
     type: str = Field(..., description="Event type"),
@@ -672,20 +643,33 @@ def create_event(
     client = get_client()
     api = Events(client)
 
-    event_data: Dict[str, Any] = {
-        "personId": personId,
-        "type": type,
-        "message": message,
-    }
-    if dateTime:
-        event_data["dateTime"] = dateTime
-
-    return api.create_event(event_data)
+    return api.create_event(
+        type=type,
+        person_id=personId,
+        message=message,
+        date_time=dateTime,
+    )
 
 
 # Main entry point
 def main() -> None:
-    """Run the MCP server."""
+    """
+    Run the MCP server with optimized event loop.
+
+    This function initializes and starts the Follow Up Boss MCP server,
+    setting up an optimized event loop using uvloop if available for
+    better performance. The server provides MCP tools for interacting
+    with the Follow Up Boss API.
+
+    Raises:
+        ImportError: If required MCP dependencies are not installed.
+        ValueError: If required environment variables are not set.
+        RuntimeError: If the server fails to start.
+
+    Example:
+        >>> if __name__ == "__main__":
+        ...     main()
+    """
     try:
         import uvloop
 

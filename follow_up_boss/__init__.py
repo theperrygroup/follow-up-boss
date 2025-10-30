@@ -61,9 +61,14 @@ from .threaded_replies import ThreadedReplies
 from .timeframes import Timeframes
 from .users import Users
 from .webhook_events import WebhookEvents
+from .webhook_utils import (
+    extract_person_id_from_payload,
+    get_event_name,
+    get_resource_by_collection,
+)
 from .webhooks import Webhooks
 
-__version__ = "0.2.10"
+__version__ = "0.4.0"
 __all__ = [
     # Core API
     "FollowUpBossApiClient",
@@ -121,4 +126,8 @@ __all__ = [
     "extract_all_people",
     "extract_pond_people",
     "verify_pond_extraction_quick",
+    # Webhook utilities
+    "extract_person_id_from_payload",
+    "get_event_name",
+    "get_resource_by_collection",
 ]

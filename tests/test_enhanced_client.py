@@ -392,8 +392,10 @@ class TestErrorScenarios:
 
     def test_missing_api_key_error(self):
         """Test error handling for missing API key."""
-        with pytest.raises(ValueError, match="API key not found"):
-            RobustApiClient(api_key=None)
+        # Mock the module-level API_KEY to be None to simulate missing env var
+        with patch("follow_up_boss.enhanced_client.API_KEY", None):
+            with pytest.raises(ValueError, match="API key not found"):
+                RobustApiClient(api_key=None)
 
     def test_authentication_error_detection_in_request(self):
         """Test authentication error detection in actual requests."""

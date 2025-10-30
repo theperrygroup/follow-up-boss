@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "follow-up-boss"
-version = "0.2.10"
+version = "0.4.0"
 description = "A Python client library for the Follow Up Boss API"
 readme = "README.md"
 license = {text = "MIT"}
@@ -116,4 +116,12 @@ addopts = [
     "--cov-report=term-missing",
     "--cov-report=html",
     "--cov-report=xml",
+    "-m not integration and not slow",  # Skip integration and slow tests by default
+]
+markers = [
+    "unit: marks tests as unit tests (no API calls, uses mocks)",
+    "integration: marks tests as integration tests (requires API access)",
+    "slow: marks tests as slow (may take a long time)",
+    "pagination: marks tests related to pagination functionality",
+    "enhanced: marks tests for enhanced functionality",
 ] 

@@ -1,4 +1,5 @@
 """
+
 Test the Action Plans API.
 """
 
@@ -11,6 +12,8 @@ import requests
 from follow_up_boss.action_plans import ActionPlans
 from follow_up_boss.client import FollowUpBossApiClient, FollowUpBossApiException
 from follow_up_boss.people import People
+
+pytestmark = pytest.mark.integration  # Mark all tests in this module as integration
 
 
 @pytest.fixture

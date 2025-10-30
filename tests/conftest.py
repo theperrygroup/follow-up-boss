@@ -279,6 +279,95 @@ def pytest_configure(config):
     )
 
 
+@pytest.fixture(scope="function")
+def resource_tracker(client):
+    """Track created resources and clean them up after tests."""
+    from follow_up_boss.appointments import Appointments
+    from follow_up_boss.calls import Calls
+    from follow_up_boss.deals import Deals
+    from follow_up_boss.events import Events
+    from follow_up_boss.notes import Notes
+    from follow_up_boss.people import People
+    from follow_up_boss.tasks import Tasks
+
+    tracker = {
+        "people": [],
+        "deals": [],
+        "tasks": [],
+        "notes": [],
+        "calls": [],
+        "appointments": [],
+        "events": [],
+    }
+
+    yield tracker
+
+    # Cleanup in reverse order of dependencies
+    # Events don't have delete endpoint, skip them
+
+    # Clean up appointments
+    if tracker["appointments"]:
+        appointments_api = Appointments(client)
+        for appointment_id in tracker["appointments"]:
+            try:
+                appointments_api.delete_appointment(appointment_id)
+                print(f"Cleaned up appointment {appointment_id}")
+            except Exception as e:
+                print(f"Failed to cleanup appointment {appointment_id}: {e}")
+
+    # Clean up calls
+    if tracker["calls"]:
+        calls_api = Calls(client)
+        for call_id in tracker["calls"]:
+            try:
+                # Calls API might not have delete, check if it does
+                if hasattr(calls_api, "delete_call"):
+                    calls_api.delete_call(call_id)
+                    print(f"Cleaned up call {call_id}")
+            except Exception as e:
+                print(f"Failed to cleanup call {call_id}: {e}")
+
+    # Clean up notes
+    if tracker["notes"]:
+        notes_api = Notes(client)
+        for note_id in tracker["notes"]:
+            try:
+                notes_api.delete_note(note_id)
+                print(f"Cleaned up note {note_id}")
+            except Exception as e:
+                print(f"Failed to cleanup note {note_id}: {e}")
+
+    # Clean up tasks
+    if tracker["tasks"]:
+        tasks_api = Tasks(client)
+        for task_id in tracker["tasks"]:
+            try:
+                tasks_api.delete_task(task_id)
+                print(f"Cleaned up task {task_id}")
+            except Exception as e:
+                print(f"Failed to cleanup task {task_id}: {e}")
+
+    # Clean up deals
+    if tracker["deals"]:
+        deals_api = Deals(client)
+        for deal_id in tracker["deals"]:
+            try:
+                deals_api.delete_deal(deal_id)
+                print(f"Cleaned up deal {deal_id}")
+            except Exception as e:
+                print(f"Failed to cleanup deal {deal_id}: {e}")
+
+    # Clean up people last (they might be referenced by other resources)
+    if tracker["people"]:
+        people_api = People(client)
+        for person_id in tracker["people"]:
+            try:
+                people_api.delete_person(person_id)
+                print(f"Cleaned up person {person_id}")
+            except Exception as e:
+                print(f"Failed to cleanup person {person_id}: {e}")
+
+
 @pytest.fixture(autouse=True)
 def cleanup_test_files():
     """Clean up any test files created during testing."""

@@ -16,7 +16,7 @@ from follow_up_boss.people import People
 from follow_up_boss.tasks import Tasks
 
 
-def test_corrected_apis():
+def test_corrected_apis() -> None:
     client = FollowUpBossApiClient()
     person_id = None
 
@@ -33,8 +33,10 @@ def test_corrected_apis():
     }
     try:
         result = people_api.create_person(person_data)
-        print(f'✅ People API Success: Created person ID {result.get("id")}')
-        person_id = result.get("id")
+        print(
+            f'✅ People API Success: Created person ID {result.get("id") if isinstance(result, dict) else "N/A"}'
+        )
+        person_id = result.get("id") if isinstance(result, dict) else None
     except Exception as e:
         print(f"❌ People API Failed: {e}")
         person_id = None
@@ -49,7 +51,9 @@ def test_corrected_apis():
             due_date="2025-05-24T10:00:00Z",
             details="Test task details",
         )
-        print(f'✅ Tasks API Success: Created task ID {result.get("id")}')
+        print(
+            f'✅ Tasks API Success: Created task ID {result.get("id") if isinstance(result, dict) else "N/A"}'
+        )
     except Exception as e:
         print(f"❌ Tasks API Failed: {e}")
 
@@ -64,7 +68,9 @@ def test_corrected_apis():
     }
     try:
         result = appointments_api.create_appointment(appointment_data)
-        print(f'✅ Appointments API Success: Created appointment ID {result.get("id")}')
+        print(
+            f'✅ Appointments API Success: Created appointment ID {result.get("id") if isinstance(result, dict) else "N/A"}'
+        )
     except Exception as e:
         print(f"❌ Appointments API Failed: {e}")
 
@@ -77,7 +83,9 @@ def test_corrected_apis():
             subject="Test Subject",
             body="<html><body>Test email template</body></html>",
         )
-        print(f'✅ Email Templates API Success: Created template ID {result.get("id")}')
+        print(
+            f'✅ Email Templates API Success: Created template ID {result.get("id") if isinstance(result, dict) else "N/A"}'
+        )
     except Exception as e:
         print(f"❌ Email Templates API Failed: {e}")
 
@@ -102,7 +110,7 @@ def test_corrected_apis():
                 name=f"Test Field {field_type} {int(time.time())}", type=field_type
             )
             print(
-                f'✅ Custom Fields API Success with type "{field_type}": Created field ID {result.get("id")}'
+                f'✅ Custom Fields API Success with type "{field_type}": Created field ID {result.get("id") if isinstance(result, dict) else "N/A"}'
             )
             break
         except Exception as e:

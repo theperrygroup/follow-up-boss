@@ -1,4 +1,5 @@
 """
+
 Test the Reactions API.
 """
 
@@ -10,6 +11,8 @@ from follow_up_boss.client import FollowUpBossApiClient, FollowUpBossApiExceptio
 from follow_up_boss.notes import Notes
 from follow_up_boss.people import People
 from follow_up_boss.reactions import Reactions
+
+pytestmark = pytest.mark.integration  # Mark all tests in this module as integration
 
 
 @pytest.fixture

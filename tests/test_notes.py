@@ -1,4 +1,5 @@
 """
+
 Test the Notes API.
 """
 
@@ -10,6 +11,8 @@ import pytest
 from follow_up_boss.client import FollowUpBossApiClient
 from follow_up_boss.notes import Notes
 from follow_up_boss.people import People
+
+pytestmark = pytest.mark.integration  # Mark all tests in this module as integration
 
 
 @pytest.fixture
@@ -34,7 +37,7 @@ def people_api(client):
     return People(client)
 
 
-def get_test_person_id(people_api):
+def get_test_person_id(people_api, resource_tracker=None):
     """Create a test person and return their ID."""
     # Generate unique data to avoid conflicts
     unique_suffix = uuid.uuid4().hex[:8]
@@ -50,13 +53,19 @@ def get_test_person_id(people_api):
     }
 
     response = people_api.create_person(person_data)
-    return response["id"]
+    person_id = response["id"]
+
+    # Track for cleanup if tracker provided
+    if resource_tracker is not None:
+        resource_tracker["people"].append(person_id)
+
+    return person_id
 
 
-def create_test_note(notes_api, people_api):
+def create_test_note(notes_api, people_api, resource_tracker=None):
     """Helper function to create a test note and return its ID."""
     # Create a test person to associate the note with
-    person_id = get_test_person_id(people_api)
+    person_id = get_test_person_id(people_api, resource_tracker)
 
     # Generate unique content for the note
     subject = f"Test Note {uuid.uuid4().hex[:6]}"
@@ -64,7 +73,13 @@ def create_test_note(notes_api, people_api):
 
     # Create the note
     response = notes_api.create_note(person_id, subject, body)
-    return response["id"], subject, body
+    note_id = response["id"]
+
+    # Track for cleanup if tracker provided
+    if resource_tracker is not None:
+        resource_tracker["notes"].append(note_id)
+
+    return note_id, subject, body
 
 
 def test_list_notes(notes_api):
@@ -88,10 +103,10 @@ def test_list_notes(notes_api):
     assert isinstance(response["notes"], list)
 
 
-def test_create_note(notes_api, people_api):
+def test_create_note(notes_api, people_api, resource_tracker):
     """Test creating a note for a person."""
     # Create a test person to associate the note with
-    person_id = get_test_person_id(people_api)
+    person_id = get_test_person_id(people_api, resource_tracker)
 
     # Generate unique content for the note
     subject = f"Test Note {uuid.uuid4().hex[:6]}"
@@ -99,6 +114,9 @@ def test_create_note(notes_api, people_api):
 
     # Create the note
     response = notes_api.create_note(person_id, subject, body)
+
+    # Track for cleanup
+    resource_tracker["notes"].append(response["id"])
 
     # Debug print
     print(f"Create Note Response:", response)
@@ -114,10 +132,10 @@ def test_create_note(notes_api, people_api):
     assert response["personId"] == person_id
 
 
-def test_retrieve_note(notes_api, people_api):
+def test_retrieve_note(notes_api, people_api, resource_tracker):
     """Test retrieving a specific note."""
     # Create a test note to retrieve
-    note_id, subject, body = create_test_note(notes_api, people_api)
+    note_id, subject, body = create_test_note(notes_api, people_api, resource_tracker)
 
     # Retrieve the note
     response = notes_api.retrieve_note(note_id)
@@ -135,10 +153,10 @@ def test_retrieve_note(notes_api, people_api):
     assert response["body"] == body
 
 
-def test_update_note(notes_api, people_api):
+def test_update_note(notes_api, people_api, resource_tracker):
     """Test updating a note."""
     # Create a test note to update
-    note_id, _, _ = create_test_note(notes_api, people_api)
+    note_id, _, _ = create_test_note(notes_api, people_api, resource_tracker)
 
     # Generate new content for the update
     new_subject = f"Updated Note {uuid.uuid4().hex[:6]}"
@@ -160,10 +178,10 @@ def test_update_note(notes_api, people_api):
     assert response["body"] == new_body
 
 
-def test_delete_note(notes_api, people_api):
+def test_delete_note(notes_api, people_api, resource_tracker):
     """Test deleting a note."""
-    # Create a test note to delete
-    note_id, _, _ = create_test_note(notes_api, people_api)
+    # Create a test note to delete (don't track since we're testing deletion)
+    note_id, _, _ = create_test_note(notes_api, people_api, resource_tracker=None)
 
     # Delete the note
     response = notes_api.delete_note(note_id)

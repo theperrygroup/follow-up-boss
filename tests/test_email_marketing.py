@@ -1,4 +1,5 @@
 """
+
 Test the Email Marketing API.
 """
 
@@ -10,6 +11,8 @@ import pytest
 from follow_up_boss.client import FollowUpBossApiClient, FollowUpBossApiException
 from follow_up_boss.email_marketing import EmailMarketing
 from follow_up_boss.people import People
+
+pytestmark = pytest.mark.integration  # Mark all tests in this module as integration
 
 
 @pytest.fixture

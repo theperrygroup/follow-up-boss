@@ -297,8 +297,9 @@ class TestNextLinkStrategy:
         test_url = "https://api.example.com/people?offset=100&limit=50&sort=name"
         result = strategy._parse_next_link(test_url)
 
-        assert result["offset"] == "100"
-        assert result["limit"] == "50"
+        # offset and limit are converted to integers
+        assert result["offset"] == 100
+        assert result["limit"] == 50
         assert result["sort"] == "name"
 
 
@@ -322,37 +323,32 @@ class TestSmartPaginator:
         """Test SmartPaginator tries strategies in order until one succeeds."""
         mock_client = Mock()
 
-        with patch(
-            "follow_up_boss.pagination.OffsetPaginationStrategy"
-        ) as mock_offset, patch(
-            "follow_up_boss.pagination.NextLinkStrategy"
-        ) as mock_nextlink, patch(
-            "follow_up_boss.pagination.DateRangeStrategy"
-        ) as mock_daterange:
-            # First strategy fails
-            mock_offset_instance = Mock()
-            mock_offset_instance.paginate.side_effect = Exception("Offset failed")
-            mock_offset.return_value = mock_offset_instance
+        # Create mock strategy classes
+        mock_offset = Mock()
+        mock_offset_instance = Mock()
+        mock_offset_instance.paginate.side_effect = Exception("Offset failed")
+        mock_offset.return_value = mock_offset_instance
 
-            # Second strategy succeeds
-            mock_nextlink_instance = Mock()
-            mock_nextlink_instance.paginate.return_value = iter(
-                [{"people": [{"id": 1}]}]
-            )
-            mock_nextlink.return_value = mock_nextlink_instance
+        mock_nextlink = Mock()
+        mock_nextlink_instance = Mock()
+        mock_nextlink_instance.paginate.return_value = iter([{"people": [{"id": 1}]}])
+        mock_nextlink.return_value = mock_nextlink_instance
 
-            # Third strategy shouldn't be called
-            mock_daterange_instance = Mock()
-            mock_daterange.return_value = mock_daterange_instance
+        mock_daterange = Mock()
+        mock_daterange_instance = Mock()
+        mock_daterange.return_value = mock_daterange_instance
 
-            paginator = SmartPaginator(mock_client, "people")
-            results = paginator.paginate_all()
+        # Create paginator and inject mocked strategies
+        paginator = SmartPaginator(mock_client, "people")
+        paginator.strategies = [mock_offset, mock_nextlink, mock_daterange]
 
-            assert len(results) == 1
-            assert results[0]["id"] == 1
-            assert mock_offset.called
-            assert mock_nextlink.called
-            assert not mock_daterange.called
+        results = paginator.paginate_all()
+
+        assert len(results) == 1
+        assert results[0]["id"] == 1
+        assert mock_offset.called
+        assert mock_nextlink.called
+        assert not mock_daterange.called
 
     def test_smart_paginator_extract_items(self):
         """Test SmartPaginator _extract_items method."""
@@ -423,12 +419,14 @@ class TestSmartPaginator:
     @patch("follow_up_boss.pagination.ThreadPoolExecutor")
     def test_smart_paginator_concurrent_processing(self, mock_executor):
         """Test SmartPaginator concurrent processing."""
+        from unittest.mock import MagicMock
+
         mock_client = Mock()
 
-        # Mock the executor and futures
+        # Mock the executor and futures - use MagicMock for context manager support
         mock_future = Mock()
         mock_future.result.return_value = [{"id": 1}, {"id": 2}]
-        mock_executor_instance = Mock()
+        mock_executor_instance = MagicMock()
         mock_executor_instance.__enter__.return_value = mock_executor_instance
         mock_executor_instance.__exit__.return_value = None
         mock_executor_instance.submit.return_value = mock_future
@@ -474,7 +472,7 @@ class TestPondFilterPaginator:
             {"id": 3, "ponds": [{"id": 134}]},
         ]
 
-        result = paginator._verify_pond_filtering(test_people)
+        result = paginator._verify_pond_results(test_people)
         assert result is True
 
     def test_pond_filter_paginator_verify_filtering_failure(self):
@@ -489,7 +487,7 @@ class TestPondFilterPaginator:
             {"id": 3, "ponds": [{"id": 134}]},
         ]
 
-        result = paginator._verify_pond_filtering(test_people)
+        result = paginator._verify_pond_results(test_people)
         assert result is False
 
     def test_pond_filter_paginator_verify_empty_results(self):
@@ -497,8 +495,13 @@ class TestPondFilterPaginator:
         mock_client = Mock()
         paginator = PondFilterPaginator(mock_client, 134)
 
-        result = paginator._verify_pond_filtering([])
-        assert result is True  # Empty results are valid
+        # With strict=False, empty results are considered valid
+        result = paginator._verify_pond_results([], strict=False)
+        assert result is True  # Empty results are valid in non-strict mode
+
+        # With strict=True (default), empty results fail verification
+        result_strict = paginator._verify_pond_results([])
+        assert result_strict is False
 
     def test_person_in_pond_various_formats(self):
         """Test _person_in_pond handles various pond data formats."""
@@ -531,12 +534,12 @@ class TestPondFilterPaginator:
         """Test pond paginator falls back to post-fetch filtering."""
         mock_client = Mock()
 
-        with patch.object(PondFilterPaginator, "_verify_pond_filtering") as mock_verify:
+        with patch.object(PondFilterPaginator, "_verify_pond_results") as mock_verify:
             # Mock verification to fail (indicating API filtering didn't work)
             mock_verify.return_value = False
 
             with patch.object(
-                PondFilterPaginator, "_fetch_and_filter_all"
+                PondFilterPaginator, "_fetch_and_filter_locally"
             ) as mock_fetch_filter:
                 mock_fetch_filter.return_value = [{"id": 1, "ponds": [{"id": 134}]}]
 
@@ -546,8 +549,8 @@ class TestPondFilterPaginator:
                 assert len(results) == 1
                 assert mock_fetch_filter.called
 
-    def test_fetch_and_filter_all_method(self):
-        """Test _fetch_and_filter_all method."""
+    def test_fetch_and_filter_locally_method(self):
+        """Test _fetch_and_filter_locally method."""
         mock_client = Mock()
 
         with patch("follow_up_boss.pagination.SmartPaginator") as mock_smart_paginator:
@@ -564,7 +567,7 @@ class TestPondFilterPaginator:
             mock_smart_paginator.return_value = mock_paginator_instance
 
             paginator = PondFilterPaginator(mock_client, 134)
-            results = paginator._fetch_and_filter_all()
+            results = paginator._fetch_and_filter_locally()
 
             # Should only return people from pond 134
             assert len(results) == 2
@@ -670,5 +673,5 @@ class TestPaginationErrorHandling:
         ]
 
         # Should not crash, should return False
-        result = paginator._verify_pond_filtering(malformed_people)
+        result = paginator._verify_pond_results(malformed_people)
         assert result is False

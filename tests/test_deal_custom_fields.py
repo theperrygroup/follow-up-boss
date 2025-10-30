@@ -1,4 +1,5 @@
 """
+
 Test the Deal Custom Fields API.
 """
 
@@ -9,6 +10,8 @@ import pytest
 
 from follow_up_boss.client import FollowUpBossApiClient, FollowUpBossApiException
 from follow_up_boss.deal_custom_fields import DealCustomFields
+
+pytestmark = pytest.mark.integration  # Mark all tests in this module as integration
 
 
 @pytest.fixture

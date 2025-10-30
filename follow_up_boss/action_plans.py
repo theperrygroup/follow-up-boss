@@ -141,8 +141,129 @@ class ActionPlans:
             f"actionPlansPeople/{assignment_id}", json_data=update_data
         )
 
+    def pause_action_plan(
+        self, assignment_id: int, reason: Optional[str] = None
+    ) -> Union[Dict[str, Any], str]:
+        """
+        Pause an action plan assignment for a person.
+
+        This is a convenience method that wraps update_action_plan_assignment()
+        with the appropriate status and reason fields.
+
+        Args:
+            assignment_id: The ID of the action plan assignment to pause.
+            reason: Optional reason for pausing the action plan.
+
+        Returns:
+            A dictionary containing the updated action plan assignment or an error string.
+
+        Example:
+            >>> action_plans = ActionPlans(client)
+            >>> result = action_plans.pause_action_plan(
+            ...     assignment_id=12345,
+            ...     reason="Communication detected"
+            ... )
+        """
+        update_data = {"status": "paused"}
+        if reason:
+            update_data["pauseReason"] = reason
+
+        return self.update_action_plan_assignment(assignment_id, update_data)
+
+    def resume_action_plan(self, assignment_id: int) -> Union[Dict[str, Any], str]:
+        """
+        Resume a paused action plan assignment for a person.
+
+        This is a convenience method that wraps update_action_plan_assignment()
+        to set the status back to active.
+
+        Args:
+            assignment_id: The ID of the action plan assignment to resume.
+
+        Returns:
+            A dictionary containing the updated action plan assignment or an error string.
+
+        Example:
+            >>> action_plans = ActionPlans(client)
+            >>> result = action_plans.resume_action_plan(assignment_id=12345)
+        """
+        update_data = {"status": "active"}
+        return self.update_action_plan_assignment(assignment_id, update_data)
+
+    def pause_all_for_person(
+        self,
+        person_id: int,
+        reason: Optional[str] = None,
+        only_active: bool = True,
+    ) -> Dict[str, Any]:
+        """
+        Pause all action plan assignments for a specific person.
+
+        This method fetches all action plan assignments for the person and
+        pauses each one that matches the criteria.
+
+        Args:
+            person_id: The ID of the person whose action plans should be paused.
+            reason: Optional reason for pausing the action plans.
+            only_active: If True, only pause action plans with status="active".
+                        If False, attempt to pause all action plans.
+
+        Returns:
+            A dictionary containing:
+                - total_found: Total number of action plan assignments found
+                - paused_count: Number of action plans successfully paused
+                - failed_count: Number of action plans that failed to pause
+                - errors: List of error messages for failed pauses
+
+        Example:
+            >>> action_plans = ActionPlans(client)
+            >>> result = action_plans.pause_all_for_person(
+            ...     person_id=67890,
+            ...     reason="Communication detected"
+            ... )
+            >>> print(f"Paused {result['paused_count']} action plans")
+        """
+        # Fetch all action plan assignments for this person
+        response = self.list_action_plan_assignments(person_id=person_id)
+
+        # Handle different response formats
+        assignments = response.get("actionPlansPeople", [])
+
+        result: Dict[str, Any] = {
+            "total_found": len(assignments),
+            "paused_count": 0,
+            "failed_count": 0,
+            "errors": [],
+        }
+
+        for assignment in assignments:
+            # Skip if only_active is True and this isn't active
+            if only_active and assignment.get("status") != "active":
+                continue
+
+            assignment_id = assignment.get("id")
+            if not assignment_id or not isinstance(assignment_id, (int, str)):
+                result["failed_count"] += 1
+                result["errors"].append("Assignment missing ID field")
+                continue
+
+            # Attempt to pause this assignment
+            try:
+                pause_result = self.pause_action_plan(assignment_id, reason)
+
+                # Check if pause was successful
+                if isinstance(pause_result, dict) and not pause_result.get("error"):
+                    result["paused_count"] += 1
+                else:
+                    result["failed_count"] += 1
+                    error_msg = f"Assignment {assignment_id}: {pause_result}"
+                    result["errors"].append(error_msg)
+            except Exception as e:
+                result["failed_count"] += 1
+                result["errors"].append(f"Assignment {assignment_id}: {str(e)}")
+
+        return result
+
     # GET /actionPlansPeople (List people in action plans)
     # POST /actionPlansPeople (Add person to action plan)
     # PUT /actionPlansPeople/{id} (Update person in action plan)
-
-    # ... rest of the file remains unchanged ...

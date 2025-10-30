@@ -1,4 +1,5 @@
 """
+
 Test the Appointment Outcomes API.
 """
 
@@ -9,6 +10,8 @@ import pytest
 
 from follow_up_boss.appointment_outcomes import AppointmentOutcomes
 from follow_up_boss.client import FollowUpBossApiClient, FollowUpBossApiException
+
+pytestmark = pytest.mark.integration  # Mark all tests in this module as integration
 
 
 @pytest.fixture

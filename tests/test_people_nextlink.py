@@ -32,7 +32,9 @@ def test_list_people_next_uses_absolute_link(mock_client: Any) -> None:
 
     mock_client.get_absolute.return_value = page2
 
-    out = people_api.list_people_next("https://api.followupboss.com/v1/people?next=TOKEN")
+    out = people_api.list_people_next(
+        "https://api.followupboss.com/v1/people?next=TOKEN"
+    )
     assert [p["id"] for p in out.get("people", [])] == [2, 3]
     mock_client.get_absolute.assert_called_once()
 
@@ -59,4 +61,3 @@ def test_iter_people_traverses_nextlink(mock_client: Any) -> None:
 
     people: List[int] = [p["id"] for p in people_api.iter_people({"limit": 1})]
     assert people == [1, 2, 3]
-

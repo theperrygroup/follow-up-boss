@@ -1,6 +1,44 @@
 """
 API bindings for Follow Up Boss Events endpoints.
-Events are activities related to people, such as website visits, inquiries, etc.
+
+This module provides comprehensive functionality for managing events and activities
+in Follow Up Boss. Events represent various interactions and activities related
+to people, such as website visits, property inquiries, form submissions, and
+other lead generation activities.
+
+Key Features:
+    - Create and track various event types
+    - Associate events with people or create new people
+    - Support for property-related events
+    - Campaign tracking with UTM parameters
+    - Filter events by type, person, and date ranges
+    - Comprehensive event data management
+
+Event Types:
+    - Property inquiries and website visits
+    - Form submissions and lead captures
+    - Email opens and clicks
+    - Phone calls and text messages
+    - Custom events and activities
+
+Usage:
+    Basic usage:
+        client = FollowUpBossApiClient(api_key="your_api_key")
+        events = Events(client)
+        
+        # Create a property inquiry event
+        event = events.create_event(
+            type="Property Inquiry",
+            first_name="John",
+            last_name="Doe",
+            email="john@example.com",
+            property_street="123 Main St",
+            property_city="Anytown",
+            property_state="CA"
+        )
+        
+        # List events for a person
+        person_events = events.list_events(person_id=12345)
 """
 
 import logging
@@ -112,6 +150,9 @@ class Events:
 
         Raises:
             ValueError: If no person information is provided.
+            FollowUpBossApiException: If the API request fails.
+            FollowUpBossValidationError: If the event data is invalid.
+            FollowUpBossAuthError: If authentication fails.
         """
         payload: Dict[str, Any] = {}
         if type is not None:
@@ -205,11 +246,4 @@ class Events:
             A dictionary containing the details of the event.
         """
         response = self.client._get(f"events/{event_id}")
-        if isinstance(response, dict):
-            return response
-        else:
-            # If response is not a dict, log warning and return empty dict
-            logger.warning(
-                f"Unexpected response type from retrieve_event: {type(response)}"
-            )
-            return {}
+        return response

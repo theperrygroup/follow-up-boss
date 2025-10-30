@@ -10,6 +10,8 @@ from follow_up_boss.people_relationships import PeopleRelationships
 # Load environment variables from .env file
 load_dotenv()
 
+pytestmark = pytest.mark.integration  # Mark all tests in this module as integration
+
 
 # Test fixtures
 @pytest.fixture

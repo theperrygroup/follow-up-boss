@@ -11,7 +11,7 @@ sys.path.insert(0, ".")
 from follow_up_boss.client import FollowUpBossApiClient
 
 
-def analyze_api_signatures():
+def analyze_api_signatures() -> None:
     client = FollowUpBossApiClient()
 
     print("=== API Method Signatures Analysis ===\n")

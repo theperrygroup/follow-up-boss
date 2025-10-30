@@ -64,4 +64,3 @@ def test_exception_default(monkeypatch: Any) -> None:
 
     with pytest.raises(FollowUpBossApiException):
         client._get("people")
-

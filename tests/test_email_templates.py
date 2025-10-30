@@ -1,4 +1,5 @@
 """
+
 Test the Email Templates API.
 """
 
@@ -10,6 +11,8 @@ import requests
 
 from follow_up_boss.client import FollowUpBossApiClient, FollowUpBossApiException
 from follow_up_boss.email_templates import EmailTemplates
+
+pytestmark = pytest.mark.integration  # Mark all tests in this module as integration
 
 
 @pytest.fixture

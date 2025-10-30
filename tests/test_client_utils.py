@@ -45,7 +45,9 @@ def test_get_absolute_calls_get(monkeypatch: Any) -> None:
     called: Dict[str, Any] = {}
     client = FollowUpBossApiClient(api_key="x")
 
-    def fake_get(endpoint: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def fake_get(
+        endpoint: str, params: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         called["endpoint"] = endpoint
         called["params"] = params
         return {"ok": True}
@@ -56,4 +58,3 @@ def test_get_absolute_calls_get(monkeypatch: Any) -> None:
     out = client.get_absolute("https://api.followupboss.com/v1/people?next=T1")
     assert out == {"ok": True}
     assert str(called.get("endpoint", "")).startswith("https://api.followupboss.com/")
-

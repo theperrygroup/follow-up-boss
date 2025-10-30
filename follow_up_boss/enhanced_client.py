@@ -9,7 +9,7 @@ import logging
 import os
 import time
 from functools import wraps
-from typing import Any, Dict, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, TypeVar, Union
 
 import requests
 from dotenv import load_dotenv
@@ -43,7 +43,12 @@ class MaxRetriesExceeded(FollowUpBossApiException):
     pass
 
 
-def retry_on_auth_failure(max_retries: int = 3, backoff_factor: float = 1.0) -> Any:
+F = TypeVar("F", bound=Callable[..., Any])
+
+
+def retry_on_auth_failure(
+    max_retries: int = 3, backoff_factor: float = 1.0
+) -> Callable[[F], F]:
     """
     Decorator to retry API calls on authentication failures.
 
@@ -52,7 +57,7 @@ def retry_on_auth_failure(max_retries: int = 3, backoff_factor: float = 1.0) -> 
         backoff_factor: Factor for exponential backoff between retries.
     """
 
-    def decorator(func: Any) -> Any:
+    def decorator(func: F) -> F:
         @wraps(func)
         def wrapper(self: Any, *args: Any, **kwargs: Any) -> Any:
             last_exception = None
@@ -89,7 +94,7 @@ def retry_on_auth_failure(max_retries: int = 3, backoff_factor: float = 1.0) -> 
                 f"Max retries ({max_retries}) exceeded"
             ) from last_exception
 
-        return wrapper
+        return wrapper  # type: ignore[return-value]
 
     return decorator
 
@@ -133,9 +138,17 @@ class RobustApiClient(FollowUpBossApiClient):
             pool_maxsize: Maximum size of connection pool.
         """
         # Use default values from client.py if None provided
+        final_api_key = api_key or API_KEY
+
+        # Validate API key explicitly
+        if not final_api_key:
+            raise ValueError(
+                "API key not found. Please set FOLLOW_UP_BOSS_API_KEY in your .env file or pass it to the client."
+            )
+
         # Initialize parent class
         super().__init__(
-            api_key=api_key or API_KEY,
+            api_key=final_api_key,
             base_url=base_url or BASE_URL,
             x_system=x_system or X_SYSTEM,
             x_system_key=x_system_key or X_SYSTEM_KEY,
@@ -433,7 +446,7 @@ class ConnectionManager:
         self.api_key = api_key
         self.pool_size = pool_size
         self.timeout_threshold = timeout_threshold
-        self.clients = []
+        self.clients: List[RobustApiClient] = []
         self.current_client_index = 0
 
         # Initialize client pool

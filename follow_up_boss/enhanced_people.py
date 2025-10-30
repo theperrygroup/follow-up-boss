@@ -8,7 +8,7 @@ including deep pagination bypass, reliable pond filtering, and comprehensive dat
 import logging
 import time
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Set, Union
 
 from .enhanced_client import RobustApiClient
 from .pagination import PondFilterPaginator, SmartPaginator
@@ -38,7 +38,7 @@ class EnhancedPeople(People):
             client: An instance of RobustApiClient or FollowUpBossApiClient.
         """
         super().__init__(client)
-        self._extraction_stats = {
+        self._extraction_stats: Dict[str, Any] = {
             "total_requests": 0,
             "total_people_extracted": 0,
             "extraction_time": 0.0,
@@ -92,7 +92,7 @@ class EnhancedPeople(People):
             logger.error(f"Failed to extract all people: {e}")
             raise
 
-    def get_by_pond(self, pond_id: int, **kwargs) -> List[Dict[str, Any]]:
+    def get_by_pond(self, pond_id: int, **kwargs: Any) -> List[Dict[str, Any]]:
         """
         EMERGENCY FIX: Reliable pond filtering using mandatory local filtering.
 
@@ -136,7 +136,7 @@ class EnhancedPeople(People):
             raise
 
     def _emergency_local_pond_filtering(
-        self, pond_id: int, **kwargs
+        self, pond_id: int, **kwargs: Any
     ) -> List[Dict[str, Any]]:
         """
         EMERGENCY: Local pond filtering with enhanced pond data retrieval.
@@ -167,7 +167,7 @@ class EnhancedPeople(People):
             )
         except Exception as e:
             logger.error(f"❌ Failed to fetch all people: {e}")
-            return []
+            raise
 
         # Step 2: Enhanced pond data retrieval for each person
         logger.info("🔍 Enhancing pond data for accurate filtering...")
@@ -222,16 +222,24 @@ class EnhancedPeople(People):
         """
         Get detailed person data that should include proper pond information.
 
+        This method attempts to retrieve individual person data which may contain
+        more complete pond information than what's available in list responses.
+        It's used as part of the emergency pond filtering strategy when the
+        API's pond parameter is not working correctly.
+
         Args:
             person_id: The ID of the person to fetch.
 
         Returns:
             Person data with enhanced pond information, or None if failed.
+
+        Raises:
+            FollowUpBossApiException: If the API request fails.
         """
         try:
             # Try getting individual person which might have better pond data
             response = self._client._get(f"people/{person_id}")
-            return response.get("person", response)
+            return response.get("person", response)  # type: ignore[no-any-return]
         except Exception as e:
             logger.debug(f"Failed to get detailed person data for {person_id}: {e}")
             return None
@@ -315,7 +323,7 @@ class EnhancedPeople(People):
                     f"🔄 Trying endpoint: {approach['endpoint']} with params: {approach['params']}"
                 )
                 response = self._client._get(
-                    approach["endpoint"], params=approach["params"]
+                    approach["endpoint"], params=approach["params"]  # type: ignore[arg-type]
                 )
                 people = response.get("people", [])
 
@@ -363,7 +371,7 @@ class EnhancedPeople(People):
         """
         return self.get_pond_members_comprehensive(pond_id)
 
-    def get_all_people_with_nextlink(self, **filters) -> List[Dict[str, Any]]:
+    def get_all_people_with_nextlink(self, **filters: Any) -> List[Dict[str, Any]]:
         """
         Enhanced method: Get all people using nextLink pagination to bypass limits.
 
@@ -398,7 +406,7 @@ class EnhancedPeople(People):
             )
             return self.get_all(**filters)
 
-    def bypass_deep_pagination(self, **filters) -> List[Dict[str, Any]]:
+    def bypass_deep_pagination(self, **filters: Any) -> List[Dict[str, Any]]:
         """
         Enhanced method: Bypass deep pagination limits using advanced strategies.
 
@@ -410,7 +418,9 @@ class EnhancedPeople(People):
         """
         return self.get_all_people_with_nextlink(**filters)
 
-    def get_concurrent(self, max_workers: int = 5, **filters) -> List[Dict[str, Any]]:
+    def get_concurrent(
+        self, max_workers: int = 5, **filters: Any
+    ) -> List[Dict[str, Any]]:
         """
         Extract people data using concurrent requests for improved performance.
 
@@ -447,7 +457,11 @@ class EnhancedPeople(People):
             logger.error(f"Failed to extract people concurrently: {e}")
             raise
 
-    def get_with_progress(self, callback=None, **filters) -> List[Dict[str, Any]]:
+    def get_with_progress(
+        self,
+        callback: Optional[Callable[[int, int, float], None]] = None,
+        **filters: Any,
+    ) -> List[Dict[str, Any]]:
         """
         Extract people data with progress tracking.
 
@@ -486,7 +500,7 @@ class EnhancedPeople(People):
 
                         if callback:
                             elapsed_time = time.time() - start_time
-                            callback(len(all_people), None, elapsed_time)
+                            callback(len(all_people), 0, elapsed_time)
 
                     # If we got data, break out of strategy loop
                     if all_people:
@@ -589,7 +603,7 @@ class EnhancedPeople(People):
             f"🔍 Emergency verification for pond {pond_id} (expected: {expected_count})"
         )
 
-        verification_results = {
+        verification_results: Dict[str, Any] = {
             "pond_id": pond_id,
             "expected_count": expected_count,
             "extraction_methods": {},
@@ -598,6 +612,8 @@ class EnhancedPeople(People):
             "emergency_mode": True,
             "api_issues_detected": [],
         }
+        # Type hint for extraction_methods
+        verification_results["extraction_methods"] = {}
 
         try:
             # Test 1: Sample extraction with verification
@@ -733,7 +749,7 @@ class EnhancedPeople(People):
             raise ValueError("No people data to export")
 
         # Get all unique keys from all people records
-        all_keys = set()
+        all_keys: Set[str] = set()
         for person in people_data:
             all_keys.update(person.keys())
 
@@ -792,12 +808,23 @@ class EnhancedPeople(People):
         """
         ENHANCED: Check if a person belongs to the specified pond with comprehensive verification.
 
+        This method performs comprehensive pond membership verification by checking
+        multiple possible data structures and field names where pond information
+        might be stored. It handles various API response formats and data types.
+
         Args:
-            person: Person data dictionary.
-            pond_id: ID of the pond to check.
+            person: Person data dictionary containing pond information.
+            pond_id: ID of the pond to check membership for.
 
         Returns:
-            True if person is in the pond, False otherwise.
+            True if person is confirmed to be in the specified pond, False otherwise.
+
+        Example:
+            >>> person_data = {"ponds": [{"id": 134}, {"id": 135}]}
+            >>> enhanced_people._person_in_pond(person_data, 134)
+            True
+            >>> enhanced_people._person_in_pond(person_data, 999)
+            False
         """
         ponds = person.get("ponds", [])
 

@@ -195,8 +195,8 @@ class TestEnhancedMethodsImplementation:
         assert pond_paginator.params.get("pond") == 134
 
         # Should have methods for verification and fallback
-        assert hasattr(pond_paginator, "_verify_pond_filtering")
-        assert hasattr(pond_paginator, "_fetch_and_filter_all")
+        assert hasattr(pond_paginator, "_verify_pond_results")
+        assert hasattr(pond_paginator, "_fetch_and_filter_locally")
         assert hasattr(pond_paginator, "_person_in_pond")
 
 
@@ -254,9 +254,9 @@ class TestMockPondFilteringFix:
     Unit tests with mocks to validate pond filtering fixes.
     """
 
-    @patch("follow_up_boss.pagination.PondFilterPaginator.paginate_all")
+    @patch("follow_up_boss.enhanced_people.SmartPaginator")
     def test_pond_filtering_fix_with_mock(
-        self, mock_paginate_all: Mock, mock_robust_client: Mock
+        self, mock_smart_paginator_class: Mock, mock_robust_client: Mock
     ) -> None:
         """
         Test pond filtering fix using mocks to simulate correct behavior.
@@ -271,10 +271,21 @@ class TestMockPondFilteringFix:
             for i in range(1, 335)  # 334 people
         ]
 
-        mock_paginate_all.return_value = mock_pond_people
+        mock_paginator_instance = Mock()
+        mock_paginator_instance.paginate_all.return_value = mock_pond_people
+        mock_smart_paginator_class.return_value = mock_paginator_instance
 
         enhanced_people = EnhancedPeople(mock_robust_client)
-        result = enhanced_people.get_by_pond(134)
+
+        # Mock _get_person_with_pond_data to avoid extra calls
+        with patch.object(
+            enhanced_people,
+            "_get_person_with_pond_data",
+            side_effect=lambda person_id: next(
+                (p for p in mock_pond_people if p["id"] == person_id), None
+            ),
+        ):
+            result = enhanced_people.get_by_pond(134)
 
         # Should return 334 people, not 0
         assert len(result) == 334, f"Should return 334 people, got {len(result)}"

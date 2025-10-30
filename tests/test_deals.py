@@ -14,6 +14,8 @@ from follow_up_boss.pipelines import Pipelines
 from follow_up_boss.stages import Stages
 from follow_up_boss.users import Users
 
+pytestmark = pytest.mark.integration  # Mark all tests in this module as integration
+
 
 @pytest.fixture
 def client():
@@ -55,9 +57,18 @@ def people_api(client):
     return People(client)
 
 
-@pytest.fixture
-def test_pipeline_id(pipelines_api):
-    """Get a pipeline ID for testing or create one if needed."""
+@pytest.fixture(scope="session")
+def test_pipeline_id():
+    """Get a pipeline ID for testing or create one if needed (cached for session)."""
+    from follow_up_boss.pipelines import Pipelines
+
+    client = FollowUpBossApiClient(
+        api_key=os.getenv("FOLLOW_UP_BOSS_API_KEY"),
+        x_system=os.getenv("X_SYSTEM"),
+        x_system_key=os.getenv("X_SYSTEM_KEY"),
+    )
+    pipelines_api = Pipelines(client)
+
     # Get a pipeline
     pipelines_response = pipelines_api.list_pipelines()
 
@@ -73,9 +84,18 @@ def test_pipeline_id(pipelines_api):
     return pipeline_id
 
 
-@pytest.fixture
-def test_stage_id(pipelines_api, test_pipeline_id):
-    """Get a stage ID for testing that belongs to the pipeline."""
+@pytest.fixture(scope="session")
+def test_stage_id(test_pipeline_id):
+    """Get a stage ID for testing that belongs to the pipeline (cached for session)."""
+    from follow_up_boss.pipelines import Pipelines
+
+    client = FollowUpBossApiClient(
+        api_key=os.getenv("FOLLOW_UP_BOSS_API_KEY"),
+        x_system=os.getenv("X_SYSTEM"),
+        x_system_key=os.getenv("X_SYSTEM_KEY"),
+    )
+    pipelines_api = Pipelines(client)
+
     # Get the pipeline to find its stages
     pipeline_response = pipelines_api.retrieve_pipeline(test_pipeline_id)
 
@@ -93,9 +113,16 @@ def test_stage_id(pipelines_api, test_pipeline_id):
     return pipeline_response["stages"][0]["id"]
 
 
-@pytest.fixture
-def test_user_id(users_api):
-    """Get a user ID for testing."""
+@pytest.fixture(scope="session")
+def test_user_id():
+    """Get a user ID for testing (cached for session)."""
+    client = FollowUpBossApiClient(
+        api_key=os.getenv("FOLLOW_UP_BOSS_API_KEY"),
+        x_system=os.getenv("X_SYSTEM"),
+        x_system_key=os.getenv("X_SYSTEM_KEY"),
+    )
+    users_api = Users(client)
+
     # Get a user
     users_response = users_api.list_users()
 
@@ -105,9 +132,16 @@ def test_user_id(users_api):
     return users_response["users"][0]["id"]
 
 
-@pytest.fixture
-def test_person_id(people_api):
-    """Get a person ID for testing."""
+@pytest.fixture(scope="session")
+def test_person_id():
+    """Get a person ID for testing (cached for session)."""
+    client = FollowUpBossApiClient(
+        api_key=os.getenv("FOLLOW_UP_BOSS_API_KEY"),
+        x_system=os.getenv("X_SYSTEM"),
+        x_system_key=os.getenv("X_SYSTEM_KEY"),
+    )
+    people_api = People(client)
+
     # Get a person
     people_response = people_api.list_people(params={"limit": 1})
 
@@ -162,7 +196,7 @@ def test_list_deals(deals_api):
     assert found_deals or "collection" in response["_metadata"]
 
 
-def test_create_and_retrieve_deal(deals_api, test_stage_id):
+def test_create_and_retrieve_deal(deals_api, test_stage_id, resource_tracker):
     """Test creating and retrieving a deal."""
     # Create a minimal deal
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
@@ -180,6 +214,9 @@ def test_create_and_retrieve_deal(deals_api, test_stage_id):
 
     deal_id = response["id"]
 
+    # Track for cleanup
+    resource_tracker["deals"].append(deal_id)
+
     # Retrieve the deal
     retrieve_response = deals_api.retrieve_deal(deal_id)
 
@@ -190,9 +227,6 @@ def test_create_and_retrieve_deal(deals_api, test_stage_id):
     assert isinstance(retrieve_response, dict)
     assert retrieve_response["id"] == deal_id
     assert retrieve_response["name"] == deal_name
-
-    # Clean up
-    deals_api.delete_deal(deal_id)
 
 
 def test_update_deal(deals_api, test_deal_id):
@@ -225,9 +259,9 @@ def test_update_deal(deals_api, test_deal_id):
     assert abs(float(retrieve_response["price"]) - updated_price) < 0.01
 
 
-def test_delete_deal(deals_api, test_stage_id):
+def test_delete_deal(deals_api, test_stage_id, resource_tracker):
     """Test deleting a deal."""
-    # Create a deal specifically for deletion with minimal fields
+    # Create a deal specifically for deletion with minimal fields (don't track since we're testing deletion)
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     deal_name = f"Delete Test Deal {timestamp}"
 
@@ -243,11 +277,14 @@ def test_delete_deal(deals_api, test_stage_id):
     # Debug info
     print(f"Delete deal response: {delete_response}")
 
-    # Verify deletion - the API returns an empty list for successful deletion
+    # Verify deletion - the API returns an empty list or dict with rate limit info
     assert (
         delete_response == ""
         or delete_response == []
-        or (isinstance(delete_response, dict) and not delete_response)
+        or (
+            isinstance(delete_response, dict)
+            and (not delete_response or "_rateLimit" in delete_response)
+        )
     )
 
     # The API marks deals as "Deleted" rather than actually removing them
@@ -261,7 +298,7 @@ def test_delete_deal(deals_api, test_stage_id):
 # New Commission Field Tests
 
 
-def test_commission_fields_in_create_deal(deals_api, test_stage_id):
+def test_commission_fields_in_create_deal(deals_api, test_stage_id, resource_tracker):
     """Test that commission fields work as top-level parameters."""
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     deal_name = f"Commission Test Deal {timestamp}"
@@ -285,6 +322,9 @@ def test_commission_fields_in_create_deal(deals_api, test_stage_id):
     assert "id" in response
     deal_id = response["id"]
 
+    # Track for cleanup
+    resource_tracker["deals"].append(deal_id)
+
     # Verify commission fields were set
     assert response.get("commissionValue") == 13500
     assert response.get("agentCommission") == 9450
@@ -294,9 +334,6 @@ def test_commission_fields_in_create_deal(deals_api, test_stage_id):
     assert response.get("has_commission") is True
     assert "total_people" in response
     assert "total_users" in response
-
-    # Clean up
-    deals_api.delete_deal(deal_id)
 
 
 def test_commission_fields_in_custom_fields_raises_error(deals_api, test_stage_id):
@@ -429,7 +466,7 @@ def test_commission_partial_data_preparation(deals_api):
     assert "teamCommission" not in prepared_data
 
 
-def test_enhanced_error_message_formatting(deals_api, test_stage_id):
+def test_enhanced_error_message_formatting(deals_api, test_stage_id, resource_tracker):
     """Test that enhanced error messages are properly formatted."""
     # This test may not always trigger the enhanced error handling
     # but it verifies the functionality doesn't break normal operations
@@ -445,9 +482,9 @@ def test_enhanced_error_message_formatting(deals_api, test_stage_id):
             commissionValue=12000.0,  # Valid commission field
         )
 
-        # If successful, clean up
+        # If successful, track for cleanup
         if isinstance(response, dict) and "id" in response:
-            deals_api.delete_deal(response["id"])
+            resource_tracker["deals"].append(response["id"])
 
         # Test passes if no exception is raised
         assert True
@@ -460,7 +497,9 @@ def test_enhanced_error_message_formatting(deals_api, test_stage_id):
         print(f"Enhanced error message: {error_message}")
 
 
-def test_create_deal_with_all_commission_fields(deals_api, test_stage_id):
+def test_create_deal_with_all_commission_fields(
+    deals_api, test_stage_id, resource_tracker
+):
     """Test creating a deal with all commission fields and verify response helpers."""
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     deal_name = f"Full Commission Test Deal {timestamp}"
@@ -483,6 +522,9 @@ def test_create_deal_with_all_commission_fields(deals_api, test_stage_id):
     assert "id" in response
     deal_id = response["id"]
 
+    # Track for cleanup
+    resource_tracker["deals"].append(deal_id)
+
     # Verify all commission fields
     assert response.get("commissionValue") == 15000.0
     assert response.get("agentCommission") == 10500.0
@@ -492,6 +534,3 @@ def test_create_deal_with_all_commission_fields(deals_api, test_stage_id):
     assert response.get("has_commission") is True
     assert isinstance(response.get("total_people"), int)
     assert isinstance(response.get("total_users"), int)
-
-    # Clean up
-    deals_api.delete_deal(deal_id)

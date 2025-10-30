@@ -1,0 +1,37 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.13.5, pytest-8.4.2, pluggy-1.5.0 -- /opt/homebrew/bin/python
+cachedir: .pytest_cache
+rootdir: /Users/x/Library/CloudStorage/Dropbox/Portfolio/Python/follow_up_boss
+configfile: pyproject.toml
+plugins: xdist-3.8.0, cov-4.1.0, anyio-4.10.0, Faker-37.3.0, mock-3.14.1, django-4.5.2
+collecting ... collected 342 items / 80 deselected / 262 selected
+
+tests/test_action_plans.py::test_list_action_plans PASSED                [  0%]
+tests/test_action_plans.py::test_list_action_plan_assignments PASSED     [  0%]
+tests/test_action_plans.py::test_assign_person_to_action_plan_invalid_ids PASSED [  1%]
+tests/test_action_plans.py::test_update_action_plan_assignment_invalid_id PASSED [  1%]
+tests/test_appointment_outcomes.py::test_list_appointment_outcomes PASSED [  1%]
+tests/test_appointment_outcomes.py::test_create_appointment_outcome_skipped SKIPPED [  2%]
+tests/test_appointment_outcomes.py::test_retrieve_appointment_outcome PASSED [  2%]
+tests/test_appointment_outcomes.py::test_update_appointment_outcome_skipped SKIPPED [  3%]
+tests/test_appointment_outcomes.py::test_delete_appointment_outcome_skipped SKIPPED [  3%]
+tests/test_appointment_outcomes.py::test_retrieve_nonexistent_appointment_outcome PASSED [  3%]
+tests/test_appointment_types.py::test_list_appointment_types PASSED      [  4%]
+tests/test_appointment_types.py::test_create_appointment_type_skipped SKIPPED [  4%]
+tests/test_appointment_types.py::test_retrieve_appointment_type PASSED   [  4%]
+tests/test_appointment_types.py::test_update_appointment_type_skipped SKIPPED [  5%]
+tests/test_appointment_types.py::test_delete_appointment_type_skipped SKIPPED [  5%]
+tests/test_appointment_types.py::test_retrieve_nonexistent_appointment_type PASSED [  6%]
+tests/test_appointments.py::test_list_appointments PASSED                [  6%]
+tests/test_appointments.py::test_appointment_operations_with_invalid_id PASSED [  6%]
+tests/test_appointments.py::test_create_appointment_date_formats SKIPPED [  7%]
+tests/test_appointments.py::test_book_appointment_with_documentation_format SKIPPED [  7%]
+tests/test_calls.py::test_list_calls PASSED                              [  8%]
+tests/test_calls.py::test_create_call PASSED                             [  8%]
+tests/test_calls.py::test_retrieve_call PASSED                           [  8%]
+tests/test_calls.py::test_update_call PASSED                             [  9%]
+tests/test_client_utils.py::test_extract_pagination_links PASSED         [  9%]
+tests/test_client_utils.py::test_extract_rate_limit_info PASSED          [  9%]
+tests/test_client_utils.py::test_get_absolute_calls_get PASSED           [ 10%]
+tests/test_critical_issues.py::TestCriticalPondFiltering::test_pond_134_extraction_should_return_334_leads FAILED [ 10%]
+tests/test_critical_issues.py::TestCriticalPondFiltering::test_pond_filtering_api_parameter_vs_local_filtering 

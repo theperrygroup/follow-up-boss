@@ -3,7 +3,10 @@ API bindings for Follow Up Boss People endpoints.
 """
 
 import logging
+from datetime import datetime, timedelta
+from datetime import timezone as dt_timezone
 from typing import Any, Dict, Iterator, List, Optional, TypedDict, Union, cast
+from urllib.parse import parse_qs, urlparse
 
 from .client import FollowUpBossApiClient
 
@@ -227,6 +230,7 @@ class People:
         *,
         merge: bool = True,
         case_sensitive: bool = True,
+        skip_if_created_within: Optional[timedelta] = None,
     ) -> Union[Dict[str, Any], str]:
         """
         Add or update tags on a person using the supported people update endpoint.
@@ -245,15 +249,49 @@ class People:
             case_sensitive: Controls de-duplication behavior. When True, 'Tag' and
                 'tag' are treated as distinct. When False, comparisons are case-insensitive.
                 Defaults to True.
+            skip_if_created_within: Optional timedelta. If provided, skip tagging if
+                the person was created within this time window. Useful to avoid tagging
+                brand new leads that might be in initial processing. Example:
+                timedelta(minutes=5) to skip leads created in the last 5 minutes.
 
         Returns:
             The updated person object on success, or an error string from the client.
 
         Raises:
             ValueError: If ``tags`` is empty.
+
+        Example:
+            >>> from datetime import timedelta
+            >>> people = People(client)
+            >>> # Skip tagging if person was created in last 5 minutes
+            >>> result = people.add_tags(
+            ...     person_id=12345,
+            ...     tags=["New Tag"],
+            ...     skip_if_created_within=timedelta(minutes=5)
+            ... )
         """
         if not tags:
             raise ValueError("'tags' must contain at least one tag")
+
+        # Check creation time guard if specified
+        if skip_if_created_within is not None:
+            created_at = self.get_person_created_at(person_id)
+            if created_at is not None:
+                now = datetime.now(dt_timezone.utc)
+                if created_at >= (now - skip_if_created_within):
+                    logger.info(
+                        f"Skipping tag addition: person {person_id} created within guard window",
+                        extra={
+                            "person_id": person_id,
+                            "created_at": created_at,
+                            "guard_window": skip_if_created_within,
+                        },
+                    )
+                    # Return success to avoid retries
+                    return {
+                        "id": person_id,
+                        "message": "Skipped due to creation time guard",
+                    }
 
         # Normalize provided tags: ensure all are strings and strip whitespace
         provided_tags: List[str] = [str(t).strip() for t in tags if str(t).strip()]
@@ -491,3 +529,180 @@ class People:
             meta: Dict[str, Any] = cast(Dict[str, Any], response.get("_metadata", {}))
             response.setdefault("_metadata", meta)
         return cast(PeopleListResponse, response)
+
+    def find_person_id(
+        self, email: Optional[str] = None, phone: Optional[str] = None
+    ) -> Optional[int]:
+        """
+        Find a person's ID by email or phone number.
+
+        This is a convenience method that searches for a person and returns
+        just their ID if found. At least one of email or phone must be provided.
+
+        Args:
+            email: Email address to search for.
+            phone: Phone number to search for.
+
+        Returns:
+            The person's ID if found, None otherwise.
+
+        Raises:
+            ValueError: If both email and phone are None.
+
+        Example:
+            >>> people = People(client)
+            >>> person_id = people.find_person_id(email="john@example.com")
+            >>> if person_id:
+            ...     print(f"Found person with ID: {person_id}")
+        """
+        if not email and not phone:
+            raise ValueError("At least one of email or phone must be provided")
+
+        # Build search parameters
+        params: Dict[str, Any] = {}
+        if email:
+            params["email"] = email
+        elif phone:
+            params["phone"] = phone
+
+        try:
+            # Search using list_people
+            response = self.list_people(params=cast(ListPeopleParams, params))
+
+            if isinstance(response, dict):
+                people_list = response.get("people", [])
+                if people_list and len(people_list) > 0:
+                    first_person = people_list[0]
+                    person_id = first_person.get("id")
+                    if person_id:
+                        return int(person_id)
+
+            return None
+
+        except Exception as e:
+            logger.error(
+                f"Error searching for person: {e}",
+                extra={"email": email, "phone": phone},
+            )
+            return None
+
+    def assign_to_user(
+        self, person_id: int, user_id: int
+    ) -> Union[Dict[str, Any], str]:
+        """
+        Assign a person to a user (agent).
+
+        This is a convenience method that wraps update_person() to set
+        the assignedTo field.
+
+        Args:
+            person_id: The ID of the person to assign.
+            user_id: The ID of the user to assign the person to.
+
+        Returns:
+            A dictionary containing the updated person or an error string.
+
+        Example:
+            >>> people = People(client)
+            >>> result = people.assign_to_user(person_id=12345, user_id=67890)
+        """
+        update_data = {"assignedTo": int(user_id)}
+        return self.update_person(person_id, update_data)
+
+    def get_person_created_at(self, person_id: int) -> Optional[datetime]:
+        """
+        Get the creation timestamp for a person.
+
+        This method fetches the person and extracts their creation timestamp,
+        handling various field names and formats that Follow Up Boss might use.
+
+        Args:
+            person_id: The ID of the person.
+
+        Returns:
+            A timezone-aware datetime of when the person was created, or None if unavailable.
+
+        Example:
+            >>> people = People(client)
+            >>> created_at = people.get_person_created_at(person_id=12345)
+            >>> if created_at:
+            ...     print(f"Person created at: {created_at}")
+        """
+        try:
+            person = self.retrieve_person(person_id)
+
+            # Check common timestamp field names
+            for key in ("createdAt", "created", "dateCreated", "created_at"):
+                if key in person:
+                    ts = self._parse_timestamp(person.get(key))
+                    if ts is not None:
+                        return ts
+
+            # Some APIs nest fields under 'data'
+            data = person.get("data")
+            if isinstance(data, dict):
+                for key in ("createdAt", "created", "dateCreated", "created_at"):
+                    if key in data:
+                        ts = self._parse_timestamp(data.get(key))
+                        if ts is not None:
+                            return ts
+
+            return None
+
+        except Exception as e:
+            logger.warning(
+                f"Could not get person creation time: {e}",
+                extra={"person_id": person_id},
+            )
+            return None
+
+    def _parse_timestamp(self, value: Any) -> Optional[datetime]:
+        """
+        Parse various timestamp formats from Follow Up Boss.
+
+        Handles:
+        - ISO8601 strings (with or without 'Z' suffix)
+        - Unix epoch timestamps (int or float)
+        - Nested objects like {"date": "..."}
+
+        Args:
+            value: The timestamp value to parse.
+
+        Returns:
+            A timezone-aware datetime if parsing succeeds, None otherwise.
+        """
+        if value is None:
+            return None
+
+        # Handle nested objects
+        if isinstance(value, dict):
+            inner = value.get("date") or value.get("created") or value.get("createdAt")
+            return self._parse_timestamp(inner)
+
+        # Handle epoch timestamps
+        if isinstance(value, (int, float)):
+            try:
+                return datetime.fromtimestamp(float(value), tz=dt_timezone.utc)
+            except Exception:
+                return None
+
+        # Handle string timestamps
+        if isinstance(value, str):
+            s = value.strip()
+            # Convert 'Z' suffix to RFC3339 format
+            if s.endswith("Z"):
+                s = s[:-1] + "+00:00"
+
+            try:
+                # Try Python's fromisoformat
+                parsed_dt = datetime.fromisoformat(s)
+
+                # Ensure timezone-aware
+                if parsed_dt is not None and parsed_dt.tzinfo is None:
+                    parsed_dt = parsed_dt.replace(tzinfo=dt_timezone.utc)
+
+                return parsed_dt
+            except Exception:
+                return None
+
+        return None

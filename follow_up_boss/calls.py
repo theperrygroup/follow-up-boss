@@ -1,5 +1,35 @@
 """
 API bindings for Follow Up Boss Calls endpoints.
+
+This module provides comprehensive functionality for managing call logs and
+call-related data in Follow Up Boss. It supports creating, retrieving, updating,
+and listing call records with detailed tracking of call outcomes, duration,
+and associated metadata.
+
+Key Features:
+    - Create call log entries with detailed information
+    - Track call outcomes and duration
+    - Support for both incoming and outgoing calls
+    - Associate calls with specific people
+    - Store call recordings and notes
+    - Filter and search call history
+
+Usage:
+    Basic usage:
+        client = FollowUpBossApiClient(api_key="your_api_key")
+        calls = Calls(client)
+        
+        # Create a call log
+        call = calls.create_call(
+            person_id=12345,
+            phone="555-1234",
+            duration=300,
+            outcome="Answered",
+            is_incoming=True
+        )
+        
+        # List calls for a person
+        person_calls = calls.list_calls(person_id=12345)
 """
 
 import logging
@@ -88,6 +118,12 @@ class Calls:
 
         Returns:
             A dictionary containing the details of the newly created call log or an error string.
+
+        Raises:
+            FollowUpBossApiException: If the API request fails.
+            FollowUpBossValidationError: If the call data is invalid.
+            FollowUpBossAuthError: If authentication fails.
+            FollowUpBossNotFoundError: If the person_id is not found.
         """
         payload: Dict[str, Any] = {
             "personId": person_id,
